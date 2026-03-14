@@ -1,34 +1,84 @@
 import { create } from 'zustand';
 import type { UserProfile } from '../types/app';
-import { MOCK_PROFILE } from '../lib/mockData';
+import { supabase } from '../lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthState {
-  user: UserProfile | null;
+  user: Partial<UserProfile> | null;
+  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isInitialized: boolean;
 
   // Actions
-  setUser: (user: UserProfile | null) => void;
+  initializeAuth: () => Promise<void>;
+  signOut: () => Promise<void>;
   setLoading: (loading: boolean) => void;
-  signOut: () => void;
-  // For dev: mock sign-in
-  mockSignIn: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
+  session: null,
   isLoading: false,
   isAuthenticated: false,
-
-  setUser: (user) =>
-    set({ user, isAuthenticated: user !== null }),
+  isInitialized: false,
 
   setLoading: (isLoading) => set({ isLoading }),
 
-  signOut: () =>
-    set({ user: null, isAuthenticated: false }),
+  initializeAuth: async () => {
+    try {
+      if (get().isInitialized) return;
+      
+      set({ isLoading: true });
 
-  // Dev-only: bypass auth with mock data
-  mockSignIn: () =>
-    set({ user: MOCK_PROFILE, isAuthenticated: true }),
+      // Get initial session
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) throw error;
+
+      if (session) {
+        set({ session, isAuthenticated: true });
+        // Fetch profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        set({ user: { ...profile, email: session.user.email, id: session.user.id } });
+      }
+
+      // Listen for auth state changes
+      supabase.auth.onAuthStateChange(async (_event, newSession) => {
+        set({ session: newSession, isAuthenticated: !!newSession });
+        
+        if (newSession) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', newSession.user.id)
+            .single();
+            
+          set({ user: { ...profile, email: newSession.user.email, id: newSession.user.id } });
+        } else {
+          set({ user: null });
+        }
+      });
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+    } finally {
+      set({ isLoading: false, isInitialized: true });
+    }
+  },
+
+  signOut: async () => {
+    try {
+      set({ isLoading: true });
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    } finally {
+      set({ user: null, session: null, isAuthenticated: false, isLoading: false });
+    }
+  },
 }));

@@ -26,11 +26,11 @@ export default function ProfileScreen() {
   ];
 
   const setupRows = [
-    { icon: '🎯', label: 'Goal', value: goalLabel(user.goal) },
-    { icon: '⚡', label: 'Activity Level', value: user.activity_level.replace('_', ' ') },
-    { icon: '🏋️', label: 'Equipment', value: user.equipment.slice(0, 2).join(', ') + (user.equipment.length > 2 ? ' +more' : '') },
+    { icon: '🎯', label: 'Goal', value: user?.goal ? goalLabel(user.goal) : 'Not set' },
+    { icon: '⚡', label: 'Activity Level', value: user?.activity_level?.replace('_', ' ') || 'Not set' },
+    { icon: '🏋️', label: 'Equipment', value: user?.equipment ? user.equipment.slice(0, 2).join(', ') + (user.equipment.length > 2 ? ' +more' : '') : 'Not set' },
     { icon: '📅', label: 'Workouts / week', value: `${user.workouts_per_week}x` },
-    { icon: '🥗', label: 'Diet Preference', value: user.diet_preference.replace('_', ' ') },
+    { icon: '🥗', label: 'Diet Preference', value: user?.diet_preference?.replace('_', ' ') || 'Not set' },
     { icon: '📍', label: 'Country', value: user.country === 'AU' ? 'Australia 🇦🇺' : user.country === 'NP' ? 'Nepal 🇳🇵' : 'Other' },
   ];
 
@@ -48,8 +48,8 @@ export default function ProfileScreen() {
         <Text style={styles.fullName}>{user.full_name}</Text>
         <Text style={styles.email}>{user.email}</Text>
         <View style={styles.badgeRow}>
-          <Badge label={goalLabel(user.goal)} color={Colors.accent} />
-          <Badge label={user.experience_level} color={Colors.green} />
+          {user?.goal && <Badge label={goalLabel(user.goal)} color={Colors.accent} />}
+          {user?.experience_level && <Badge label={user.experience_level} color={Colors.green} />}
         </View>
       </View>
 

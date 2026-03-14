@@ -225,7 +225,7 @@ export default function NutritionScreen() {
                 placeholder="e.g. Chicken Rice Bowl"
                 placeholderTextColor={Colors.dim}
                 value={form.meal_name}
-                onChangeText={(v) => setForm((f) => ({ ...f, meal_name: v }))}
+                onChangeText={(v: string) => setForm((f) => ({ ...f, meal_name: v }))}
               />
 
               <Text style={styles.fieldLabel}>Calories *</Text>
@@ -235,7 +235,7 @@ export default function NutritionScreen() {
                 placeholderTextColor={Colors.dim}
                 keyboardType="numeric"
                 value={form.calories}
-                onChangeText={(v) => setForm((f) => ({ ...f, calories: v }))}
+                onChangeText={(v: string) => setForm((f) => ({ ...f, calories: v }))}
               />
 
               <View style={styles.macroInputRow}>
@@ -247,7 +247,7 @@ export default function NutritionScreen() {
                     placeholderTextColor={Colors.dim}
                     keyboardType="numeric"
                     value={form.protein_g}
-                    onChangeText={(v) => setForm((f) => ({ ...f, protein_g: v }))}
+                    onChangeText={(v: string) => setForm((f) => ({ ...f, protein_g: v }))}
                   />
                 </View>
                 <View style={styles.macroInput}>
@@ -258,7 +258,7 @@ export default function NutritionScreen() {
                     placeholderTextColor={Colors.dim}
                     keyboardType="numeric"
                     value={form.carbs_g}
-                    onChangeText={(v) => setForm((f) => ({ ...f, carbs_g: v }))}
+                    onChangeText={(v: string) => setForm((f) => ({ ...f, carbs_g: v }))}
                   />
                 </View>
                 <View style={styles.macroInput}>
@@ -269,7 +269,7 @@ export default function NutritionScreen() {
                     placeholderTextColor={Colors.dim}
                     keyboardType="numeric"
                     value={form.fat_g}
-                    onChangeText={(v) => setForm((f) => ({ ...f, fat_g: v }))}
+                    onChangeText={(v: string) => setForm((f) => ({ ...f, fat_g: v }))}
                   />
                 </View>
               </View>

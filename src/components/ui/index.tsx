@@ -5,9 +5,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  TextInput,
   type ViewStyle,
   type TextStyle,
   type TouchableOpacityProps,
+  type TextInputProps,
 } from 'react-native';
 import { Colors, Radius, Spacing, Typography, Shadow } from '../../lib/theme';
 
@@ -107,6 +109,7 @@ export function Button({
       disabled={disabled || loading}
       style={[
         styles.button,
+        variant === 'primary' && !disabled ? Shadow.md : null,
         {
           backgroundColor: bgMap[variant],
           opacity: disabled ? 0.5 : 1,
@@ -135,6 +138,31 @@ export function Button({
         </View>
       )}
     </TouchableOpacity>
+  );
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+
+interface InputProps extends TextInputProps {
+  label?: string;
+  error?: string;
+}
+
+export function Input({ label, error, style, ...props }: InputProps) {
+  return (
+    <View style={[{ marginBottom: Spacing.md }]}>
+      {label && <Text style={styles.inputLabel}>{label}</Text>}
+      <TextInput
+        style={[
+          styles.input,
+          error ? { borderColor: Colors.red } : null,
+          style
+        ]}
+        placeholderTextColor={Colors.dim}
+        {...props}
+      />
+      {error && <Text style={styles.inputError}>{error}</Text>}
+    </View>
   );
 }
 
@@ -183,7 +211,7 @@ export function EmptyState({ emoji, title, subtitle, action, onAction }: EmptySt
       <Text style={styles.emptyTitle}>{title}</Text>
       {subtitle && <Text style={styles.emptySubtitle}>{subtitle}</Text>}
       {action && onAction && (
-        <Button label={action} onPress={onAction} style={{ marginTop: 16 } as ViewStyle} />
+        <Button label={action} onPress={onAction} style={[{ marginTop: 16 }]} />
       )}
     </View>
   );
@@ -266,5 +294,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: Spacing.sm,
     lineHeight: 22,
+  },
+  input: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    color: Colors.text,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 16,
+    fontSize: Typography.size.md,
+  },
+  inputLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    marginBottom: Spacing.xs,
+    fontWeight: Typography.weight.semibold,
+  },
+  inputError: {
+    color: Colors.red,
+    fontSize: Typography.size.xs,
+    marginTop: 4,
   },
 });
