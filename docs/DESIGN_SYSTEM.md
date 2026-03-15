@@ -4,18 +4,20 @@ This document is the absolute single source of truth for the **Navya** applicati
 
 ---
 
-## 1. Core Aesthetic Principles
+## 1. Core Aesthetic Principles (Tailwind First)
 
-- **Premium Dark Mode First**: The application relies on deep, inky backgrounds contrasted with vibrant accents and glowing elements to create a sleek, futuristic, and high-end fitness app feel.
-- **Intentional Negative Space**: UIs should breathe. Do not cram elements together. Group related information closely, but separate distinct sections with generous spacing (`xl`, `xxl`, `xxxl`).
+We use **NativeWind v4** (Tailwind CSS) for all styling. **Do not** use `StyleSheet.create` or inline styles.
+
+- **Premium Dark Mode First**: The application relies on deep, inky backgrounds contrasted with vibrant accents and glowing elements.
+- **Intentional Negative Space**: UIs should breathe. Do not cram elements together. Group related information closely, but separate distinct sections with generous spacing classes (`p-xl`, `gap-xxl`, `mb-xxxl`).
 - **Tactility & Depth**: Interfaces should feel physical. Elements that can be tapped must respond visually. Hover and press states are mandatory. We use layered elevation (background → surface → card) and subtle, tinted shadows to create depth, avoiding flat-looking gray shadows.
 - **Rhythmic Typography**: Information hierarchy is driven by size, weight, and perfectly tuned contrast. Use bold/extrabold display fonts for emotional impact (titles, numbers) and readable sans-serif fonts for utility.
 
 ---
 
-## 2. Color Palette & Theming (`Colors`)
+## 2. Color Palette & Theming (Tailwind Classes)
 
-Do **not** use raw hex codes in component files. Always import `Colors` from `src/lib/theme.ts`.
+Do **not** use raw hex codes. Always use Tailwind utility classes (e.g. `bg-bg`, `text-accent`, `border-border`).
 
 ### Backgrounds & Surfaces
 Used to establish the physical layers of the app, from the back wall to the foreground objects.

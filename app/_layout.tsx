@@ -1,3 +1,4 @@
+import '../global.css';
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -31,13 +32,23 @@ export default function RootLayout() {
     if (!isInitialized) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inOnboardingGroup = segments[0] === '(onboarding)';
+    const onboardingComplete = useAuthStore.getState().user?.onboarding_complete;
 
     if (!isAuthenticated && !inAuthGroup) {
       // Not logged in, trying to access protected route
       router.replace('/(auth)/login');
-    } else if (isAuthenticated && inAuthGroup) {
-      // Logged in, trying to access auth screens
-      router.replace('/(tabs)');
+    } else if (isAuthenticated) {
+      if (!onboardingComplete && !inOnboardingGroup) {
+        // Logged in but profile incomplete → onboarding
+        router.replace('/(onboarding)/welcome');
+      } else if ((onboardingComplete || inOnboardingGroup) && inAuthGroup) {
+        // Logged in and already past auth → tabs (if onboarding complete)
+        router.replace('/(tabs)');
+      } else if (onboardingComplete && inOnboardingGroup) {
+        // Back-button or direct access to onboarding while complete → tabs
+        router.replace('/(tabs)');
+      }
     }
   }, [isAuthenticated, isInitialized, segments, router]);
 
@@ -57,6 +68,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           </Stack>
         </WebWrapper>
       </SafeAreaProvider>

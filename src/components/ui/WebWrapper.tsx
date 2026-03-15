@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Platform, type ViewStyle } from 'react-native';
-import { Colors } from '../../lib/theme';
+import { Colors } from '../../constants/theme';
 
 interface WebWrapperProps {
   children: React.ReactNode;

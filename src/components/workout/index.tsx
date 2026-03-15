@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors, Radius, Spacing, Typography } from '../../lib/theme';
+import { Colors, Radius, Spacing, Typography } from '../../constants/theme';
 import type { SessionExercise, WorkoutPlanDay } from '../../types/app';
 
 // ─── Exercise Row (in session) ────────────────────────────────────────────────

@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "FitAI",
-    "slug": "fitai",
+    "name": "Navya",
+    "slug": "navya",
     "version": "1.0.0",
-    "scheme": "fitai",
+    "scheme": "navya",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",

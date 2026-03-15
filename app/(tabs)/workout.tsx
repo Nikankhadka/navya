@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '../../src/lib/theme';
+import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { useWorkoutStore } from '../../src/stores/useWorkoutStore';
 import { Card, Button, SectionHeader, EmptyState } from '../../src/components/ui';
 import { ExerciseRow, PlanDayCard } from '../../src/components/workout';
-import { MOCK_PLAN, MOCK_TODAY_SESSION } from '../../src/lib/mockData';
+import { MOCK_PLAN, MOCK_TODAY_SESSION } from '../../src/mocks/mockData';
 import { formatDuration, sessionProgress } from '../../src/utils/helpers';
 import { crossAlert } from '../../src/utils/crossAlert';
 import type { WorkoutSession } from '../../src/types/app';

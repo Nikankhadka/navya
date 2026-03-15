@@ -49,6 +49,7 @@ export interface UserProfile {
   workouts_per_week: number;
   country: 'AU' | 'NP' | 'other';
   onboarding_complete: boolean;
+  glow_focus: 'Skin' | 'Hair' | 'Body' | 'Mind';
   created_at: string;
   updated_at: string;
 }

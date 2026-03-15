@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Typography } from '../../src/lib/theme';
+import { Colors, Typography } from '../../src/constants/theme';
 
 interface TabIconProps {
   emoji: string;

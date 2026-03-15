@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '../../src/lib/theme';
+import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { Card, Badge, SectionHeader } from '../../src/components/ui';
 import { ProgressBar } from '../../src/components/ui/MacroRing';
@@ -19,7 +19,7 @@ import {
   MOCK_DAILY_NUTRITION,
   MOCK_TODAY_SESSION,
   MOCK_COACH_MESSAGES,
-} from '../../src/lib/mockData';
+} from '../../src/mocks/mockData';
 import { formatDuration, getWeekDayLabels, sessionProgress } from '../../src/utils/helpers';
 
 const WEEK_LABELS = getWeekDayLabels();

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { UserProfile } from '../types/app';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../services/supabase';
 import type { Session } from '@supabase/supabase-js';
 
 interface AuthState {
@@ -14,6 +14,7 @@ interface AuthState {
   initializeAuth: () => Promise<void>;
   signOut: () => Promise<void>;
   setLoading: (loading: boolean) => void;
+  setProfile: (profile: Partial<UserProfile>) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -40,7 +41,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ session, isAuthenticated: true });
         // Fetch profile
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('user_profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
@@ -54,7 +55,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         
         if (newSession) {
           const { data: profile } = await supabase
-            .from('profiles')
+            .from('user_profiles')
             .select('*')
             .eq('id', newSession.user.id)
             .single();
@@ -79,6 +80,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error('Sign out error:', error);
     } finally {
       set({ user: null, session: null, isAuthenticated: false, isLoading: false });
+    }
+  },
+
+  setProfile: (profile) => {
+    const currentUser = get().user;
+    if (currentUser) {
+      set({ user: { ...currentUser, ...profile } });
     }
   },
 }));

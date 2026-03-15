@@ -11,7 +11,7 @@ import {
   type TouchableOpacityProps,
   type TextInputProps,
 } from 'react-native';
-import { Colors, Radius, Spacing, Typography, Shadow } from '../../lib/theme';
+import { Colors, Radius, Spacing, Typography, Shadow } from '../../constants/theme';
 
 export { WebWrapper } from './WebWrapper';
 

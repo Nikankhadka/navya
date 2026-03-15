@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '../../src/lib/theme';
+import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { Card, Badge, Divider } from '../../src/components/ui';
 import { goalLabel } from '../../src/utils/helpers';

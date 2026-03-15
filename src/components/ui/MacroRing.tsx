@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Typography } from '../../lib/theme';
+import { Colors, Typography } from '../../constants/theme';
 
 interface MacroRingProps {
   value: number;

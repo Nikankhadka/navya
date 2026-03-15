@@ -11,8 +11,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '../../src/lib/theme';
-import { MOCK_COACH_MESSAGES, DEMO_COACH_RESPONSES, COACH_QUICK_REPLIES } from '../../src/lib/mockData';
+import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
+import { MOCK_COACH_MESSAGES, DEMO_COACH_RESPONSES, COACH_QUICK_REPLIES } from '../../src/mocks/mockData';
 import { formatTimeAgo } from '../../src/utils/helpers';
 import type { CoachMessage } from '../../src/types/app';
 

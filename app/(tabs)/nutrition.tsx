@@ -11,10 +11,10 @@ import {
   Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '../../src/lib/theme';
+import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { Card, Button, SectionHeader } from '../../src/components/ui';
 import { MacroRing } from '../../src/components/ui/MacroRing';
-import { MOCK_DAILY_NUTRITION } from '../../src/lib/mockData';
+import { MOCK_DAILY_NUTRITION } from '../../src/mocks/mockData';
 import { formatTime, mealTimeLabel } from '../../src/utils/helpers';
 import type { FoodLog } from '../../src/types/app';
 
