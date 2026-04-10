@@ -23,6 +23,15 @@ export const coachService = {
   },
 
   async requestQuickReply(userId: string, text: string): Promise<CoachMessage> {
+    const userMessage: CoachMessage = {
+      id: `coach-user-${Date.now()}`,
+      user_id: userId,
+      action_type: 'quick_reply',
+      role: 'user',
+      text,
+      created_at: new Date().toISOString(),
+    };
+
     if (!isSupabaseConfigured) {
       const reply =
         DEMO_COACH_RESPONSES[Math.floor(Math.random() * DEMO_COACH_RESPONSES.length)];
@@ -37,8 +46,15 @@ export const coachService = {
       };
     }
 
+    await supabase.from('coach_messages').insert({
+      user_id: userId,
+      action_type: userMessage.action_type,
+      role: userMessage.role,
+      text: userMessage.text,
+    } as never);
+
     const { data, error } = await supabase.functions.invoke('coach-action', {
-      body: { text },
+      body: { text, userId },
     });
 
     if (error) {

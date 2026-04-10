@@ -6,7 +6,7 @@
 
 ## Current Step
 
-- Week 1 foundation baseline is in place and verified. The next active step is Week 2 service and schema hardening.
+- Week 2 scaffolding is underway. Canonical MVP schema, mutation hooks, and write-path services are in place; the next step is connecting them to a real Supabase project and hardening end-to-end behavior.
 
 ## Completed In This Session
 
@@ -18,6 +18,8 @@
 - switched the main tabs to hook and service boundaries instead of direct raw mock imports
 - moved auth toward OTP-first deep-link handling
 - removed the extra `pnpm` lockfile
+- added a canonical MVP schema migration for profiles, plans, sessions, nutrition, coach, flags, and push tokens
+- added mutation hooks and service write paths for workout sessions, nutrition logging, and coach requests
 - passed `npm run verify`
 - passed `npm run smoke:web`
 
@@ -25,12 +27,13 @@
 
 - finishing backend write paths for sessions, meals, and coach actions against a real Supabase project
 - finalizing schema and RLS to match the new typed contracts
+- replacing remaining fallback assumptions with real relational reads once the live schema exists
 
 ## Next Recommended Step
 
 - connect a real Supabase project and regenerate final `src/types/supabase.ts`
-- implement persistent write flows for workout sessions, nutrition logging, and coach history
-- add migrations and RLS for the remaining canonical tables
+- validate the new write paths against the live schema and fix any relation mismatches
+- add seed data for `exercise_library` and realistic `feature_flags`
 - verify OTP email and social auth end to end on device builds
 
 ## Blockers

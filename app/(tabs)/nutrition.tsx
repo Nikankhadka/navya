@@ -18,6 +18,7 @@ import { formatTime, mealTimeLabel } from '../../src/utils/helpers';
 import type { FoodLog } from '../../src/types/app';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
+import { useNutritionActions } from '../../src/hooks/useNutritionActions';
 
 type MealTime = FoodLog['meal_time'];
 
@@ -43,6 +44,7 @@ export default function NutritionScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const { data: nutritionSummary } = useDailyNutrition(user?.id);
+  const { addMeal, deleteMeal } = useNutritionActions(user?.id);
   const [meals, setMeals] = useState<FoodLog[]>([]);
   const [totalCal, setTotalCal] = useState(0);
   const [totalProtein, setTotalProtein] = useState(0);
@@ -56,23 +58,21 @@ export default function NutritionScreen() {
     setTotalProtein(nutritionSummary.total_protein_g);
   }, [nutritionSummary]);
 
-  const handleAddMeal = () => {
+  const handleAddMeal = async () => {
     if (!form.meal_name.trim() || !form.calories) return;
-    const newMeal: FoodLog = {
-      id: `meal-${Date.now()}`,
-      user_id: user?.id ?? 'local-preview-user',
+    const newMeal = {
       meal_name: form.meal_name,
       calories: Number(form.calories),
       protein_g: form.protein_g ? Number(form.protein_g) : null,
       carbs_g: form.carbs_g ? Number(form.carbs_g) : null,
       fat_g: form.fat_g ? Number(form.fat_g) : null,
       meal_time: form.meal_time,
-      logged_at: new Date().toISOString(),
       notes: null,
     };
-    setMeals((prev) => [newMeal, ...prev]);
-    setTotalCal((c) => c + Number(form.calories));
-    setTotalProtein((p) => p + (form.protein_g ? Number(form.protein_g) : 0));
+    const createdMeal = await addMeal.mutateAsync(newMeal);
+    setMeals((prev) => [createdMeal, ...prev]);
+    setTotalCal((c) => c + createdMeal.calories);
+    setTotalProtein((p) => p + (createdMeal.protein_g ?? 0));
     setForm(EMPTY_FORM);
     setShowModal(false);
   };
@@ -188,7 +188,17 @@ export default function NutritionScreen() {
           ) : (
             <View style={styles.mealList}>
               {meals.map((meal) => (
-                <View key={meal.id} style={styles.mealRow}>
+                <TouchableOpacity
+                  key={meal.id}
+                  style={styles.mealRow}
+                  activeOpacity={0.85}
+                  onLongPress={async () => {
+                    await deleteMeal.mutateAsync(meal.id);
+                    setMeals((prev) => prev.filter((item) => item.id !== meal.id));
+                    setTotalCal((value) => value - meal.calories);
+                    setTotalProtein((value) => value - (meal.protein_g ?? 0));
+                  }}
+                >
                   <View style={styles.mealLeft}>
                     <Text style={styles.mealTimeLabel}>
                       {mealTimeLabel(meal.meal_time)}
@@ -205,7 +215,7 @@ export default function NutritionScreen() {
                       <Text style={styles.mealProtein}>{meal.protein_g}g protein</Text>
                     )}
                   </View>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           )}

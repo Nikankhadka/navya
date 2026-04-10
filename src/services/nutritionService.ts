@@ -43,4 +43,51 @@ export const nutritionService = {
       meals: todaysMeals,
     };
   },
+
+  async addMeal(userId: string, meal: Omit<FoodLog, 'id' | 'user_id' | 'logged_at'>): Promise<FoodLog> {
+    const payload: FoodLog = {
+      id: `meal-${Date.now()}`,
+      user_id: userId,
+      logged_at: new Date().toISOString(),
+      ...meal,
+    };
+
+    if (!isSupabaseConfigured) {
+      return payload;
+    }
+
+    const { data, error } = await supabase
+      .from('food_logs')
+      .insert({
+        user_id: userId,
+        meal_name: payload.meal_name,
+        calories: payload.calories,
+        protein_g: payload.protein_g,
+        carbs_g: payload.carbs_g,
+        fat_g: payload.fat_g,
+        meal_time: payload.meal_time,
+        notes: payload.notes,
+      } as never)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error creating food log:', error);
+      return payload;
+    }
+
+    return data as unknown as FoodLog;
+  },
+
+  async deleteMeal(mealId: string): Promise<void> {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
+    const { error } = await supabase.from('food_logs').delete().eq('id', mealId);
+
+    if (error) {
+      console.error('Error deleting food log:', error);
+    }
+  },
 };

@@ -16,6 +16,7 @@ import { crossAlert } from '../../src/utils/crossAlert';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { useActivePlan } from '../../src/hooks/useActivePlan';
 import { useTodaySession } from '../../src/hooks/useTodaySession';
+import { useWorkoutActions } from '../../src/hooks/useWorkoutActions';
 
 export default function WorkoutScreen() {
   const insets = useSafeAreaInsets();
@@ -23,6 +24,7 @@ export default function WorkoutScreen() {
   const userId = user?.id;
   const { data: activePlan } = useActivePlan(userId);
   const { data: todaySessionData } = useTodaySession(userId);
+  const { startSession: startSessionMutation, saveSession } = useWorkoutActions(userId);
   const { activeSession, elapsedSeconds, timerActive, startSession, endSession, skipExercise, markExerciseDone, tickTimer } = useWorkoutStore();
   const [tab, setTab] = useState<'today' | 'plan'>('today');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -39,9 +41,11 @@ export default function WorkoutScreen() {
     };
   }, [timerActive, tickTimer]);
 
-  const handleStartSession = () => {
-    if (todaySessionData) {
-      startSession(todaySessionData);
+  const handleStartSession = async () => {
+    const session = await startSessionMutation.mutateAsync(activePlan ?? null);
+
+    if (session) {
+      startSession(session);
     }
   };
 
@@ -60,7 +64,19 @@ export default function WorkoutScreen() {
   const handleFinishWorkout = () => {
     crossAlert('Finish Workout?', 'Great job! Mark this session as complete.', [
       { text: 'Keep Going', style: 'cancel' },
-      { text: 'Finish 🎉', onPress: () => endSession() },
+      {
+        text: 'Finish 🎉',
+        onPress: async () => {
+          endSession();
+          const updatedSession = useWorkoutStore.getState().activeSession;
+          if (updatedSession) {
+            await saveSession.mutateAsync({
+              session: updatedSession,
+              elapsedSeconds: useWorkoutStore.getState().elapsedSeconds,
+            });
+          }
+        },
+      },
     ]);
   };
 

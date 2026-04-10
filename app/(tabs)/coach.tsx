@@ -18,13 +18,14 @@ import type { CoachMessage } from '../../src/types/app';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { useCoachMessages } from '../../src/hooks/useCoachMessages';
 import { useFeatureFlags } from '../../src/hooks/useFeatureFlags';
-import { coachService } from '../../src/services/coachService';
+import { useCoachActions } from '../../src/hooks/useCoachActions';
 
 export default function CoachScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const { data: initialMessages } = useCoachMessages(user?.id);
   const { data: featureFlags } = useFeatureFlags();
+  const { requestQuickReply } = useCoachActions(user?.id);
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -61,7 +62,7 @@ export default function CoachScreen() {
     setInputText('');
     setIsTyping(true);
 
-    const coachMsg = await coachService.requestQuickReply(user.id, content);
+    const coachMsg = await requestQuickReply.mutateAsync(content);
     setMessages((prev) => [...prev, coachMsg]);
     setIsTyping(false);
   };
