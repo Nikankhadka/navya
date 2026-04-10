@@ -5,10 +5,10 @@ import { useOnboardingStore } from '../../src/stores/useOnboardingStore';
 import { Ionicons } from '@expo/vector-icons';
 
 const GLOW_OPTIONS = [
-  { id: 'Skin', icon: 'sparkles-outline', label: 'Skin Glow' },
-  { id: 'Hair', icon: 'water-outline', label: 'Hair Health' },
-  { id: 'Body', icon: 'fitness-outline', label: 'Body Fitness' },
-  { id: 'Mind', icon: 'leaf-outline', label: 'Mental Zen' },
+  { id: 'Skin', icon: 'sparkles-outline', label: 'Recovery' },
+  { id: 'Hair', icon: 'water-outline', label: 'Consistency' },
+  { id: 'Body', icon: 'fitness-outline', label: 'Performance' },
+  { id: 'Mind', icon: 'leaf-outline', label: 'Mindset' },
 ] as const;
 
 const COUNTRIES = [
@@ -35,7 +35,7 @@ export default function BasicsScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
       <ScrollView className="flex-1 px-6 pt-10">
         <Text className="text-white text-3xl font-bold mb-2">The Basics</Text>
-        <Text className="text-slate-400 text-lg mb-8">Tell us about your glow goals.</Text>
+        <Text className="text-slate-400 text-lg mb-8">Tell us about your training profile.</Text>
 
         {/* Full Name */}
         <View className="mb-8">
@@ -95,7 +95,7 @@ export default function BasicsScreen() {
           </View>
         </View>
 
-        {/* Glow Focus */}
+        {/* Priority Focus */}
 ...
         {/* Country */}
         <View className="mb-12">

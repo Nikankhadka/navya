@@ -14,7 +14,7 @@ Navya uses Expo Router with the following group structures:
 **Goal:** Verify the login experience and brand impression.
 
 - **Route:** `/(auth)/login`
-- **Expected UI:** Premium dark-mode design, glassmorphism on login card, Google/Apple/Facebook social login buttons.
+- **Expected UI:** Premium dark-mode design, magic-link email entry, and Google/Apple social login buttons.
 - **Deep Link:** `navya://(auth)/login`
 
 ---
@@ -30,7 +30,7 @@ Users are redirected here if `isAuthenticated` is true but `onboarding_complete`
 | 2 | Basics | `/(onboarding)/basics` | Form fields (Name, Birthdate), input styling. |
 | 3 | Body | `/(onboarding)/body` | Height/Weight pickers, unit toggles. |
 | 4 | Goal | `/(onboarding)/goal` | Selection cards for fitness goals. |
-| 5 | Preferences | `/(onboarding)/preferences` | "Glow Focus" chips, notification toggles. |
+| 5 | Preferences | `/(onboarding)/preferences` | Focus chips, training preferences, notification toggles. |
 | 6 | Complete | `/(onboarding)/complete` | Success animation, "Get Started" button. |
 
 **Deep Links:**

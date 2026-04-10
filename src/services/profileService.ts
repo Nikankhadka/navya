@@ -30,11 +30,13 @@ export const profileService = {
   async upsertProfile(userId: string, profile: Partial<UserProfile>): Promise<void> {
     const { error } = await supabase
       .from('user_profiles')
-      .upsert({
-        id: userId,
-        ...profile,
-        updated_at: new Date().toISOString(),
-      });
+      .upsert(
+        {
+          id: userId,
+          ...profile,
+          updated_at: new Date().toISOString(),
+        } as unknown as never
+      );
 
     if (error) {
       console.error('Error upserting profile:', error);

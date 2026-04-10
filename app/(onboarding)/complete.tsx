@@ -56,10 +56,10 @@ export default function CompleteScreen() {
             <>
               <ActivityIndicator size="large" color="#3b82f6" />
               <Text className="text-white text-2xl font-bold mt-8 text-center">
-                Building your personal glow plan...
+                Saving your fitness profile...
               </Text>
               <Text className="text-slate-400 text-center mt-4 px-8">
-                Analyzing your metrics and goals to create the perfect foundations.
+                Preparing your onboarding data so your dashboard is ready to use.
               </Text>
             </>
           )}

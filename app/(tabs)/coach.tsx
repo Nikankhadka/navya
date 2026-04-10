@@ -12,16 +12,29 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
-import { MOCK_COACH_MESSAGES, DEMO_COACH_RESPONSES, COACH_QUICK_REPLIES } from '../../src/mocks/mockData';
+import { COACH_QUICK_REPLIES } from '../../src/mocks/mockData';
 import { formatTimeAgo } from '../../src/utils/helpers';
 import type { CoachMessage } from '../../src/types/app';
+import { useAuthStore } from '../../src/stores/useAuthStore';
+import { useCoachMessages } from '../../src/hooks/useCoachMessages';
+import { useFeatureFlags } from '../../src/hooks/useFeatureFlags';
+import { coachService } from '../../src/services/coachService';
 
 export default function CoachScreen() {
   const insets = useSafeAreaInsets();
-  const [messages, setMessages] = useState<CoachMessage[]>(MOCK_COACH_MESSAGES);
+  const { user } = useAuthStore();
+  const { data: initialMessages } = useCoachMessages(user?.id);
+  const { data: featureFlags } = useFeatureFlags();
+  const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (initialMessages) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages]);
 
   const scrollToBottom = () => {
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
@@ -31,13 +44,13 @@ export default function CoachScreen() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = (text?: string) => {
+  const handleSend = async (text?: string) => {
     const content = text ?? inputText.trim();
-    if (!content) return;
+    if (!content || !user?.id || featureFlags?.ai_enabled === false) return;
 
     const userMsg: CoachMessage = {
       id: `msg-${Date.now()}`,
-      user_id: 'mock-user-1',
+      user_id: user.id,
       action_type: 'quick_reply',
       role: 'user',
       text: content,
@@ -48,25 +61,9 @@ export default function CoachScreen() {
     setInputText('');
     setIsTyping(true);
 
-    // Simulate AI response delay
-    setTimeout(
-      () => {
-        const reply = DEMO_COACH_RESPONSES[
-          Math.floor(Math.random() * DEMO_COACH_RESPONSES.length)
-        ];
-        const coachMsg: CoachMessage = {
-          id: `msg-${Date.now() + 1}`,
-          user_id: 'mock-user-1',
-          action_type: 'quick_reply',
-          role: 'coach',
-          text: reply,
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, coachMsg]);
-        setIsTyping(false);
-      },
-      900 + Math.random() * 700
-    );
+    const coachMsg = await coachService.requestQuickReply(user.id, content);
+    setMessages((prev) => [...prev, coachMsg]);
+    setIsTyping(false);
   };
 
   return (
@@ -86,12 +83,16 @@ export default function CoachScreen() {
               <Text style={styles.coachName}>AI Coach</Text>
               <View style={styles.onlineRow}>
                 <View style={styles.onlineDot} />
-                <Text style={styles.onlineText}>Active · Knows your plan</Text>
+                <Text style={styles.onlineText}>
+                  {featureFlags?.ai_enabled === false ? 'Offline' : 'Active'}
+                </Text>
               </View>
             </View>
           </View>
           <View style={styles.limitBadge}>
-            <Text style={styles.limitText}>8/10 today</Text>
+            <Text style={styles.limitText}>
+              {featureFlags?.ai_enabled === false ? 'AI disabled' : 'Limited AI'}
+            </Text>
           </View>
         </View>
 
@@ -199,6 +200,7 @@ export default function CoachScreen() {
             maxLength={300}
             returnKeyType="send"
             onSubmitEditing={() => handleSend()}
+            editable={featureFlags?.ai_enabled !== false}
           />
           <TouchableOpacity
             style={[
@@ -206,7 +208,7 @@ export default function CoachScreen() {
               inputText.trim() ? styles.sendBtnActive : styles.sendBtnInactive,
             ]}
             onPress={() => handleSend()}
-            disabled={!inputText.trim() || isTyping}
+            disabled={!inputText.trim() || isTyping || featureFlags?.ai_enabled === false}
             activeOpacity={0.85}
           >
             <Text style={styles.sendBtnText}>↑</Text>

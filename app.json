@@ -14,14 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fitai.app"
+      "bundleIdentifier": "com.navya.app"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0A0A0F",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
-      "package": "com.fitai.app"
+      "package": "com.navya.app"
     },
     "web": {
       "bundler": "metro",
@@ -41,6 +41,10 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "projectName": "Navya",
+      "appEnv": "development"
     }
   }
 }

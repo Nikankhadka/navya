@@ -24,7 +24,7 @@ export default function BodyScreen() {
         </TouchableOpacity>
 
         <Text className="text-white text-3xl font-bold mb-2">Metrics</Text>
-        <Text className="text-slate-400 text-lg mb-8">The health foundation for your glow.</Text>
+        <Text className="text-slate-400 text-lg mb-8">Your baseline for training, recovery, and progress.</Text>
 
         {/* Biometrics */}
         <View className="flex-row justify-between mb-8">

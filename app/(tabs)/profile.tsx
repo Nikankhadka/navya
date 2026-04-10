@@ -11,12 +11,15 @@ import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { Card, Badge, Divider } from '../../src/components/ui';
 import { goalLabel } from '../../src/utils/helpers';
+import { useProfile } from '../../src/hooks/useProfile';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuthStore();
+  const { data: profile } = useProfile(user?.id);
+  const activeUser = profile ?? user;
 
-  if (!user) return null;
+  if (!activeUser) return null;
 
   const stats = [
     { label: 'Workouts', value: '24', suffix: 'this month' },
@@ -26,12 +29,12 @@ export default function ProfileScreen() {
   ];
 
   const setupRows = [
-    { icon: '🎯', label: 'Goal', value: user?.goal ? goalLabel(user.goal) : 'Not set' },
-    { icon: '⚡', label: 'Activity Level', value: user?.activity_level?.replace('_', ' ') || 'Not set' },
-    { icon: '🏋️', label: 'Equipment', value: user?.equipment ? user.equipment.slice(0, 2).join(', ') + (user.equipment.length > 2 ? ' +more' : '') : 'Not set' },
-    { icon: '📅', label: 'Workouts / week', value: `${user.workouts_per_week}x` },
-    { icon: '🥗', label: 'Diet Preference', value: user?.diet_preference?.replace('_', ' ') || 'Not set' },
-    { icon: '📍', label: 'Country', value: user.country === 'AU' ? 'Australia 🇦🇺' : user.country === 'NP' ? 'Nepal 🇳🇵' : 'Other' },
+    { icon: '🎯', label: 'Goal', value: activeUser?.goal ? goalLabel(activeUser.goal) : 'Not set' },
+    { icon: '⚡', label: 'Activity Level', value: activeUser?.activity_level?.replace('_', ' ') || 'Not set' },
+    { icon: '🏋️', label: 'Equipment', value: activeUser?.equipment ? activeUser.equipment.slice(0, 2).join(', ') + (activeUser.equipment.length > 2 ? ' +more' : '') : 'Not set' },
+    { icon: '📅', label: 'Workouts / week', value: `${activeUser.workouts_per_week ?? 0}x` },
+    { icon: '🥗', label: 'Diet Preference', value: activeUser?.diet_preference?.replace('_', ' ') || 'Not set' },
+    { icon: '📍', label: 'Country', value: activeUser.country === 'AU' ? 'Australia 🇦🇺' : activeUser.country === 'NP' ? 'Nepal 🇳🇵' : 'Other' },
   ];
 
   return (
@@ -45,11 +48,11 @@ export default function ProfileScreen() {
         <View style={styles.avatarContainer}>
           <Text style={styles.avatarEmoji}>🧑‍💪</Text>
         </View>
-        <Text style={styles.fullName}>{user.full_name}</Text>
-        <Text style={styles.email}>{user.email}</Text>
+        <Text style={styles.fullName}>{activeUser.full_name ?? 'Navya User'}</Text>
+        <Text style={styles.email}>{activeUser.email}</Text>
         <View style={styles.badgeRow}>
-          {user?.goal && <Badge label={goalLabel(user.goal)} color={Colors.accent} />}
-          {user?.experience_level && <Badge label={user.experience_level} color={Colors.green} />}
+          {activeUser?.goal && <Badge label={goalLabel(activeUser.goal)} color={Colors.accent} />}
+          {activeUser?.experience_level && <Badge label={activeUser.experience_level} color={Colors.green} />}
         </View>
       </View>
 
@@ -70,7 +73,7 @@ export default function ProfileScreen() {
         <View style={styles.metricsRow}>
           <View style={styles.metric}>
             <Text style={styles.metricVal}>
-              {user.weight_kg ?? '—'}
+              {activeUser.weight_kg ?? '—'}
               <Text style={styles.metricUnit}> kg</Text>
             </Text>
             <Text style={styles.metricLabel}>Weight</Text>
@@ -78,7 +81,7 @@ export default function ProfileScreen() {
           <View style={styles.metricDivider} />
           <View style={styles.metric}>
             <Text style={styles.metricVal}>
-              {user.height_cm ?? '—'}
+              {activeUser.height_cm ?? '—'}
               <Text style={styles.metricUnit}> cm</Text>
             </Text>
             <Text style={styles.metricLabel}>Height</Text>
@@ -86,8 +89,8 @@ export default function ProfileScreen() {
           <View style={styles.metricDivider} />
           <View style={styles.metric}>
             <Text style={styles.metricVal}>
-              {user.weight_kg && user.height_cm
-                ? (user.weight_kg / Math.pow(user.height_cm / 100, 2)).toFixed(1)
+              {activeUser.weight_kg && activeUser.height_cm
+                ? (activeUser.weight_kg / Math.pow(activeUser.height_cm / 100, 2)).toFixed(1)
                 : '—'}
             </Text>
             <Text style={styles.metricLabel}>BMI</Text>

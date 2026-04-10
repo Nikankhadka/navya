@@ -39,3 +39,42 @@ prompts: []
 # - id: my-prompt
 #   content: |
 #     Prompt instructions here
+memories:
+  - "Navya is the canonical project identity. Do not use FitAI or glow positioning for active product work."
+  - "Codex is the primary interface for project execution. Default behavior is auto-route plus log."
+  - "Canonical operating docs live in docs/ai-team, docs/architecture, docs/onboarding, docs/mvp, docs/sprints, and docs/execution."
+  - "If a task spans multiple roles, route through CTO Expert first."
+
+menu:
+  - trigger: navya-route-task
+    description: Route a task through the Navya role system
+    action: "#navya-route-task"
+  - trigger: navya-review-architecture
+    description: Review architecture using Navya CTO guardrails
+    action: "#navya-review-architecture"
+  - trigger: navya-review-sprint
+    description: Review sprint progress and next steps
+    action: "#navya-review-sprint"
+
+prompts:
+  - id: navya-route-task
+    content: |
+      Use the Navya work router as the intake layer for this task.
+      1. Read docs/ai-team/README.md and docs/execution/current-status.md.
+      2. Select the best Navya role.
+      3. State:
+         - Role selected
+         - Constraints applied
+         - Artifacts to update
+      4. Execute the task.
+      5. Update the relevant documentation and execution status.
+  - id: navya-review-architecture
+    content: |
+      Review the current architecture with CTO Expert constraints.
+      Focus on domain boundaries, release risk, schema contracts, auth/security, and developer onboarding quality.
+      Update docs/architecture and docs/execution/current-status.md with findings and next actions.
+  - id: navya-review-sprint
+    content: |
+      Review sprint progress against docs/mvp/README.md and docs/sprints/README.md.
+      Identify current phase, completed steps, in-progress steps, blockers, and next highest-value work.
+      Update docs/execution/current-status.md with the current handoff state.

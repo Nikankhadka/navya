@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
-import { Card, Button, SectionHeader } from '../../src/components/ui';
+import { Card, SectionHeader } from '../../src/components/ui';
 import { MacroRing } from '../../src/components/ui/MacroRing';
-import { MOCK_DAILY_NUTRITION } from '../../src/mocks/mockData';
 import { formatTime, mealTimeLabel } from '../../src/utils/helpers';
 import type { FoodLog } from '../../src/types/app';
+import { useAuthStore } from '../../src/stores/useAuthStore';
+import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
 
 type MealTime = FoodLog['meal_time'];
 
@@ -40,17 +41,26 @@ const EMPTY_FORM: NewMealForm = {
 
 export default function NutritionScreen() {
   const insets = useSafeAreaInsets();
-  const [meals, setMeals] = useState<FoodLog[]>(MOCK_DAILY_NUTRITION.meals);
-  const [totalCal, setTotalCal] = useState(MOCK_DAILY_NUTRITION.total_calories);
-  const [totalProtein, setTotalProtein] = useState(MOCK_DAILY_NUTRITION.total_protein_g);
+  const { user } = useAuthStore();
+  const { data: nutritionSummary } = useDailyNutrition(user?.id);
+  const [meals, setMeals] = useState<FoodLog[]>([]);
+  const [totalCal, setTotalCal] = useState(0);
+  const [totalProtein, setTotalProtein] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewMealForm>(EMPTY_FORM);
+
+  useEffect(() => {
+    if (!nutritionSummary) return;
+    setMeals(nutritionSummary.meals);
+    setTotalCal(nutritionSummary.total_calories);
+    setTotalProtein(nutritionSummary.total_protein_g);
+  }, [nutritionSummary]);
 
   const handleAddMeal = () => {
     if (!form.meal_name.trim() || !form.calories) return;
     const newMeal: FoodLog = {
       id: `meal-${Date.now()}`,
-      user_id: 'mock-user-1',
+      user_id: user?.id ?? 'local-preview-user',
       meal_name: form.meal_name,
       calories: Number(form.calories),
       protein_g: form.protein_g ? Number(form.protein_g) : null,
@@ -67,8 +77,8 @@ export default function NutritionScreen() {
     setShowModal(false);
   };
 
-  const calorieGoal = MOCK_DAILY_NUTRITION.calorie_goal;
-  const proteinGoal = MOCK_DAILY_NUTRITION.protein_goal_g;
+  const calorieGoal = nutritionSummary?.calorie_goal ?? 2200;
+  const proteinGoal = nutritionSummary?.protein_goal_g ?? 140;
   const carbGoal = 240;
   const fatGoal = 70;
   const remaining = calorieGoal - totalCal;
@@ -125,7 +135,7 @@ export default function NutritionScreen() {
                 unit="g"
               />
               <MacroRing
-                value={MOCK_DAILY_NUTRITION.total_carbs_g}
+                value={nutritionSummary?.total_carbs_g ?? 0}
                 max={carbGoal}
                 size={85}
                 color={Colors.green}
@@ -133,7 +143,7 @@ export default function NutritionScreen() {
                 unit="g"
               />
               <MacroRing
-                value={MOCK_DAILY_NUTRITION.total_fat_g}
+                value={nutritionSummary?.total_fat_g ?? 0}
                 max={fatGoal}
                 size={85}
                 color={Colors.blue}

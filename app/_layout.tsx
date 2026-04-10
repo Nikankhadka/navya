@@ -7,6 +7,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../src/stores/useAuthStore';
 import { WebWrapper } from '../src/components/ui/WebWrapper';
 import { View, ActivityIndicator } from 'react-native';
+import * as Linking from 'expo-linking';
+import { Colors } from '../src/constants/theme';
+import { createSessionFromUrl } from '../src/services/supabase';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,11 +24,19 @@ export default function RootLayout() {
   const { initializeAuth, isInitialized, isAuthenticated } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
+  const incomingUrl = Linking.useURL();
 
   // Initialize auth exactly once
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  useEffect(() => {
+    if (!incomingUrl) return;
+    createSessionFromUrl(incomingUrl).catch((error) => {
+      console.error('Deep link auth error:', error);
+    });
+  }, [incomingUrl]);
 
   // Auth Guard
   useEffect(() => {
@@ -54,8 +65,8 @@ export default function RootLayout() {
 
   if (!isInitialized) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
-        <ActivityIndicator size="large" color="#fff" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.bg }}>
+        <ActivityIndicator size="large" color={Colors.text} />
       </View>
     );
   }

@@ -9,15 +9,20 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { useWorkoutStore } from '../../src/stores/useWorkoutStore';
-import { Card, Button, SectionHeader, EmptyState } from '../../src/components/ui';
+import { Card, EmptyState } from '../../src/components/ui';
 import { ExerciseRow, PlanDayCard } from '../../src/components/workout';
-import { MOCK_PLAN, MOCK_TODAY_SESSION } from '../../src/mocks/mockData';
 import { formatDuration, sessionProgress } from '../../src/utils/helpers';
 import { crossAlert } from '../../src/utils/crossAlert';
-import type { WorkoutSession } from '../../src/types/app';
+import { useAuthStore } from '../../src/stores/useAuthStore';
+import { useActivePlan } from '../../src/hooks/useActivePlan';
+import { useTodaySession } from '../../src/hooks/useTodaySession';
 
 export default function WorkoutScreen() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuthStore();
+  const userId = user?.id;
+  const { data: activePlan } = useActivePlan(userId);
+  const { data: todaySessionData } = useTodaySession(userId);
   const { activeSession, elapsedSeconds, timerActive, startSession, endSession, skipExercise, markExerciseDone, tickTimer } = useWorkoutStore();
   const [tab, setTab] = useState<'today' | 'plan'>('today');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -35,7 +40,9 @@ export default function WorkoutScreen() {
   }, [timerActive, tickTimer]);
 
   const handleStartSession = () => {
-    startSession(MOCK_TODAY_SESSION);
+    if (todaySessionData) {
+      startSession(todaySessionData);
+    }
   };
 
   const handleCompleteSet = (exerciseId: string) => {
@@ -165,32 +172,42 @@ export default function WorkoutScreen() {
                     <View style={styles.todayBadge}>
                       <Text style={styles.todayBadgeText}>TODAY</Text>
                     </View>
-                    <Text style={styles.todayTitle}>{MOCK_TODAY_SESSION.day_name}</Text>
+                    <Text style={styles.todayTitle}>{todaySessionData?.day_name ?? 'No session ready'}</Text>
                     <Text style={styles.todayMeta}>
-                      {MOCK_TODAY_SESSION.session_exercises.length} exercises · ~50 min
+                      {todaySessionData ? `${todaySessionData.session_exercises.length} exercises` : 'Connect your plan data to load today’s session'}
                     </Text>
                   </View>
 
-                  <View style={styles.exercisePreview}>
-                    {MOCK_TODAY_SESSION.session_exercises.slice(0, 3).map((ex, i) => (
-                      <View key={i} style={styles.previewRow}>
-                        <View style={styles.previewDot} />
-                        <Text style={styles.previewName}>{ex.exercise_name}</Text>
-                        <Text style={styles.previewMeta}>
-                          {ex.planned_sets}×{ex.planned_reps}
-                        </Text>
+                  {todaySessionData ? (
+                    <>
+                      <View style={styles.exercisePreview}>
+                        {todaySessionData.session_exercises.slice(0, 3).map((ex, i) => (
+                          <View key={i} style={styles.previewRow}>
+                            <View style={styles.previewDot} />
+                            <Text style={styles.previewName}>{ex.exercise_name}</Text>
+                            <Text style={styles.previewMeta}>
+                              {ex.planned_sets}×{ex.planned_reps}
+                            </Text>
+                          </View>
+                        ))}
+                        {todaySessionData.session_exercises.length > 3 && (
+                          <Text style={styles.moreExercises}>
+                            +{todaySessionData.session_exercises.length - 3} more
+                          </Text>
+                        )}
                       </View>
-                    ))}
-                    {MOCK_TODAY_SESSION.session_exercises.length > 3 && (
-                      <Text style={styles.moreExercises}>
-                        +{MOCK_TODAY_SESSION.session_exercises.length - 3} more
-                      </Text>
-                    )}
-                  </View>
 
-                  <TouchableOpacity style={styles.startBtn} onPress={handleStartSession} activeOpacity={0.85}>
-                    <Text style={styles.startBtnText}>Start Session →</Text>
-                  </TouchableOpacity>
+                      <TouchableOpacity style={styles.startBtn} onPress={handleStartSession} activeOpacity={0.85}>
+                        <Text style={styles.startBtnText}>Start Session →</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <EmptyState
+                      emoji="🏋️"
+                      title="No session ready"
+                      subtitle="A live session will appear here after your workout plan and session data are connected."
+                    />
+                  )}
                 </Card>
               </>
             )}
@@ -199,20 +216,28 @@ export default function WorkoutScreen() {
           /* ── Plan tab ──────────────────────────────────────────── */
           <>
             <Card style={styles.planHeaderCard}>
-              <Text style={styles.planName}>{MOCK_PLAN.name}</Text>
+              <Text style={styles.planName}>{activePlan?.name ?? 'No active workout plan'}</Text>
               <Text style={styles.planMeta}>
-                {MOCK_PLAN.workout_plan_days.length} training days / week
+                {activePlan ? `${activePlan.workout_plan_days.length} training days / week` : 'Create or sync a plan to see your week'}
               </Text>
             </Card>
 
-            {MOCK_PLAN.workout_plan_days.map((day) => (
-              <PlanDayCard
-                key={day.id}
-                day={day}
-                isToday={day.day_of_week === 'monday'}
-                onPress={() => {}}
+            {activePlan ? (
+              activePlan.workout_plan_days.map((day) => (
+                <PlanDayCard
+                  key={day.id}
+                  day={day}
+                  isToday={day.day_of_week === 'monday'}
+                  onPress={() => {}}
+                />
+              ))
+            ) : (
+              <EmptyState
+                emoji="📋"
+                title="No workout plan yet"
+                subtitle="Your structured weekly plan will appear here once it is generated or synced."
               />
-            ))}
+            )}
           </>
         )}
         <View style={{ height: 40 }} />

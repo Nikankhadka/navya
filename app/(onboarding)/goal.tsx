@@ -50,7 +50,7 @@ export default function GoalScreen() {
         </TouchableOpacity>
 
         <Text className="text-white text-3xl font-bold mb-2">What's your goal?</Text>
-        <Text className="text-slate-400 text-lg mb-8">This tailors your fitness and glow plan.</Text>
+        <Text className="text-slate-400 text-lg mb-8">This tailors your fitness plan and coaching guidance.</Text>
 
         {GOALS.map((item) => (
           <TouchableOpacity

@@ -9,7 +9,7 @@ import type {
 
 export const MOCK_PROFILE: UserProfile = {
   id: 'mock-user-1',
-  email: 'arjun@fitai.app',
+  email: 'arjun@navya.app',
   full_name: 'Arjun Sharma',
   avatar_url: null,
   age_range: '25-34',

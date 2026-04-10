@@ -1,6 +1,6 @@
-# Navya Tech Stack (All-in-one Glow App)
+# Navya Tech Stack
 
-This document serves as the authoritative technical reference for the Navya project, starting with its **Fitness & Health phase**.
+This document serves as a quick technical summary for Navya. Canonical architecture and standards now live under `docs/architecture/` and `docs/standards/`.
 
 ## Core Stack
 
@@ -14,7 +14,7 @@ This document serves as the authoritative technical reference for the Navya proj
 
 ### Backend
 - **Platform:** Supabase (PostgreSQL, Auth, Storage, Edge Functions)
-- **Authentication:** Supabase Auth (Email/Password, Google, Facebook, Apple)
+- **Authentication:** Supabase Auth (Email OTP, Google, Apple)
 - **Storage:** Supabase Storage (Media/Assets)
 - **Database:** PostgreSQL (with RLS enabled)
 
@@ -27,5 +27,4 @@ This document serves as the authoritative technical reference for the Navya proj
 - **Package Manager:** npm (with `--legacy-peer-deps` for React 19 compatibility)
 - **Tools:** Claude CLI, Supabase CLI
 - **Linting/Types:** Strict TypeScript, ESLint (Standard Expo config)
-
 

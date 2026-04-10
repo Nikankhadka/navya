@@ -22,7 +22,7 @@ export default function WelcomeScreen() {
           </Text>
           
           <Text className="text-slate-400 text-lg text-center mb-12 px-4 leading-6">
-            Your AI Glow Coach. Let's build your personalized plan for fitness, skin, and longevity.
+            Your AI fitness companion. Let's build your personalized training and nutrition foundation.
           </Text>
 
           <TouchableOpacity

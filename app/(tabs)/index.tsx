@@ -14,13 +14,11 @@ import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { Card, Badge, SectionHeader } from '../../src/components/ui';
 import { ProgressBar } from '../../src/components/ui/MacroRing';
-import {
-  MOCK_WEEKLY_STREAK,
-  MOCK_DAILY_NUTRITION,
-  MOCK_TODAY_SESSION,
-  MOCK_COACH_MESSAGES,
-} from '../../src/mocks/mockData';
-import { formatDuration, getWeekDayLabels, sessionProgress } from '../../src/utils/helpers';
+import { MOCK_WEEKLY_STREAK } from '../../src/mocks/mockData';
+import { getWeekDayLabels, sessionProgress } from '../../src/utils/helpers';
+import { useTodaySession } from '../../src/hooks/useTodaySession';
+import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
+import { useCoachMessages } from '../../src/hooks/useCoachMessages';
 
 const WEEK_LABELS = getWeekDayLabels();
 
@@ -28,7 +26,11 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
+  const userId = user?.id;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { data: todaySession } = useTodaySession(userId);
+  const { data: dailyNutrition } = useDailyNutrition(userId);
+  const { data: coachMessages } = useCoachMessages(userId);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -38,13 +40,16 @@ export default function HomeScreen() {
     }).start();
   }, [fadeAnim]);
 
-  const doneExercises = MOCK_TODAY_SESSION.session_exercises.filter(
+  const doneExercises = todaySession?.session_exercises.filter(
     (ex) => ex.completed_sets.length >= ex.planned_sets
-  ).length;
-  const totalExercises = MOCK_TODAY_SESSION.session_exercises.length;
-  const workoutPct = sessionProgress(MOCK_TODAY_SESSION);
-  const calorieRemaining =
-    MOCK_DAILY_NUTRITION.calorie_goal - MOCK_DAILY_NUTRITION.total_calories;
+  ).length ?? 0;
+  const totalExercises = todaySession?.session_exercises.length ?? 0;
+  const workoutPct = todaySession ? sessionProgress(todaySession) : 0;
+  const calorieRemaining = dailyNutrition
+    ? dailyNutrition.calorie_goal - dailyNutrition.total_calories
+    : 0;
+  const coachPreview =
+    coachMessages?.[0]?.text ?? 'Your coach will start guiding you once your activity data is available.';
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -95,9 +100,9 @@ export default function HomeScreen() {
       <Card style={styles.workoutCard}>
         <View style={styles.workoutCardTop}>
           <View>
-            <Text style={styles.workoutTitle}>{MOCK_TODAY_SESSION.day_name}</Text>
+            <Text style={styles.workoutTitle}>{todaySession?.day_name ?? 'No session scheduled yet'}</Text>
             <Text style={styles.workoutMeta}>
-              {totalExercises} exercises · ~50 min
+              {todaySession ? `${totalExercises} exercises` : 'Create or sync a plan to see today’s session'}
             </Text>
           </View>
           <Badge
@@ -121,7 +126,7 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/workout')}
         >
           <Text style={styles.startBtnText}>
-            {doneExercises > 0 ? 'Continue Workout →' : 'Start Workout →'}
+            {todaySession ? (doneExercises > 0 ? 'Continue Workout →' : 'Start Workout →') : 'Open Workout →'}
           </Text>
         </TouchableOpacity>
       </Card>
@@ -132,9 +137,9 @@ export default function HomeScreen() {
       <Card>
         <View style={styles.calRow}>
           <View style={styles.calMain}>
-            <Text style={styles.calNumber}>{MOCK_DAILY_NUTRITION.total_calories}</Text>
+            <Text style={styles.calNumber}>{dailyNutrition?.total_calories ?? 0}</Text>
             <Text style={styles.calLabel}>
-              of {MOCK_DAILY_NUTRITION.calorie_goal} kcal
+              of {dailyNutrition?.calorie_goal ?? 0} kcal
             </Text>
           </View>
           <View
@@ -160,9 +165,9 @@ export default function HomeScreen() {
 
         <View style={styles.macrosGrid}>
           {([
-            { label: 'Protein', value: MOCK_DAILY_NUTRITION.total_protein_g, goal: MOCK_DAILY_NUTRITION.protein_goal_g, color: Colors.accent, unit: 'g' },
-            { label: 'Carbs', value: MOCK_DAILY_NUTRITION.total_carbs_g, goal: 240, color: Colors.green, unit: 'g' },
-            { label: 'Fat', value: MOCK_DAILY_NUTRITION.total_fat_g, goal: 70, color: Colors.orange, unit: 'g' },
+            { label: 'Protein', value: dailyNutrition?.total_protein_g ?? 0, goal: dailyNutrition?.protein_goal_g ?? 140, color: Colors.accent, unit: 'g' },
+            { label: 'Carbs', value: dailyNutrition?.total_carbs_g ?? 0, goal: 240, color: Colors.green, unit: 'g' },
+            { label: 'Fat', value: dailyNutrition?.total_fat_g ?? 0, goal: 70, color: Colors.orange, unit: 'g' },
           ] as const).map((macro) => (
             <View key={macro.label} style={styles.macroItem}>
               <ProgressBar
@@ -196,7 +201,7 @@ export default function HomeScreen() {
           <View style={styles.coachContent}>
             <Text style={styles.coachBadge}>Daily Insight</Text>
             <Text style={styles.coachText} numberOfLines={3}>
-              {MOCK_COACH_MESSAGES[0].text}
+              {coachPreview}
             </Text>
             <Text style={styles.coachCta}>Chat with coach →</Text>
           </View>

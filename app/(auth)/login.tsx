@@ -1,57 +1,51 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Button, Input, Divider } from '../../src/components/ui';
-import { Colors, Spacing, Typography, Radius, Shadow } from '../../src/constants/theme';
-import { supabase } from '../../src/services/supabase';
+import { Stack } from 'expo-router';
+import { Button, Input } from '../../src/components/ui';
+import { Colors, Spacing, Typography } from '../../src/constants/theme';
+import { createSessionFromUrl, getAuthRedirectUrl, supabase } from '../../src/services/supabase';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
-  const router = useRouter();
-  const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleEmailAuth() {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password.');
+    if (!email) {
+      Alert.alert('Error', 'Please enter your email address.');
       return;
     }
 
-    setLoading(true);
-    let authError = null;
-
-    if (isSignIn) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      authError = error;
-    } else {
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
         options: {
-          data: {
-            first_name: email.split('@')[0], 
-          }
-        }
+          emailRedirectTo: getAuthRedirectUrl(),
+          shouldCreateUser: true,
+        },
       });
-      authError = error;
-      if (!error) {
-        Alert.alert('Success', 'Check your email for the confirmation link.');
-      }
-    }
 
-    if (authError) {
-      Alert.alert('Authentication Error', authError.message);
+      if (error) {
+        throw error;
+      }
+
+      Alert.alert(
+        'Check your inbox',
+        'We sent a sign-in link to your email. Open it on this device to continue.',
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to send sign-in link.';
+      Alert.alert('Authentication Error', message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
-  async function handleOAuth(provider: 'google' | 'facebook' | 'apple') {
+  async function handleOAuth(provider: 'google' | 'apple') {
     setLoading(true);
 
     if (provider === 'apple' && Platform.OS === 'ios') {
@@ -84,7 +78,7 @@ export default function LoginScreen() {
     }
 
     try {
-      const redirectUrl = Linking.createURL('/(tabs)');
+      const redirectUrl = getAuthRedirectUrl();
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -101,31 +95,7 @@ export default function LoginScreen() {
           const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
           
           if (result.type === 'success') {
-            const url = result.url;
-            // Parse URL parameters or fragments
-            const parsedUrl = Linking.parse(url);
-            let access_token = '';
-            let refresh_token = '';
-            
-            if (parsedUrl.queryParams) {
-              access_token = parsedUrl.queryParams.access_token as string;
-              refresh_token = parsedUrl.queryParams.refresh_token as string;
-            }
-
-            // Fallback for fragmented hash parsing
-            if (!access_token && url.includes('#')) {
-              const hashObj = url.split('#')[1].split('&').reduce((acc: any, item) => {
-                const [k, v] = item.split('=');
-                acc[k] = decodeURIComponent(v);
-                return acc;
-              }, {});
-              access_token = hashObj.access_token;
-              refresh_token = hashObj.refresh_token;
-            }
-
-            if (access_token && refresh_token) {
-               await supabase.auth.setSession({ access_token, refresh_token });
-            }
+            await createSessionFromUrl(result.url);
           }
         }
       }
@@ -147,7 +117,7 @@ export default function LoginScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Navya</Text>
           <Text style={styles.subtitle}>
-            {isSignIn ? 'Sign in to continue your fitness journey' : 'Create an account to get started'}
+            Sign in with a secure magic link to continue your training journey.
           </Text>
         </View>
 
@@ -160,37 +130,13 @@ export default function LoginScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <Input 
-            label="Password" 
-            placeholder="••••••••" 
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-
-          <View style={styles.forgotPasswordContainer}>
-            <Button 
-              label="Forgot Password?" 
-              variant="ghost" 
-              size="sm"
-              onPress={() => Alert.alert('Coming Soon', 'Password reset will be implemented in the future.')}
-            />
-          </View>
 
           <Button 
-            label={isSignIn ? "Sign In" : "Sign Up"} 
+            label="Send Magic Link" 
             fullWidth 
             loading={loading}
             onPress={handleEmailAuth}
             style={[{ marginTop: Spacing.sm }]}
-          />
-
-          <Button 
-            label={isSignIn ? "Create an account" : "Already have an account? Sign In"} 
-            variant="ghost" 
-            fullWidth 
-            onPress={() => setIsSignIn(!isSignIn)}
-            style={[{ marginTop: Spacing.md }]}
           />
         </View>
 
@@ -215,14 +161,6 @@ export default function LoginScreen() {
             variant="secondary" 
             fullWidth
             onPress={() => handleOAuth('google')}
-            disabled={loading}
-            style={[{ marginTop: Spacing.md }]}
-          />
-          <Button 
-            label="Continue with Facebook" 
-            variant="secondary" 
-            fullWidth
-            onPress={() => handleOAuth('facebook')}
             disabled={loading}
             style={[{ marginTop: Spacing.md }]}
           />
@@ -266,11 +204,6 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     marginBottom: Spacing.xxl,
-  },
-  forgotPasswordContainer: {
-    alignItems: 'flex-end',
-    marginBottom: Spacing.lg,
-    marginTop: -Spacing.xs,
   },
   dividerContainer: {
     flexDirection: 'row',

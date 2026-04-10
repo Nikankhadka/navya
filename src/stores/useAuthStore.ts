@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { UserProfile } from '../types/app';
 import { supabase } from '../services/supabase';
 import type { Session } from '@supabase/supabase-js';
+import { profileService } from '../services/profileService';
 
 interface AuthState {
   user: Partial<UserProfile> | null;
@@ -15,6 +16,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   setProfile: (profile: Partial<UserProfile>) => void;
+  refreshProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -25,6 +27,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
 
   setLoading: (isLoading) => set({ isLoading }),
+
+  refreshProfile: async () => {
+    const session = get().session;
+
+    if (!session?.user.id) {
+      return;
+    }
+
+    const profile = await profileService.getProfile(session.user.id);
+
+    if (profile) {
+      set({ user: { ...profile, email: session.user.email, id: session.user.id } });
+      return;
+    }
+
+    set({
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        onboarding_complete: false,
+      },
+    });
+  },
 
   initializeAuth: async () => {
     try {
@@ -39,14 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (session) {
         set({ session, isAuthenticated: true });
-        // Fetch profile
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-          
-        set({ user: { ...profile, email: session.user.email, id: session.user.id } });
+        await get().refreshProfile();
       }
 
       // Listen for auth state changes
@@ -54,13 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ session: newSession, isAuthenticated: !!newSession });
         
         if (newSession) {
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', newSession.user.id)
-            .single();
-            
-          set({ user: { ...profile, email: newSession.user.email, id: newSession.user.id } });
+          await get().refreshProfile();
         } else {
           set({ user: null });
         }
