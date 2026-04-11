@@ -82,6 +82,8 @@ In your Supabase dashboard:
 1. Enable Email auth.
 2. Make sure magic link / OTP sign-in is allowed.
 3. Add `navya://auth/callback` as an allowed redirect URL.
+4. For local web testing, also add `http://localhost:8081/auth/callback`.
+5. If you use a different local web host or port, add that exact `/auth/callback` URL too.
 
 Optional:
 
@@ -121,6 +123,12 @@ npm run start
 3. Use the magic-link email form on the login screen.
 4. Open the sign-in link on the same device if possible.
 5. After login, complete onboarding.
+
+Important notes for magic links:
+
+- Always use the newest email. Older links can fail with `otp_expired`.
+- Some mail clients or link-scanners can consume one-time links before you open them. If that happens, request a fresh email and open it immediately.
+- Local web testing requires the exact localhost callback URL to be allow-listed in Supabase, not just the native `navya://` scheme.
 
 Once the user exists, copy that user id from Supabase:
 

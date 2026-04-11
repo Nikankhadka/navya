@@ -10,6 +10,7 @@ export function useNutritionActions(userId?: string) {
       nutritionService.addMeal(userId ?? '', meal),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['habit-streak', userId] });
     },
   });
 
@@ -17,8 +18,17 @@ export function useNutritionActions(userId?: string) {
     mutationFn: (mealId: string) => nutritionService.deleteMeal(mealId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['habit-streak', userId] });
     },
   });
 
-  return { addMeal, deleteMeal };
+  const addWater = useMutation({
+    mutationFn: (amountMl: number) => nutritionService.addWater(userId ?? '', amountMl),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['habit-streak', userId] });
+    },
+  });
+
+  return { addMeal, deleteMeal, addWater };
 }

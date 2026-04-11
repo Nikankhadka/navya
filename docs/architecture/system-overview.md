@@ -14,15 +14,17 @@ Navya is an Expo application backed by Supabase.
 
 ## Product Focus
 
-- auth
-- onboarding
+- auth and onboarding
+- daily fitness dashboard
 - workout plan viewing and tracking
-- nutrition logging
-- limited AI coach
+- nutrition diary and fast logging
+- progress check-ins for weight and adherence
+- limited AI coach and weekly summaries
 - profile and settings
 
 ## Delivery Philosophy
 
+- upgrade existing tabs and contracts instead of rebuilding the product
 - simple architecture that new developers can follow
 - explicit contracts over clever abstractions
 - typed data boundaries

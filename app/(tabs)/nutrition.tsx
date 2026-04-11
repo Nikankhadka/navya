@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,9 +13,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { Card, SectionHeader } from '../../src/components/ui';
-import { MacroRing } from '../../src/components/ui/MacroRing';
-import { formatTime, mealTimeLabel } from '../../src/utils/helpers';
-import type { FoodLog } from '../../src/types/app';
+import { MacroRing, ProgressBar } from '../../src/components/ui/MacroRing';
+import { formatTime, formatWaterAmount, mealTimeLabel } from '../../src/utils/helpers';
+import type { FoodLog, RecentMealTemplate } from '../../src/types/app';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
 import { useNutritionActions } from '../../src/hooks/useNutritionActions';
@@ -40,48 +40,83 @@ const EMPTY_FORM: NewMealForm = {
   meal_time: 'snack',
 };
 
+const QUICK_ADD_OPTIONS = [
+  { label: '+250ml', amountMl: 250 },
+  { label: '+500ml', amountMl: 500 },
+  { label: '+750ml', amountMl: 750 },
+];
+
+const MEAL_SECTION_ORDER: MealTime[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+
 export default function NutritionScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const { data: nutritionSummary } = useDailyNutrition(user?.id);
-  const { addMeal, deleteMeal } = useNutritionActions(user?.id);
-  const [meals, setMeals] = useState<FoodLog[]>([]);
-  const [totalCal, setTotalCal] = useState(0);
-  const [totalProtein, setTotalProtein] = useState(0);
+  const { addMeal, deleteMeal, addWater } = useNutritionActions(user?.id);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewMealForm>(EMPTY_FORM);
 
-  useEffect(() => {
-    if (!nutritionSummary) return;
-    setMeals(nutritionSummary.meals);
-    setTotalCal(nutritionSummary.total_calories);
-    setTotalProtein(nutritionSummary.total_protein_g);
-  }, [nutritionSummary]);
+  const meals = nutritionSummary?.meals ?? [];
+  const totalCal = nutritionSummary?.total_calories ?? 0;
+  const totalProtein = nutritionSummary?.total_protein_g ?? 0;
+  const totalCarbs = nutritionSummary?.total_carbs_g ?? 0;
+  const totalFat = nutritionSummary?.total_fat_g ?? 0;
+  const calorieGoal = nutritionSummary?.calorie_goal ?? 2200;
+  const proteinGoal = nutritionSummary?.protein_goal_g ?? 140;
+  const carbGoal = 240;
+  const fatGoal = 70;
+  const waterTotal = nutritionSummary?.water_total_ml ?? 0;
+  const waterGoal = nutritionSummary?.water_goal_ml ?? 2500;
+  const recentMeals = nutritionSummary?.recent_meals ?? [];
+  const remaining = calorieGoal - totalCal;
+
+  const mealsByTime = MEAL_SECTION_ORDER.map((mealTime) => ({
+    mealTime,
+    meals: meals.filter((meal) => meal.meal_time === mealTime),
+  }));
 
   const handleAddMeal = async () => {
-    if (!form.meal_name.trim() || !form.calories) return;
-    const newMeal = {
-      meal_name: form.meal_name,
+    if (!form.meal_name.trim() || !form.calories) {
+      return;
+    }
+
+    await addMeal.mutateAsync({
+      meal_name: form.meal_name.trim(),
       calories: Number(form.calories),
       protein_g: form.protein_g ? Number(form.protein_g) : null,
       carbs_g: form.carbs_g ? Number(form.carbs_g) : null,
       fat_g: form.fat_g ? Number(form.fat_g) : null,
       meal_time: form.meal_time,
       notes: null,
-    };
-    const createdMeal = await addMeal.mutateAsync(newMeal);
-    setMeals((prev) => [createdMeal, ...prev]);
-    setTotalCal((c) => c + createdMeal.calories);
-    setTotalProtein((p) => p + (createdMeal.protein_g ?? 0));
+    });
+
     setForm(EMPTY_FORM);
     setShowModal(false);
   };
 
-  const calorieGoal = nutritionSummary?.calorie_goal ?? 2200;
-  const proteinGoal = nutritionSummary?.protein_goal_g ?? 140;
-  const carbGoal = 240;
-  const fatGoal = 70;
-  const remaining = calorieGoal - totalCal;
+  const handleLogRecentMeal = async (meal: RecentMealTemplate) => {
+    await addMeal.mutateAsync({
+      meal_name: meal.meal_name,
+      calories: meal.calories,
+      protein_g: meal.protein_g,
+      carbs_g: meal.carbs_g,
+      fat_g: meal.fat_g,
+      meal_time: meal.meal_time,
+      notes: null,
+    });
+  };
+
+  const handleQuickAddCalories = async () => {
+    await addMeal.mutateAsync({
+      meal_name: 'Quick Add Calories',
+      calories: 200,
+      protein_g: null,
+      carbs_g: null,
+      fat_g: null,
+      meal_time: 'snack',
+      notes: 'Quick add',
+    });
+  };
 
   return (
     <KeyboardAvoidingView
@@ -89,7 +124,6 @@ export default function NutritionScreen() {
       style={{ flex: 1 }}
     >
       <View style={[styles.screen, { paddingTop: insets.top }]}>
-        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.screenTitle}>Nutrition</Text>
@@ -115,7 +149,6 @@ export default function NutritionScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {/* Macro rings */}
           <Card style={styles.macroCard}>
             <View style={styles.ringRow}>
               <MacroRing
@@ -135,7 +168,7 @@ export default function NutritionScreen() {
                 unit="g"
               />
               <MacroRing
-                value={nutritionSummary?.total_carbs_g ?? 0}
+                value={totalCarbs}
                 max={carbGoal}
                 size={85}
                 color={Colors.green}
@@ -143,7 +176,7 @@ export default function NutritionScreen() {
                 unit="g"
               />
               <MacroRing
-                value={nutritionSummary?.total_fat_g ?? 0}
+                value={totalFat}
                 max={fatGoal}
                 size={85}
                 color={Colors.blue}
@@ -152,7 +185,6 @@ export default function NutritionScreen() {
               />
             </View>
 
-            {/* Remaining */}
             <View
               style={[
                 styles.remainingBanner,
@@ -168,62 +200,133 @@ export default function NutritionScreen() {
                   { color: remaining >= 0 ? Colors.green : Colors.red },
                 ]}
               >
-                {remaining >= 0 ? '+' : ''}{remaining} kcal remaining today
+                {remaining >= 0 ? '+' : ''}
+                {remaining} kcal remaining today
               </Text>
             </View>
           </Card>
 
-          {/* Meals */}
+          <SectionHeader title="Hydration" />
+          <Card style={styles.waterCard}>
+            <View style={styles.waterHeader}>
+              <View>
+                <Text style={styles.waterValue}>{formatWaterAmount(waterTotal)}</Text>
+                <Text style={styles.waterMeta}>
+                  of {formatWaterAmount(waterGoal)} target
+                </Text>
+              </View>
+              <View style={styles.waterBadge}>
+                <Text style={styles.waterBadgeText}>Daily habit</Text>
+              </View>
+            </View>
+            <ProgressBar
+              value={waterTotal}
+              max={waterGoal}
+              color={Colors.blue}
+              height={6}
+              showLabel={false}
+            />
+            <View style={styles.waterActions}>
+              {QUICK_ADD_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.label}
+                  style={styles.waterAction}
+                  activeOpacity={0.85}
+                  disabled={addWater.isPending}
+                  onPress={() => addWater.mutate(option.amountMl)}
+                >
+                  <Text style={styles.waterActionText}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Card>
+
           <SectionHeader
-            title="Today's Meals"
+            title="Quick Add"
+            action="+ 200 kcal"
+            onAction={handleQuickAddCalories}
+          />
+          <View style={styles.recentMealsRow}>
+            {recentMeals.length === 0 ? (
+              <Card style={styles.emptyRecentCard}>
+                <Text style={styles.emptyRecentText}>
+                  Log a few meals and your fastest repeat options will appear here.
+                </Text>
+              </Card>
+            ) : (
+              recentMeals.map((meal) => (
+                <TouchableOpacity
+                  key={meal.id}
+                  style={styles.recentMealChip}
+                  activeOpacity={0.85}
+                  onPress={() => handleLogRecentMeal(meal)}
+                >
+                  <Text style={styles.recentMealName} numberOfLines={1}>
+                    {meal.meal_name}
+                  </Text>
+                  <Text style={styles.recentMealMeta}>
+                    {meal.calories} kcal • {mealTimeLabel(meal.meal_time).replace(/^[^\s]+\s/, '')}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+
+          <SectionHeader
+            title="Today's Diary"
             action="+ Add"
             onAction={() => setShowModal(true)}
           />
 
-          {meals.length === 0 ? (
-            <View style={styles.emptyMeals}>
-              <Text style={styles.emptyEmoji}>🍽️</Text>
-              <Text style={styles.emptyText}>No meals logged yet</Text>
+          {mealsByTime.map((section) => (
+            <View key={section.mealTime} style={styles.mealSection}>
+              <View style={styles.mealSectionHeader}>
+                <Text style={styles.mealSectionTitle}>
+                  {mealTimeLabel(section.mealTime)}
+                </Text>
+                <Text style={styles.mealSectionMeta}>
+                  {section.meals.reduce((sum, meal) => sum + meal.calories, 0)} kcal
+                </Text>
+              </View>
+
+              {section.meals.length === 0 ? (
+                <View style={styles.emptyMealSection}>
+                  <Text style={styles.emptyMealSectionText}>
+                    Nothing logged yet
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.mealList}>
+                  {section.meals.map((meal) => (
+                    <TouchableOpacity
+                      key={meal.id}
+                      style={styles.mealRow}
+                      activeOpacity={0.85}
+                      onLongPress={() => deleteMeal.mutate(meal.id)}
+                    >
+                      <View style={styles.mealLeft}>
+                        <Text style={styles.mealName}>{meal.meal_name}</Text>
+                        <Text style={styles.mealTimestamp}>
+                          {formatTime(meal.logged_at)}
+                        </Text>
+                      </View>
+                      <View style={styles.mealRight}>
+                        <Text style={styles.mealCal}>{meal.calories}</Text>
+                        <Text style={styles.mealCalLabel}>kcal</Text>
+                        <Text style={styles.mealMacroLine}>
+                          {meal.protein_g ?? 0}P • {meal.carbs_g ?? 0}C • {meal.fat_g ?? 0}F
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
-          ) : (
-            <View style={styles.mealList}>
-              {meals.map((meal) => (
-                <TouchableOpacity
-                  key={meal.id}
-                  style={styles.mealRow}
-                  activeOpacity={0.85}
-                  onLongPress={async () => {
-                    await deleteMeal.mutateAsync(meal.id);
-                    setMeals((prev) => prev.filter((item) => item.id !== meal.id));
-                    setTotalCal((value) => value - meal.calories);
-                    setTotalProtein((value) => value - (meal.protein_g ?? 0));
-                  }}
-                >
-                  <View style={styles.mealLeft}>
-                    <Text style={styles.mealTimeLabel}>
-                      {mealTimeLabel(meal.meal_time)}
-                    </Text>
-                    <Text style={styles.mealName}>{meal.meal_name}</Text>
-                    <Text style={styles.mealTimestamp}>
-                      {formatTime(meal.logged_at)}
-                    </Text>
-                  </View>
-                  <View style={styles.mealRight}>
-                    <Text style={styles.mealCal}>{meal.calories}</Text>
-                    <Text style={styles.mealCalLabel}>kcal</Text>
-                    {meal.protein_g != null && (
-                      <Text style={styles.mealProtein}>{meal.protein_g}g protein</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
+          ))}
 
           <View style={{ height: 40 }} />
         </ScrollView>
 
-        {/* Add Meal Modal */}
         <Modal
           visible={showModal}
           animationType="slide"
@@ -246,6 +349,7 @@ export default function NutritionScreen() {
                 placeholderTextColor={Colors.dim}
                 value={form.meal_name}
                 onChangeText={(v: string) => setForm((f) => ({ ...f, meal_name: v }))}
+                testID="nutrition-meal-name-input"
               />
 
               <Text style={styles.fieldLabel}>Calories *</Text>
@@ -296,7 +400,7 @@ export default function NutritionScreen() {
 
               <Text style={styles.fieldLabel}>Meal Time</Text>
               <View style={styles.mealTimeRow}>
-                {(['breakfast', 'lunch', 'dinner', 'snack'] as MealTime[]).map((t) => (
+                {MEAL_SECTION_ORDER.map((t) => (
                   <TouchableOpacity
                     key={t}
                     style={[
@@ -325,8 +429,9 @@ export default function NutritionScreen() {
                 onPress={handleAddMeal}
                 disabled={!form.meal_name || !form.calories}
                 activeOpacity={0.85}
+                testID="nutrition-save-meal"
               >
-                <Text style={styles.logBtnText}>Log Meal</Text>
+                <Text style={styles.logBtnText}>Save Meal</Text>
               </TouchableOpacity>
 
               <View style={{ height: 60 }} />
@@ -370,7 +475,6 @@ const styles = StyleSheet.create({
   },
   scroll: { flex: 1 },
   content: { padding: Spacing.xl, paddingBottom: 40 },
-
   macroCard: { marginBottom: Spacing.xxl },
   ringRow: {
     flexDirection: 'row',
@@ -386,11 +490,117 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
     fontSize: Typography.size.sm,
   },
-
-  emptyMeals: { alignItems: 'center', paddingVertical: 40 },
-  emptyEmoji: { fontSize: 40, marginBottom: 8 },
-  emptyText: { color: Colors.muted, fontSize: Typography.size.md },
-
+  waterCard: {
+    marginBottom: Spacing.xxl,
+    gap: Spacing.md,
+  },
+  waterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  waterValue: {
+    color: Colors.text,
+    fontSize: Typography.size.xxl,
+    fontWeight: Typography.weight.extrabold,
+  },
+  waterMeta: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    marginTop: 4,
+  },
+  waterBadge: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.blue + '22',
+    borderWidth: 1,
+    borderColor: Colors.blue + '44',
+  },
+  waterBadgeText: {
+    color: Colors.blue,
+    fontWeight: Typography.weight.bold,
+    fontSize: Typography.size.xs,
+  },
+  waterActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  waterAction: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.bg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  waterActionText: {
+    color: Colors.text,
+    fontWeight: Typography.weight.semibold,
+    fontSize: Typography.size.sm,
+  },
+  recentMealsRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xxl,
+  },
+  emptyRecentCard: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  emptyRecentText: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+  },
+  recentMealChip: {
+    flex: 1,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.xl,
+    padding: Spacing.lg,
+  },
+  recentMealName: {
+    color: Colors.text,
+    fontWeight: Typography.weight.semibold,
+    fontSize: Typography.size.sm,
+    marginBottom: 6,
+  },
+  recentMealMeta: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+  },
+  mealSection: {
+    marginBottom: Spacing.lg,
+  },
+  mealSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  mealSectionTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+  },
+  mealSectionMeta: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+  },
+  emptyMealSection: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.lg,
+  },
+  emptyMealSectionText: {
+    color: Colors.dim,
+    fontSize: Typography.size.sm,
+  },
   mealList: {
     borderRadius: Radius.xl,
     overflow: 'hidden',
@@ -407,27 +617,20 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   mealLeft: { flex: 1, gap: 2 },
-  mealTimeLabel: {
-    color: Colors.accent,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-  },
   mealName: {
     color: Colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
   },
   mealTimestamp: { color: Colors.dim, fontSize: Typography.size.xs },
-  mealRight: { alignItems: 'flex-end' },
+  mealRight: { alignItems: 'flex-end', gap: 4 },
   mealCal: {
     color: Colors.orange,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
   },
   mealCalLabel: { color: Colors.muted, fontSize: Typography.size.xs },
-  mealProtein: { color: Colors.accent, fontSize: Typography.size.xs, marginTop: 2 },
-
-  // Modal
+  mealMacroLine: { color: Colors.accent, fontSize: Typography.size.xs },
   modal: { flex: 1, backgroundColor: Colors.bg },
   modalHeader: {
     flexDirection: 'row',
@@ -476,16 +679,24 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     borderColor: Colors.accent,
   },
-  mealTimePillText: { color: Colors.muted, fontSize: Typography.size.sm },
-  mealTimePillTextActive: { color: '#fff', fontWeight: Typography.weight.bold },
-  logBtn: {
-    backgroundColor: Colors.accent,
-    borderRadius: Radius.lg,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: Spacing.xxl,
+  mealTimePillText: {
+    color: Colors.text,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
   },
-  logBtnDisabled: { opacity: 0.4 },
+  mealTimePillTextActive: {
+    color: '#fff',
+  },
+  logBtn: {
+    marginTop: Spacing.xl,
+    backgroundColor: Colors.accent,
+    paddingVertical: 15,
+    borderRadius: Radius.xl,
+    alignItems: 'center',
+  },
+  logBtnDisabled: {
+    opacity: 0.45,
+  },
   logBtnText: {
     color: '#fff',
     fontWeight: Typography.weight.bold,

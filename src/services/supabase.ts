@@ -55,42 +55,101 @@ export const isSupabaseConfigured =
 export const isDemoModeAvailable = demoModeFlag === 'true' || !isSupabaseConfigured;
 
 export function getAuthRedirectUrl(): string {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return `${window.location.origin}/auth/callback`;
+  }
+
   return makeRedirectUri({
+    scheme: 'navya',
     native: 'navya://auth/callback',
     path: 'auth/callback',
   });
 }
 
-function extractSessionParams(url: string): { accessToken?: string; refreshToken?: string } {
+type AuthCallbackParams = {
+  accessToken?: string;
+  refreshToken?: string;
+  code?: string;
+  errorCode?: string;
+  errorDescription?: string;
+};
+
+function readUrlParams(url: string): URLSearchParams {
   const parsed = Linking.parse(url);
-  const queryParams = parsed.queryParams ?? {};
-  const accessToken =
-    typeof queryParams.access_token === 'string' ? queryParams.access_token : undefined;
-  const refreshToken =
-    typeof queryParams.refresh_token === 'string' ? queryParams.refresh_token : undefined;
+  const params = new URLSearchParams();
 
-  if (accessToken && refreshToken) {
-    return { accessToken, refreshToken };
+  Object.entries(parsed.queryParams ?? {}).forEach(([key, value]) => {
+    if (typeof value === 'string') {
+      params.set(key, value);
+    }
+  });
+
+  if (url.includes('#')) {
+    const fragment = url.split('#')[1] ?? '';
+    const fragmentParams = new URLSearchParams(fragment);
+    fragmentParams.forEach((value, key) => {
+      params.set(key, value);
+    });
   }
 
-  if (!url.includes('#')) {
-    return {};
-  }
+  return params;
+}
 
-  const fragment = url.split('#')[1] ?? '';
-  const fragmentParams = new URLSearchParams(fragment);
+function extractSessionParams(url: string): AuthCallbackParams {
+  const params = readUrlParams(url);
+  const parsed = Linking.parse(url);
 
   return {
-    accessToken: fragmentParams.get('access_token') ?? undefined,
-    refreshToken: fragmentParams.get('refresh_token') ?? undefined,
+    accessToken: params.get('access_token') ?? undefined,
+    refreshToken: params.get('refresh_token') ?? undefined,
+    code: params.get('code') ?? undefined,
+    errorCode:
+      params.get('error_code') ??
+      params.get('error') ??
+      (typeof parsed.queryParams?.error_code === 'string' ? parsed.queryParams.error_code : undefined) ??
+      undefined,
+    errorDescription: params.get('error_description') ?? undefined,
   };
 }
 
+export function getAuthCallbackError(url: string): string | null {
+  const { errorCode, errorDescription } = extractSessionParams(url);
+
+  if (!errorCode) {
+    return null;
+  }
+
+  if (errorCode === 'otp_expired') {
+    return 'That sign-in link is invalid or has expired. Request a new magic link and open the newest email on the same device.';
+  }
+
+  if (errorDescription) {
+    return decodeURIComponent(errorDescription.replace(/\+/g, ' '));
+  }
+
+  return 'Authentication could not be completed. Please try again.';
+}
+
 export async function createSessionFromUrl(url: string): Promise<boolean> {
-  const { accessToken, refreshToken } = extractSessionParams(url);
+  const { accessToken, refreshToken, code, errorCode } = extractSessionParams(url);
+
+  if (errorCode) {
+    return false;
+  }
 
   if (!accessToken || !refreshToken) {
-    return false;
+    if (!code) {
+      return false;
+    }
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      console.error('Code exchange failed:', error.message);
+      return false;
+    }
+
+    return true;
   }
 
   const { error } = await supabase.auth.setSession({

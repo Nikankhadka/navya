@@ -14,11 +14,11 @@ import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { Card, Badge, SectionHeader } from '../../src/components/ui';
 import { ProgressBar } from '../../src/components/ui/MacroRing';
-import { MOCK_WEEKLY_STREAK } from '../../src/mocks/mockData';
-import { getWeekDayLabels, sessionProgress } from '../../src/utils/helpers';
+import { formatWaterAmount, getWeekDayLabels, sessionProgress } from '../../src/utils/helpers';
 import { useTodaySession } from '../../src/hooks/useTodaySession';
 import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
 import { useCoachMessages } from '../../src/hooks/useCoachMessages';
+import { useHabitStreak } from '../../src/hooks/useHabitStreak';
 
 const WEEK_LABELS = getWeekDayLabels();
 
@@ -31,6 +31,7 @@ export default function HomeScreen() {
   const { data: todaySession } = useTodaySession(userId);
   const { data: dailyNutrition } = useDailyNutrition(userId);
   const { data: coachMessages } = useCoachMessages(userId);
+  const { data: habitStreak } = useHabitStreak(userId);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -48,8 +49,13 @@ export default function HomeScreen() {
   const calorieRemaining = dailyNutrition
     ? dailyNutrition.calorie_goal - dailyNutrition.total_calories
     : 0;
+  const waterProgress = dailyNutrition
+    ? Math.min(Math.round((dailyNutrition.water_total_ml / dailyNutrition.water_goal_ml) * 100), 100)
+    : 0;
   const coachPreview =
     coachMessages?.[0]?.text ?? 'Your coach will start guiding you once your activity data is available.';
+  const streakDays = habitStreak?.current_streak_days ?? 0;
+  const weeklyActivity = habitStreak?.weekly_activity ?? Array.from({ length: 7 }, () => false);
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -72,14 +78,16 @@ export default function HomeScreen() {
         </View>
         <View style={styles.streakChip}>
           <Text style={styles.streakFire}>🔥</Text>
-          <Text style={styles.streakCount}>7</Text>
-          <Text style={styles.streakLabel}>day streak</Text>
+          <Text style={styles.streakCount}>{streakDays}</Text>
+          <Text style={styles.streakLabel}>
+            {streakDays === 1 ? 'day streak' : 'day streak'}
+          </Text>
         </View>
       </Animated.View>
 
       {/* ── Week view ────────────────────────────────────────────────────── */}
       <Animated.View style={[styles.weekRow, { opacity: fadeAnim }]}>
-        {MOCK_WEEKLY_STREAK.map((done, i) => (
+        {weeklyActivity.map((done, i) => (
           <View key={i} style={styles.weekDay}>
             <View
               style={[
@@ -184,6 +192,25 @@ export default function HomeScreen() {
               </Text>
             </View>
           ))}
+        </View>
+
+        <View style={styles.waterRow}>
+          <View>
+            <Text style={styles.waterLabel}>Hydration</Text>
+            <Text style={styles.waterValue}>
+              {formatWaterAmount(dailyNutrition?.water_total_ml ?? 0)} / {formatWaterAmount(dailyNutrition?.water_goal_ml ?? 2500)}
+            </Text>
+          </View>
+          <View style={styles.waterProgressWrap}>
+            <ProgressBar
+              value={waterProgress}
+              max={100}
+              color={Colors.blue}
+              height={6}
+              showLabel={false}
+            />
+            <Text style={styles.waterProgressText}>{waterProgress}% of goal</Text>
+          </View>
         </View>
       </Card>
 
@@ -370,6 +397,35 @@ const styles = StyleSheet.create({
   macroValue: {
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.semibold,
+    textAlign: 'right',
+  },
+  waterRow: {
+    marginTop: Spacing.lg,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  waterLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    marginBottom: 4,
+  },
+  waterValue: {
+    color: Colors.text,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  waterProgressWrap: {
+    flex: 1,
+    gap: 6,
+  },
+  waterProgressText: {
+    color: Colors.dim,
+    fontSize: Typography.size.xs,
     textAlign: 'right',
   },
   coachCard: {

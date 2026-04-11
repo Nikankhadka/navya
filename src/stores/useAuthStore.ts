@@ -4,6 +4,7 @@ import { supabase } from '../services/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { profileService } from '../services/profileService';
 import { MOCK_PROFILE } from '../mocks/mockData';
+import { getVisualTestSessionMode } from '../utils/visualTest';
 
 interface AuthState {
   user: Partial<UserProfile> | null;
@@ -19,7 +20,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   setProfile: (profile: Partial<UserProfile>) => void;
   refreshProfile: () => Promise<void>;
-  enterDemoMode: () => void;
+  enterDemoMode: (options?: { onboardingComplete?: boolean }) => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -32,9 +33,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setLoading: (isLoading) => set({ isLoading }),
 
-  enterDemoMode: () =>
+  enterDemoMode: (options) =>
     set({
-      user: MOCK_PROFILE,
+      user: {
+        ...MOCK_PROFILE,
+        onboarding_complete: options?.onboardingComplete ?? true,
+      },
       session: null,
       isAuthenticated: true,
       isInitialized: true,
@@ -75,6 +79,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (get().isInitialized) return;
       
       set({ isLoading: true });
+
+      const visualTestMode = getVisualTestSessionMode();
+
+      if (visualTestMode) {
+        get().enterDemoMode({
+          onboardingComplete: visualTestMode === 'demo-tabs',
+        });
+        return;
+      }
 
       // Get initial session
       const { data: { session }, error } = await supabase.auth.getSession();

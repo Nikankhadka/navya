@@ -2,12 +2,16 @@ import { supabase, isSupabaseConfigured } from './supabase';
 import type { UserProfile } from '../types/app';
 import { MOCK_PROFILE } from '../mocks/mockData';
 
+function shouldUseDemoProfile(userId: string): boolean {
+  return userId === MOCK_PROFILE.id || !isSupabaseConfigured;
+}
+
 export const profileService = {
   /**
    * Fetch a user profile by ID
    */
   async getProfile(userId: string): Promise<UserProfile | null> {
-    if (!isSupabaseConfigured) {
+    if (shouldUseDemoProfile(userId)) {
       return userId === MOCK_PROFILE.id ? MOCK_PROFILE : null;
     }
 
@@ -33,7 +37,7 @@ export const profileService = {
    * Upsert a user profile
    */
   async upsertProfile(userId: string, profile: Partial<UserProfile>): Promise<void> {
-    if (!isSupabaseConfigured) {
+    if (shouldUseDemoProfile(userId)) {
       return;
     }
 

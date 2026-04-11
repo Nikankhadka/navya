@@ -168,6 +168,24 @@ export interface FoodLog {
   notes: string | null;
 }
 
+export interface WaterLog {
+  id: string;
+  user_id: string;
+  amount_ml: number;
+  logged_at: string;
+}
+
+export interface RecentMealTemplate {
+  id: string;
+  meal_name: string;
+  calories: number;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+  meal_time: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  last_logged_at: string;
+}
+
 export interface DailyNutritionSummary {
   date: string;
   total_calories: number;
@@ -176,7 +194,17 @@ export interface DailyNutritionSummary {
   total_fat_g: number;
   calorie_goal: number;
   protein_goal_g: number;
+  water_total_ml: number;
+  water_goal_ml: number;
   meals: FoodLog[];
+  recent_meals: RecentMealTemplate[];
+  water_logs: WaterLog[];
+}
+
+export interface HabitStreakSummary {
+  current_streak_days: number;
+  weekly_activity: boolean[];
+  completed_days_this_week: number;
 }
 
 // ─── AI Coach ─────────────────────────────────────────────────────────────────

@@ -6,10 +6,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useAuthStore } from '../src/stores/useAuthStore';
 import { WebWrapper } from '../src/components/ui/WebWrapper';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Alert } from 'react-native';
 import * as Linking from 'expo-linking';
 import { Colors } from '../src/constants/theme';
-import { createSessionFromUrl } from '../src/services/supabase';
+import { createSessionFromUrl, getAuthCallbackError } from '../src/services/supabase';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,10 +33,19 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!incomingUrl) return;
+
+    const authCallbackError = getAuthCallbackError(incomingUrl);
+
+    if (authCallbackError) {
+      Alert.alert('Sign-in link issue', authCallbackError);
+      router.replace('/(auth)/login');
+      return;
+    }
+
     createSessionFromUrl(incomingUrl).catch((error) => {
       console.error('Deep link auth error:', error);
     });
-  }, [incomingUrl]);
+  }, [incomingUrl, router]);
 
   // Auth Guard
   useEffect(() => {

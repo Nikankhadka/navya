@@ -146,6 +146,7 @@ export default function LoginScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            testID="login-email-input"
           />
 
           <Button 
@@ -155,6 +156,7 @@ export default function LoginScreen() {
             onPress={handleEmailAuth}
             style={[{ marginTop: Spacing.sm }]}
             disabled={!isSupabaseConfigured}
+            testID="login-send-magic-link"
           />
 
           {isDemoModeAvailable && (
@@ -162,8 +164,9 @@ export default function LoginScreen() {
               label="Explore Demo App"
               variant="secondary"
               fullWidth
-              onPress={enterDemoMode}
+              onPress={() => enterDemoMode()}
               style={[{ marginTop: Spacing.md }]}
+              testID="login-explore-demo"
             />
           )}
         </View>
@@ -191,6 +194,7 @@ export default function LoginScreen() {
             onPress={() => handleOAuth('google')}
             disabled={loading || !isSupabaseConfigured}
             style={[{ marginTop: Spacing.md }]}
+            testID="login-google-auth"
           />
         </View>
 

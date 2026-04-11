@@ -1,7 +1,7 @@
 import type { WorkoutPlan, WorkoutSession } from '../types/app';
 import type { Database } from '../types/supabase';
 import { supabase, isSupabaseConfigured } from './supabase';
-import { MOCK_PLAN, MOCK_TODAY_SESSION } from '../mocks/mockData';
+import { MOCK_PLAN, MOCK_PROFILE, MOCK_TODAY_SESSION } from '../mocks/mockData';
 import {
   mapSessionExerciseRow,
   mapWorkoutPlanRow,
@@ -40,9 +40,13 @@ function buildSessionFromPlan(plan: WorkoutPlan): WorkoutSession | null {
   };
 }
 
+function shouldUseDemoWorkout(userId: string): boolean {
+  return userId === MOCK_PROFILE.id || !isSupabaseConfigured;
+}
+
 export const workoutService = {
   async getActivePlan(userId: string): Promise<WorkoutPlan | null> {
-    if (!isSupabaseConfigured) {
+    if (shouldUseDemoWorkout(userId)) {
       return MOCK_PLAN;
     }
 
@@ -73,7 +77,7 @@ export const workoutService = {
   },
 
   async getTodaySession(userId: string): Promise<WorkoutSession | null> {
-    if (!isSupabaseConfigured) {
+    if (shouldUseDemoWorkout(userId)) {
       return MOCK_TODAY_SESSION;
     }
 
@@ -103,7 +107,7 @@ export const workoutService = {
 
     const localSession = buildSessionFromPlan(plan);
 
-    if (!isSupabaseConfigured || !localSession) {
+    if (shouldUseDemoWorkout(userId) || !localSession) {
       return localSession ?? MOCK_TODAY_SESSION;
     }
 
@@ -159,7 +163,7 @@ export const workoutService = {
       duration_seconds: elapsedSeconds,
     };
 
-    if (!isSupabaseConfigured) {
+    if (shouldUseDemoWorkout(session.user_id)) {
       return completedSession;
     }
 

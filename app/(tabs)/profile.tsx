@@ -20,6 +20,8 @@ import { useState, useEffect } from 'react';
 import { profileService } from '../../src/services/profileService';
 import { useQueryClient } from '@tanstack/react-query';
 import type { UserProfile, GoalType } from '../../src/types/app';
+import { crossAlert } from '../../src/utils/crossAlert';
+import { isVisualTestScenario } from '../../src/utils/visualTest';
 
 type EditProfileForm = {
   full_name: string;
@@ -74,7 +76,17 @@ export default function ProfileScreen() {
     activeUser?.workouts_per_week,
   ]);
 
+  useEffect(() => {
+    if (isVisualTestScenario('profile-edit-modal')) {
+      setShowEditModal(true);
+    }
+  }, []);
+
   if (!activeUser) return null;
+
+  const showComingSoon = (title: string, message: string) => {
+    crossAlert(title, message);
+  };
 
   const handleSaveProfile = async () => {
     if (!user?.id || !form.full_name.trim()) {
@@ -201,13 +213,33 @@ export default function ProfileScreen() {
 
       {/* Actions */}
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => setShowEditModal(true)}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => setShowEditModal(true)}
+          testID="profile-edit-button"
+        >
           <Text style={styles.actionBtnText}>✏️  Edit Profile</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() =>
+            showComingSoon(
+              'Notification settings are not wired yet',
+              'This action is intentionally parked for the MVP so testers are not left with a dead tap.',
+            )
+          }
+        >
           <Text style={styles.actionBtnText}>🔔  Notification Settings</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() =>
+            showComingSoon(
+              'Workout regeneration is coming soon',
+              'For the MVP, plan refresh still needs backend planning logic. Testers should use the existing workout plan flow instead.',
+            )
+          }
+        >
           <Text style={styles.actionBtnText}>🤖  Regenerate Workout Plan</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -249,6 +281,7 @@ export default function ProfileScreen() {
               onChangeText={(value) => setForm((current) => ({ ...current, full_name: value }))}
               placeholder="Your name"
               placeholderTextColor={Colors.dim}
+              testID="profile-full-name-input"
             />
 
             <Text style={styles.fieldLabel}>Goal</Text>
@@ -310,6 +343,7 @@ export default function ProfileScreen() {
               style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
               onPress={handleSaveProfile}
               disabled={isSaving || !form.full_name.trim()}
+              testID="profile-save-button"
             >
               <Text style={styles.saveBtnText}>
                 {isSaving ? 'Saving...' : isDemoSession ? 'Save Demo Profile' : 'Save Changes'}

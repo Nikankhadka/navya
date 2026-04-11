@@ -1,6 +1,6 @@
 import type { CoachMessage } from '../types/app';
 import { supabase, isSupabaseConfigured } from './supabase';
-import { MOCK_COACH_MESSAGES, DEMO_COACH_RESPONSES } from '../mocks/mockData';
+import { MOCK_COACH_MESSAGES, DEMO_COACH_RESPONSES, MOCK_PROFILE } from '../mocks/mockData';
 import { mapCoachMessageRow } from './supabaseMappers';
 
 function buildCoachUnavailableMessage(userId: string): CoachMessage {
@@ -14,9 +14,13 @@ function buildCoachUnavailableMessage(userId: string): CoachMessage {
   };
 }
 
+function shouldUseDemoCoach(userId: string): boolean {
+  return userId === MOCK_PROFILE.id || !isSupabaseConfigured;
+}
+
 export const coachService = {
   async getMessages(userId: string): Promise<CoachMessage[]> {
-    if (!isSupabaseConfigured) {
+    if (shouldUseDemoCoach(userId)) {
       return MOCK_COACH_MESSAGES;
     }
 
@@ -44,7 +48,7 @@ export const coachService = {
       created_at: new Date().toISOString(),
     };
 
-    if (!isSupabaseConfigured) {
+    if (shouldUseDemoCoach(userId)) {
       const reply =
         DEMO_COACH_RESPONSES[Math.floor(Math.random() * DEMO_COACH_RESPONSES.length)];
 

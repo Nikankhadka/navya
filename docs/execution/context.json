@@ -1,7 +1,7 @@
 {
   "project": "Navya",
-  "currentPhase": "Week 1: platform and standards foundation",
-  "currentStep": "Week 2 scaffolding is underway. Canonical MVP schema, mutation hooks, and write-path services are in place; the next step is connecting them to a real Supabase project and hardening end-to-end behavior.",
+  "currentPhase": "Week 3: daily diary parity upgrade",
+  "currentStep": "The first Phase 1 diary upgrade slice is implemented locally: grouped meal diary, quick-add and reusable meals, hydration logging, and a real activity-derived streak are now wired into the existing Home and Nutrition surfaces while live Supabase validation remains the next backend dependency.",
   "completedThisSession": [
     "standardized package scripts and app identity",
     "added Navya repo plugin and role skills",
@@ -14,21 +14,31 @@
     "added a canonical MVP schema migration for profiles, plans, sessions, nutrition, coach, flags, and push tokens",
     "added mutation hooks and service write paths for workout sessions, nutrition logging, and coach requests",
     "passed npm run verify",
-    "passed npm run smoke:web"
+    "passed npm run smoke:web",
+    "researched current MyFitnessPal fitness-tracking primitives from official sources and reframed the Navya MVP around 70% parity with the core daily habit loop",
+    "upgraded the MVP and sprint plan to extend existing Home, Nutrition, Workout, Profile, and Coach surfaces instead of proposing a rebuild",
+    "added typed hydration and reusable-meal contracts plus a Phase 1 water_logs Supabase migration",
+    "upgraded the Nutrition tab into a grouped daily diary with hydration logging, recent meal re-log, and quick-add calories",
+    "replaced the Home tab's mock streak with a real streak derived from logged meals, hydration, and completed workouts"
   ],
   "inProgress": [
     "finishing backend write paths for sessions, meals, and coach actions against a real Supabase project",
     "finalizing schema and RLS to match the new typed contracts",
-    "replacing remaining fallback assumptions with real relational reads once the live schema exists"
+    "replacing remaining fallback assumptions with real relational reads once the live schema exists",
+    "connecting the new hydration persistence path to a live Supabase project",
+    "deciding whether the next diary slice should prioritize meal templates polish or profile-driven weight check-ins"
   ],
   "nextRecommendedStep": [
     "connect a real Supabase project and regenerate final src/types/supabase.ts",
-    "validate the new write paths against the live schema and fix any relation mismatches",
-    "add seed data for exercise_library and realistic feature_flags",
+    "validate the new read and write paths against the live schema and fix any relation mismatches, including water_logs",
+    "extend the Profile and Home surfaces with weight check-ins and simple progress history",
+    "add workout history summaries so the diary streak and adherence loop are fully visible",
+    "decide whether barcode-assisted food capture should be in beta behind a feature flag or deferred until food data quality is proven",
     "verify OTP email and social auth end to end on device builds"
   ],
   "blockers": [
-    "real Supabase project values are still required for end-to-end auth and production data verification"
+    "real Supabase project values are still required for end-to-end auth and production data verification",
+    "barcode-assisted logging should not be committed to beta scope unless a reliable food data source is approved"
   ],
-  "lastUpdated": "2026-04-10"
+  "lastUpdated": "2026-04-11"
 }

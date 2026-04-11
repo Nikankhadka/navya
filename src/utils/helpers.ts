@@ -100,6 +100,14 @@ export function mealTimeLabel(mealTime: string): string {
   return map[mealTime] ?? mealTime;
 }
 
+export function formatWaterAmount(amountMl: number): string {
+  if (amountMl >= 1000) {
+    return `${(amountMl / 1000).toFixed(1)}L`;
+  }
+
+  return `${amountMl}ml`;
+}
+
 // ─── Workout ──────────────────────────────────────────────────────────────────
 
 export function sessionProgress(session: { session_exercises: Array<{ completed_sets: unknown[]; planned_sets: number; is_skipped: boolean }> }): number {

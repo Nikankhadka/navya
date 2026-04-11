@@ -19,6 +19,8 @@ import { useActivePlan } from '../../src/hooks/useActivePlan';
 import { useTodaySession } from '../../src/hooks/useTodaySession';
 import { useWorkoutActions } from '../../src/hooks/useWorkoutActions';
 import type { WorkoutPlanDay } from '../../src/types/app';
+import { isVisualTestScenario } from '../../src/utils/visualTest';
+import { MOCK_PLAN } from '../../src/mocks/mockData';
 
 export default function WorkoutScreen() {
   const insets = useSafeAreaInsets();
@@ -31,6 +33,14 @@ export default function WorkoutScreen() {
   const [tab, setTab] = useState<'today' | 'plan'>('today');
   const [selectedPlanDay, setSelectedPlanDay] = useState<WorkoutPlanDay | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const todayDayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
+    .format(new Date())
+    .toLowerCase();
+  const visualPlanDay = isVisualTestScenario('workout-plan-modal')
+    ? activePlan?.workout_plan_days[0] ?? MOCK_PLAN.workout_plan_days[0] ?? null
+    : null;
+  const activeTab = visualPlanDay ? 'plan' : tab;
+  const planDayDetail = visualPlanDay ?? selectedPlanDay;
 
   // Timer
   useEffect(() => {
@@ -123,7 +133,7 @@ export default function WorkoutScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {tab === 'today' ? (
+        {activeTab === 'today' ? (
           <>
             {isComplete ? (
               /* ── Complete state ──────────────────────────────────── */
@@ -246,7 +256,7 @@ export default function WorkoutScreen() {
                 <PlanDayCard
                   key={day.id}
                   day={day}
-                  isToday={day.day_of_week === 'monday'}
+                  isToday={day.day_of_week.toLowerCase() === todayDayOfWeek}
                   onPress={() => setSelectedPlanDay(day)}
                 />
               ))
@@ -263,7 +273,7 @@ export default function WorkoutScreen() {
       </ScrollView>
 
       <Modal
-        visible={Boolean(selectedPlanDay)}
+        visible={Boolean(planDayDetail)}
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => setSelectedPlanDay(null)}
@@ -280,12 +290,12 @@ export default function WorkoutScreen() {
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderText}>
                 <Text style={styles.modalDayLabel}>
-                  {selectedPlanDay?.day_of_week.slice(0, 3).toUpperCase()}
+                  {planDayDetail?.day_of_week.slice(0, 3).toUpperCase()}
                 </Text>
-                <Text style={styles.modalTitle}>{selectedPlanDay?.day_name}</Text>
+                <Text style={styles.modalTitle}>{planDayDetail?.day_name}</Text>
                 <Text style={styles.modalSubtitle}>
-                  {selectedPlanDay
-                    ? `${selectedPlanDay.plan_exercises.length} exercises · ~${selectedPlanDay.estimated_minutes} min`
+                  {planDayDetail
+                    ? `${planDayDetail.plan_exercises.length} exercises · ~${planDayDetail.estimated_minutes} min`
                     : ''}
                 </Text>
               </View>
@@ -297,13 +307,13 @@ export default function WorkoutScreen() {
               </TouchableOpacity>
             </View>
 
-            {selectedPlanDay && (
+            {planDayDetail && (
               <>
                 <Card style={styles.modalSummaryCard}>
                   <Text style={styles.summaryTitle}>Focus Areas</Text>
                   <View style={styles.summaryTags}>
                     {[...new Set(
-                      selectedPlanDay.plan_exercises.flatMap((exercise) => exercise.exercise.muscle_groups),
+                      planDayDetail.plan_exercises.flatMap((exercise) => exercise.exercise.muscle_groups),
                     )].map((group) => (
                       <View key={group} style={styles.summaryTag}>
                         <Text style={styles.summaryTagText}>{group.replace('_', ' ')}</Text>
@@ -314,7 +324,7 @@ export default function WorkoutScreen() {
 
                 <Text style={styles.planSectionTitle}>Exercises</Text>
                 <View style={styles.modalExerciseList}>
-                  {selectedPlanDay.plan_exercises
+                  {planDayDetail.plan_exercises
                     .sort((left, right) => left.order_index - right.order_index)
                     .map((exercise, index) => (
                       <View key={exercise.id} style={styles.planExerciseCard}>

@@ -5,6 +5,7 @@ import type {
   FoodLog,
   CoachMessage,
   DailyNutritionSummary,
+  WaterLog,
 } from '../types/app';
 
 export const MOCK_PROFILE: UserProfile = {
@@ -297,7 +298,45 @@ export const MOCK_DAILY_NUTRITION: DailyNutritionSummary = {
   total_fat_g: 21,
   calorie_goal: 2600,
   protein_goal_g: 156,
+  water_total_ml: 1500,
+  water_goal_ml: 2500,
   meals: MOCK_FOOD_LOGS,
+  recent_meals: [
+    {
+      id: 'recent-food-1',
+      meal_name: 'Chicken Rice Bowl',
+      calories: 620,
+      protein_g: 48,
+      carbs_g: 65,
+      fat_g: 12,
+      meal_time: 'lunch',
+      last_logged_at: new Date(Date.now() - 24 * 3600_000).toISOString(),
+    },
+    {
+      id: 'recent-food-2',
+      meal_name: 'Whey Protein Shake',
+      calories: 180,
+      protein_g: 30,
+      carbs_g: 8,
+      fat_g: 3,
+      meal_time: 'snack',
+      last_logged_at: new Date(Date.now() - 2 * 24 * 3600_000).toISOString(),
+    },
+  ],
+  water_logs: [
+    {
+      id: 'water-1',
+      user_id: 'mock-user-1',
+      amount_ml: 500,
+      logged_at: new Date(Date.now() - 8 * 3600_000).toISOString(),
+    },
+    {
+      id: 'water-2',
+      user_id: 'mock-user-1',
+      amount_ml: 1000,
+      logged_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
+    },
+  ],
 };
 
 export const MOCK_COACH_MESSAGES: CoachMessage[] = [
@@ -328,6 +367,8 @@ export const MOCK_COACH_MESSAGES: CoachMessage[] = [
 ];
 
 export const MOCK_WEEKLY_STREAK = [true, true, false, true, true, true, false];
+
+export const MOCK_WATER_LOGS: WaterLog[] = MOCK_DAILY_NUTRITION.water_logs;
 
 export const COACH_QUICK_REPLIES = [
   "Modify today's workout",

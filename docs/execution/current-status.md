@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-- Week 1: platform and standards foundation
+- Week 3: daily diary parity upgrade
 
 ## Current Step
 
-- Week 2 hardening is underway. Canonical MVP schema, mutation hooks, and typed service mappers are in place; the next step is connecting them to a real Supabase project and validating end-to-end relational behavior.
+- The first Phase 1 diary upgrade slice is implemented locally: grouped meal diary, quick-add and reusable meals, hydration logging, and a real activity-derived streak are now wired into the existing Home and Nutrition surfaces while live Supabase validation remains the next backend dependency.
 
 ## Completed In This Session
 
@@ -31,25 +31,37 @@
 - turned Workout plan-day cards into a working detail flow with exercise, rest, equipment, focus area, and coach-note visibility
 - passed `npm run verify`
 - passed `npm run smoke:web`
+- hardened auth callback handling for web and native with clearer expired-link errors and documented localhost redirect requirements
+- added a concrete `/auth/callback` route so local web magic-link redirects no longer hit Expo Router's unmatched route page
+- researched current MyFitnessPal fitness-tracking primitives from official sources and reframed the Navya MVP around 70% parity with the core daily habit loop
+- upgraded the MVP and sprint plan to extend existing Home, Nutrition, Workout, Profile, and Coach surfaces instead of proposing a rebuild
+- added typed hydration and reusable-meal contracts plus a Phase 1 `water_logs` Supabase migration
+- upgraded the Nutrition tab into a grouped daily diary with hydration logging, recent meal re-log, and quick-add calories
+- replaced the Home tab's mock streak with a real streak derived from logged meals, hydration, and completed workouts
+- passed `npm run verify`
+- passed `npm run smoke:web`
 
 ## In Progress
 
 - validating typed relational reads and write paths against a real Supabase project
 - finalizing schema and RLS to match the hardened typed contracts
 - replacing remaining demo fallbacks with live seeded records once the hosted schema exists
+- connecting the new hydration persistence path to a live Supabase project
+- deciding whether the next diary slice should prioritize meal templates polish or profile-driven weight check-ins
 
 ## Next Recommended Step
 
 - connect a real Supabase project and regenerate final `src/types/supabase.ts`
-- validate the new read and write paths against the live schema and fix any relation mismatches
-- begin Tamagui adoption with token mapping and one shared primitive spike once dependency install is unblocked
-- replace more dead-end profile and plan actions with real MVP flows
-- decide whether plan-day detail should also support "start this day" when multiple plan days are available
+- validate the new read and write paths against the live schema and fix any relation mismatches, including `water_logs`
+- extend the Profile and Home surfaces with weight check-ins and simple progress history
+- add workout history summaries so the diary streak and adherence loop are fully visible
+- decide whether barcode-assisted food capture should be in beta behind a feature flag or deferred until food data quality is proven
 - verify OTP email and social auth end to end on device builds
 
 ## Blockers
 
 - real Supabase project values are still required for end-to-end auth and production data verification
+- barcode-assisted logging should not be committed to beta scope unless a reliable food data source is approved
 
 ## Last Updated
 

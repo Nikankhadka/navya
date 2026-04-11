@@ -29,6 +29,7 @@ export default function WelcomeScreen() {
             onPress={() => router.push('/(onboarding)/basics')}
             className="w-full bg-blue-600 py-4 rounded-xl shadow-lg shadow-blue-600/30"
             activeOpacity={0.8}
+            testID="onboarding-get-started"
           >
             <Text className="text-white text-center text-lg font-semibold">
               Get Started
