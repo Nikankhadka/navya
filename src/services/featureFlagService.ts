@@ -1,5 +1,6 @@
 import type { FeatureFlags } from '../types/app';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { mapFeatureFlagsRow } from './supabaseMappers';
 
 const DEFAULT_FLAGS: FeatureFlags = {
   ai_enabled: true,
@@ -25,6 +26,6 @@ export const featureFlagService = {
       return DEFAULT_FLAGS;
     }
 
-    return (data as unknown as FeatureFlags) ?? DEFAULT_FLAGS;
+    return mapFeatureFlagsRow(data) ?? DEFAULT_FLAGS;
   },
 };

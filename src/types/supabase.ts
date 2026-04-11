@@ -47,6 +47,7 @@ export interface Database {
       };
       feature_flags: {
         Row: {
+          id: string;
           ai_enabled: boolean;
           food_search_enabled: boolean;
           notifications_enabled: boolean;

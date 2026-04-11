@@ -18,6 +18,8 @@ npm run verify
 npm run start
 ```
 
+If Supabase is not configured yet, you can still use the `Explore Demo App` entry on the login screen for a local MVP walkthrough.
+
 ## Project Operating System
 
 - AI team and routing: [docs/ai-team/README.md](/home/nikan/projects/navya/docs/ai-team/README.md)
@@ -26,6 +28,7 @@ npm run start
 - Sprint tracking: [docs/sprints/README.md](/home/nikan/projects/navya/docs/sprints/README.md)
 - Architecture docs: [docs/architecture/README.md](/home/nikan/projects/navya/docs/architecture/README.md)
 - Onboarding docs: [docs/onboarding/README.md](/home/nikan/projects/navya/docs/onboarding/README.md)
+- Beginner tester guide: [docs/onboarding/tester-guide.md](/home/nikan/projects/navya/docs/onboarding/tester-guide.md)
 - Standards: [docs/standards/engineering-standards.md](/home/nikan/projects/navya/docs/standards/engineering-standards.md)
 
 ## Standard Commands
@@ -34,6 +37,7 @@ npm run start
 npm run typecheck
 npm run verify
 npm run smoke:web
+npm run seed:tester -- YOUR_SUPABASE_USER_ID
 npm run sync:codex-skills
 ```
 

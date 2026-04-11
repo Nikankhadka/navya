@@ -5,6 +5,10 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
@@ -12,14 +16,93 @@ import { useAuthStore } from '../../src/stores/useAuthStore';
 import { Card, Badge, Divider } from '../../src/components/ui';
 import { goalLabel } from '../../src/utils/helpers';
 import { useProfile } from '../../src/hooks/useProfile';
+import { useState, useEffect } from 'react';
+import { profileService } from '../../src/services/profileService';
+import { useQueryClient } from '@tanstack/react-query';
+import type { UserProfile, GoalType } from '../../src/types/app';
+
+type EditProfileForm = {
+  full_name: string;
+  weight_kg: string;
+  height_cm: string;
+  goal: GoalType;
+  workouts_per_week: string;
+};
+
+const GOAL_OPTIONS: Array<{ id: GoalType; label: string }> = [
+  { id: 'build_muscle', label: 'Build Muscle' },
+  { id: 'lose_weight', label: 'Lose Weight' },
+  { id: 'maintain', label: 'Maintain' },
+  { id: 'improve_endurance', label: 'Endurance' },
+  { id: 'general_fitness', label: 'General Fitness' },
+];
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { user, signOut } = useAuthStore();
+  const queryClient = useQueryClient();
+  const { user, signOut, isDemoSession, setProfile } = useAuthStore();
   const { data: profile } = useProfile(user?.id);
   const activeUser = profile ?? user;
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [form, setForm] = useState<EditProfileForm>({
+    full_name: '',
+    weight_kg: '',
+    height_cm: '',
+    goal: 'general_fitness',
+    workouts_per_week: '3',
+  });
+
+  useEffect(() => {
+    if (!activeUser) {
+      return;
+    }
+
+    setForm({
+      full_name: activeUser.full_name ?? '',
+      weight_kg: activeUser.weight_kg != null ? String(activeUser.weight_kg) : '',
+      height_cm: activeUser.height_cm != null ? String(activeUser.height_cm) : '',
+      goal: activeUser.goal ?? 'general_fitness',
+      workouts_per_week:
+        activeUser.workouts_per_week != null ? String(activeUser.workouts_per_week) : '3',
+    });
+  }, [
+    activeUser?.full_name,
+    activeUser?.weight_kg,
+    activeUser?.height_cm,
+    activeUser?.goal,
+    activeUser?.workouts_per_week,
+  ]);
 
   if (!activeUser) return null;
+
+  const handleSaveProfile = async () => {
+    if (!user?.id || !form.full_name.trim()) {
+      return;
+    }
+
+    const workoutsPerWeek = Math.min(7, Math.max(1, Number(form.workouts_per_week) || 3));
+    const payload: Partial<UserProfile> = {
+      full_name: form.full_name.trim(),
+      goal: form.goal,
+      workouts_per_week: workoutsPerWeek,
+      weight_kg: form.weight_kg ? Number(form.weight_kg) : null,
+      height_cm: form.height_cm ? Number(form.height_cm) : null,
+    };
+
+    setIsSaving(true);
+
+    try {
+      await profileService.upsertProfile(user.id, payload);
+      setProfile(payload);
+      await queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      setShowEditModal(false);
+    } catch (error) {
+      console.error('Failed to save profile updates:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const stats = [
     { label: 'Workouts', value: '24', suffix: 'this month' },
@@ -51,6 +134,7 @@ export default function ProfileScreen() {
         <Text style={styles.fullName}>{activeUser.full_name ?? 'Navya User'}</Text>
         <Text style={styles.email}>{activeUser.email}</Text>
         <View style={styles.badgeRow}>
+          {isDemoSession && <Badge label="Demo Session" color={Colors.orange} />}
           {activeUser?.goal && <Badge label={goalLabel(activeUser.goal)} color={Colors.accent} />}
           {activeUser?.experience_level && <Badge label={activeUser.experience_level} color={Colors.green} />}
         </View>
@@ -117,7 +201,7 @@ export default function ProfileScreen() {
 
       {/* Actions */}
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionBtn}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => setShowEditModal(true)}>
           <Text style={styles.actionBtnText}>✏️  Edit Profile</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionBtn}>
@@ -130,11 +214,110 @@ export default function ProfileScreen() {
           style={[styles.actionBtn, styles.signOutBtn]}
           onPress={signOut}
         >
-          <Text style={styles.signOutText}>Sign Out</Text>
+          <Text style={styles.signOutText}>{isDemoSession ? 'Exit Demo' : 'Sign Out'}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={{ height: 40 }} />
+
+      <Modal
+        visible={showEditModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalScreen}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                <Text style={styles.modalClose}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.fieldLabel}>Full Name</Text>
+            <TextInput
+              style={styles.input}
+              value={form.full_name}
+              onChangeText={(value) => setForm((current) => ({ ...current, full_name: value }))}
+              placeholder="Your name"
+              placeholderTextColor={Colors.dim}
+            />
+
+            <Text style={styles.fieldLabel}>Goal</Text>
+            <View style={styles.goalGrid}>
+              {GOAL_OPTIONS.map((option) => {
+                const selected = form.goal === option.id;
+                return (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[styles.goalChip, selected && styles.goalChipActive]}
+                    onPress={() => setForm((current) => ({ ...current, goal: option.id }))}
+                  >
+                    <Text style={[styles.goalChipText, selected && styles.goalChipTextActive]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.inputRow}>
+              <View style={styles.inputCol}>
+                <Text style={styles.fieldLabel}>Weight (kg)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.weight_kg}
+                  onChangeText={(value) => setForm((current) => ({ ...current, weight_kg: value }))}
+                  placeholder="78"
+                  placeholderTextColor={Colors.dim}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={styles.inputCol}>
+                <Text style={styles.fieldLabel}>Height (cm)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.height_cm}
+                  onChangeText={(value) => setForm((current) => ({ ...current, height_cm: value }))}
+                  placeholder="178"
+                  placeholderTextColor={Colors.dim}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+
+            <Text style={styles.fieldLabel}>Workouts Per Week</Text>
+            <TextInput
+              style={styles.input}
+              value={form.workouts_per_week}
+              onChangeText={(value) =>
+                setForm((current) => ({ ...current, workouts_per_week: value }))
+              }
+              placeholder="3"
+              placeholderTextColor={Colors.dim}
+              keyboardType="numeric"
+            />
+
+            <TouchableOpacity
+              style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
+              onPress={handleSaveProfile}
+              disabled={isSaving || !form.full_name.trim()}
+            >
+              <Text style={styles.saveBtnText}>
+                {isSaving ? 'Saving...' : isDemoSession ? 'Save Demo Profile' : 'Save Changes'}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 }
@@ -257,6 +440,98 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     borderWidth: 1,
     borderColor: Colors.border,
+  },
+  modalScreen: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  modalScroll: {
+    flex: 1,
+  },
+  modalContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xxl,
+    paddingBottom: 48,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xl,
+  },
+  modalTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.xxl,
+    fontWeight: Typography.weight.extrabold,
+  },
+  modalClose: {
+    color: Colors.accent,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+  },
+  fieldLabel: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  input: {
+    backgroundColor: Colors.card,
+    borderColor: Colors.border,
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    color: Colors.text,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    fontSize: Typography.size.md,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  inputCol: {
+    flex: 1,
+  },
+  goalGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  goalChip: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  goalChipActive: {
+    backgroundColor: Colors.accentMuted,
+    borderColor: Colors.accent,
+  },
+  goalChipText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  goalChipTextActive: {
+    color: Colors.accent,
+  },
+  saveBtn: {
+    marginTop: Spacing.xxl,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.lg,
+    alignItems: 'center',
+  },
+  saveBtnDisabled: {
+    opacity: 0.6,
+  },
+  saveBtnText: {
+    color: '#fff',
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
   },
   actionBtnText: {
     color: Colors.text,

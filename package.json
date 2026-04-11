@@ -12,6 +12,7 @@
     "lint": "npm run typecheck",
     "verify": "node scripts/verify-project.js",
     "smoke:web": "node scripts/verify-project.js --smoke-web",
+    "seed:tester": "node scripts/prepare-tester-seed.js",
     "sync:codex-skills": "node scripts/sync-codex-skills.js"
   },
   "engines": {

@@ -44,8 +44,15 @@ const supabaseAnonKey =
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
   'placeholder-anon-key';
 
+const demoModeFlag =
+  Constants.expoConfig?.extra?.enableDemoMode ??
+  process.env.EXPO_PUBLIC_ENABLE_DEMO_MODE ??
+  'false';
+
 export const isSupabaseConfigured =
   !supabaseUrl.includes('placeholder') && supabaseAnonKey !== 'placeholder-anon-key';
+
+export const isDemoModeAvailable = demoModeFlag === 'true' || !isSupabaseConfigured;
 
 export function getAuthRedirectUrl(): string {
   return makeRedirectUri({

@@ -3,15 +3,23 @@ import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Ale
 import { Stack } from 'expo-router';
 import { Button, Input } from '../../src/components/ui';
 import { Colors, Spacing, Typography } from '../../src/constants/theme';
-import { createSessionFromUrl, getAuthRedirectUrl, supabase } from '../../src/services/supabase';
+import {
+  createSessionFromUrl,
+  getAuthRedirectUrl,
+  isDemoModeAvailable,
+  isSupabaseConfigured,
+  supabase,
+} from '../../src/services/supabase';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
+import { useAuthStore } from '../../src/stores/useAuthStore';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const enterDemoMode = useAuthStore((state) => state.enterDemoMode);
 
   async function handleEmailAuth() {
     if (!email) {
@@ -122,6 +130,15 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.formContainer}>
+          {!isSupabaseConfigured && (
+            <View style={styles.infoBanner}>
+              <Text style={styles.infoBannerTitle}>Supabase not configured</Text>
+              <Text style={styles.infoBannerText}>
+                Real auth is unavailable until `.env.local` contains a valid Supabase URL and anon key.
+              </Text>
+            </View>
+          )}
+
           <Input 
             label="Email Address" 
             placeholder="your@email.com" 
@@ -137,7 +154,18 @@ export default function LoginScreen() {
             loading={loading}
             onPress={handleEmailAuth}
             style={[{ marginTop: Spacing.sm }]}
+            disabled={!isSupabaseConfigured}
           />
+
+          {isDemoModeAvailable && (
+            <Button
+              label="Explore Demo App"
+              variant="secondary"
+              fullWidth
+              onPress={enterDemoMode}
+              style={[{ marginTop: Spacing.md }]}
+            />
+          )}
         </View>
 
         <View style={styles.dividerContainer}>
@@ -153,7 +181,7 @@ export default function LoginScreen() {
               variant="secondary" 
               fullWidth
               onPress={() => handleOAuth('apple')}
-              disabled={loading}
+              disabled={loading || !isSupabaseConfigured}
             />
           )}
           <Button 
@@ -161,7 +189,7 @@ export default function LoginScreen() {
             variant="secondary" 
             fullWidth
             onPress={() => handleOAuth('google')}
-            disabled={loading}
+            disabled={loading || !isSupabaseConfigured}
             style={[{ marginTop: Spacing.md }]}
           />
         </View>
@@ -204,6 +232,25 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     marginBottom: Spacing.xxl,
+  },
+  infoBanner: {
+    backgroundColor: Colors.orangeMuted,
+    borderColor: Colors.orange,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  infoBannerTitle: {
+    color: Colors.orange,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.bold,
+    marginBottom: 4,
+  },
+  infoBannerText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
   },
   dividerContainer: {
     flexDirection: 'row',

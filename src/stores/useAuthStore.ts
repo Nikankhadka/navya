@@ -3,6 +3,7 @@ import type { UserProfile } from '../types/app';
 import { supabase } from '../services/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { profileService } from '../services/profileService';
+import { MOCK_PROFILE } from '../mocks/mockData';
 
 interface AuthState {
   user: Partial<UserProfile> | null;
@@ -10,6 +11,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   isInitialized: boolean;
+  isDemoSession: boolean;
 
   // Actions
   initializeAuth: () => Promise<void>;
@@ -17,6 +19,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   setProfile: (profile: Partial<UserProfile>) => void;
   refreshProfile: () => Promise<void>;
+  enterDemoMode: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -25,10 +28,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   isAuthenticated: false,
   isInitialized: false,
+  isDemoSession: false,
 
   setLoading: (isLoading) => set({ isLoading }),
 
+  enterDemoMode: () =>
+    set({
+      user: MOCK_PROFILE,
+      session: null,
+      isAuthenticated: true,
+      isInitialized: true,
+      isDemoSession: true,
+      isLoading: false,
+    }),
+
   refreshProfile: async () => {
+    if (get().isDemoSession) {
+      set({ user: MOCK_PROFILE });
+      return;
+    }
+
     const session = get().session;
 
     if (!session?.user.id) {
@@ -72,9 +91,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ session: newSession, isAuthenticated: !!newSession });
         
         if (newSession) {
+          set({ isDemoSession: false });
           await get().refreshProfile();
         } else {
-          set({ user: null });
+          set({ user: null, isDemoSession: false });
         }
       });
     } catch (error) {
@@ -85,13 +105,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
+    if (get().isDemoSession) {
+      set({
+        user: null,
+        session: null,
+        isAuthenticated: false,
+        isDemoSession: false,
+        isLoading: false,
+      });
+      return;
+    }
+
     try {
       set({ isLoading: true });
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Sign out error:', error);
     } finally {
-      set({ user: null, session: null, isAuthenticated: false, isLoading: false });
+      set({
+        user: null,
+        session: null,
+        isAuthenticated: false,
+        isDemoSession: false,
+        isLoading: false,
+      });
     }
   },
 

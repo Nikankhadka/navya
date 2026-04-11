@@ -1,11 +1,16 @@
-import { supabase } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 import type { UserProfile } from '../types/app';
+import { MOCK_PROFILE } from '../mocks/mockData';
 
 export const profileService = {
   /**
    * Fetch a user profile by ID
    */
   async getProfile(userId: string): Promise<UserProfile | null> {
+    if (!isSupabaseConfigured) {
+      return userId === MOCK_PROFILE.id ? MOCK_PROFILE : null;
+    }
+
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -28,6 +33,10 @@ export const profileService = {
    * Upsert a user profile
    */
   async upsertProfile(userId: string, profile: Partial<UserProfile>): Promise<void> {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
     const { error } = await supabase
       .from('user_profiles')
       .upsert(

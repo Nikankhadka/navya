@@ -1,6 +1,7 @@
 import type { DailyNutritionSummary, FoodLog } from '../types/app';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { MOCK_DAILY_NUTRITION } from '../mocks/mockData';
+import { mapFoodLogRow } from './supabaseMappers';
 
 function isTodayIso(isoString: string): boolean {
   return isoString.startsWith(new Date().toISOString().slice(0, 10));
@@ -23,9 +24,7 @@ export const nutritionService = {
       return MOCK_DAILY_NUTRITION;
     }
 
-    const todaysMeals = ((data as unknown as FoodLog[]) ?? []).filter((meal) =>
-      isTodayIso(meal.logged_at),
-    );
+    const todaysMeals = (data ?? []).map(mapFoodLogRow).filter((meal) => isTodayIso(meal.logged_at));
 
     const totalCalories = todaysMeals.reduce((sum, meal) => sum + meal.calories, 0);
     const totalProtein = todaysMeals.reduce((sum, meal) => sum + (meal.protein_g ?? 0), 0);
@@ -76,7 +75,7 @@ export const nutritionService = {
       return payload;
     }
 
-    return data as unknown as FoodLog;
+    return mapFoodLogRow(data);
   },
 
   async deleteMeal(mealId: string): Promise<void> {

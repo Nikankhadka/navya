@@ -9,5 +9,6 @@ These docs explain how Navya is structured so a new developer can learn the syst
 - [data-model.md](/home/nikan/projects/navya/docs/architecture/data-model.md)
 - [auth-and-security.md](/home/nikan/projects/navya/docs/architecture/auth-and-security.md)
 - [state-management.md](/home/nikan/projects/navya/docs/architecture/state-management.md)
+- [ui-stack.md](/home/nikan/projects/navya/docs/architecture/ui-stack.md)
 - [ai-and-feature-flags.md](/home/nikan/projects/navya/docs/architecture/ai-and-feature-flags.md)
 - [release-and-environments.md](/home/nikan/projects/navya/docs/architecture/release-and-environments.md)

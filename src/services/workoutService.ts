@@ -1,6 +1,12 @@
 import type { WorkoutPlan, WorkoutSession } from '../types/app';
+import type { Database } from '../types/supabase';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { MOCK_PLAN, MOCK_TODAY_SESSION } from '../mocks/mockData';
+import {
+  mapSessionExerciseRow,
+  mapWorkoutPlanRow,
+  mapWorkoutSessionRow,
+} from './supabaseMappers';
 
 function buildSessionFromPlan(plan: WorkoutPlan): WorkoutSession | null {
   const planDay = plan.workout_plan_days[0];
@@ -9,8 +15,10 @@ function buildSessionFromPlan(plan: WorkoutPlan): WorkoutSession | null {
     return null;
   }
 
+  const sessionId = `local-session-${Date.now()}`;
+
   return {
-    id: `local-session-${Date.now()}`,
+    id: sessionId,
     user_id: plan.user_id,
     plan_day_id: planDay.id,
     day_name: planDay.day_name,
@@ -20,7 +28,7 @@ function buildSessionFromPlan(plan: WorkoutPlan): WorkoutSession | null {
     duration_seconds: null,
     session_exercises: planDay.plan_exercises.map((exercise, index) => ({
       id: `local-session-exercise-${index}`,
-      session_id: `local-session-${Date.now()}`,
+      session_id: sessionId,
       exercise_id: exercise.exercise_id,
       exercise_name: exercise.exercise.name,
       planned_sets: exercise.sets,
@@ -61,7 +69,7 @@ export const workoutService = {
       return null;
     }
 
-    return (data as unknown as WorkoutPlan) ?? null;
+    return data ? mapWorkoutPlanRow(data) : null;
   },
 
   async getTodaySession(userId: string): Promise<WorkoutSession | null> {
@@ -85,7 +93,7 @@ export const workoutService = {
       return null;
     }
 
-    return (data as unknown as WorkoutSession) ?? null;
+    return data ? mapWorkoutSessionRow(data) : null;
   },
 
   async startSession(userId: string, plan: WorkoutPlan | null): Promise<WorkoutSession | null> {
@@ -110,7 +118,7 @@ export const workoutService = {
       .select('*')
       .single();
 
-    const sessionRow = sessionRowRaw as unknown as { id: string } & WorkoutSession;
+    const sessionRow = sessionRowRaw as Database['public']['Tables']['workout_sessions']['Row'] | null;
 
     if (sessionError || !sessionRow) {
       console.error('Error creating workout session:', sessionError);
@@ -138,8 +146,8 @@ export const workoutService = {
     }
 
     return {
-      ...(sessionRow as unknown as WorkoutSession),
-      session_exercises: (exerciseRows as unknown as WorkoutSession['session_exercises']) ?? [],
+      ...mapWorkoutSessionRow(sessionRow),
+      session_exercises: (exerciseRows ?? []).map(mapSessionExerciseRow),
     };
   },
 

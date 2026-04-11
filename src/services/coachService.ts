@@ -1,6 +1,18 @@
 import type { CoachMessage } from '../types/app';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { MOCK_COACH_MESSAGES, DEMO_COACH_RESPONSES } from '../mocks/mockData';
+import { mapCoachMessageRow } from './supabaseMappers';
+
+function buildCoachUnavailableMessage(userId: string): CoachMessage {
+  return {
+    id: `coach-fallback-${Date.now()}`,
+    user_id: userId,
+    action_type: 'quick_reply',
+    role: 'coach',
+    text: 'Coach is temporarily unavailable. Please try again shortly.',
+    created_at: new Date().toISOString(),
+  };
+}
 
 export const coachService = {
   async getMessages(userId: string): Promise<CoachMessage[]> {
@@ -19,7 +31,7 @@ export const coachService = {
       return MOCK_COACH_MESSAGES;
     }
 
-    return (data as unknown as CoachMessage[]) ?? [];
+    return (data ?? []).map(mapCoachMessageRow);
   },
 
   async requestQuickReply(userId: string, text: string): Promise<CoachMessage> {
@@ -59,23 +71,41 @@ export const coachService = {
 
     if (error) {
       console.error('Error requesting coach response:', error);
-      return {
-        id: `coach-fallback-${Date.now()}`,
-        user_id: userId,
-        action_type: 'quick_reply',
-        role: 'coach',
-        text: 'Coach is temporarily unavailable. Please try again shortly.',
-        created_at: new Date().toISOString(),
-      };
+      return buildCoachUnavailableMessage(userId);
     }
 
-    return (data as CoachMessage) ?? {
-      id: `coach-fallback-${Date.now()}`,
-      user_id: userId,
-      action_type: 'quick_reply',
-      role: 'coach',
-      text: 'Coach is temporarily unavailable. Please try again shortly.',
-      created_at: new Date().toISOString(),
-    };
+    const responseMessage: CoachMessage =
+      data && typeof data === 'object' && !Array.isArray(data)
+        ? {
+            id: typeof data.id === 'string' ? data.id : `coach-server-${Date.now()}`,
+            user_id: userId,
+            action_type: 'quick_reply',
+            role: 'coach',
+            text:
+              typeof data.text === 'string' && data.text.trim().length > 0
+                ? data.text
+                : 'Coach is temporarily unavailable. Please try again shortly.',
+            created_at:
+              typeof data.created_at === 'string' ? data.created_at : new Date().toISOString(),
+          }
+        : buildCoachUnavailableMessage(userId);
+
+    const { data: insertedReply, error: insertError } = await supabase
+      .from('coach_messages')
+      .insert({
+        user_id: userId,
+        action_type: responseMessage.action_type,
+        role: responseMessage.role,
+        text: responseMessage.text,
+      } as never)
+      .select('*')
+      .single();
+
+    if (insertError) {
+      console.error('Error storing coach reply:', insertError);
+      return responseMessage;
+    }
+
+    return mapCoachMessageRow(insertedReply);
   },
 };
