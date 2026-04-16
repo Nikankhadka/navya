@@ -1,136 +1,244 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Button, Card, Input } from '../../src/components/ui';
+import { OnboardingShell } from '../../src/components/ui/OnboardingShell';
+import { Colors, Radius, Spacing, Typography, withAlpha } from '../../src/constants/theme';
 import { useOnboardingStore } from '../../src/stores/useOnboardingStore';
-import { Ionicons } from '@expo/vector-icons';
+import type { UserProfile } from '../../src/types/app';
 
-const GLOW_OPTIONS = [
-  { id: 'Skin', icon: 'sparkles-outline', label: 'Recovery' },
-  { id: 'Hair', icon: 'water-outline', label: 'Consistency' },
-  { id: 'Body', icon: 'fitness-outline', label: 'Performance' },
-  { id: 'Mind', icon: 'leaf-outline', label: 'Mindset' },
-] as const;
+const FOCUS_OPTIONS: Array<{
+  id: UserProfile['glow_focus'];
+  label: string;
+  description: string;
+  emoji: string;
+}> = [
+  { id: 'Skin', label: 'Recovery', description: 'Feel fresher between sessions.', emoji: '🌙' },
+  { id: 'Hair', label: 'Consistency', description: 'Keep the habit stable each week.', emoji: '🌿' },
+  { id: 'Body', label: 'Performance', description: 'Push strength, energy, and output.', emoji: '⚡' },
+  { id: 'Mind', label: 'Focus', description: 'Stay locked in and mentally clear.', emoji: '🧠' },
+];
 
-const COUNTRIES = [
-  { id: 'AU', label: '🇦🇺 Australia' },
-  { id: 'NP', label: '🇳🇵 Nepal' },
-  { id: 'other', label: '🌎 Other' },
-] as const;
+const COUNTRIES: Array<{ id: UserProfile['country']; label: string }> = [
+  { id: 'AU', label: 'Australia' },
+  { id: 'NP', label: 'Nepal' },
+  { id: 'other', label: 'Other' },
+];
 
-const GENDERS = [
+const GENDERS: Array<{ id: UserProfile['gender']; label: string }> = [
   { id: 'male', label: 'Male' },
   { id: 'female', label: 'Female' },
   { id: 'non_binary', label: 'Non-binary' },
-] as const;
+  { id: 'prefer_not_to_say', label: 'Prefer not to say' },
+];
 
-const AGE_RANGES = ['18-24', '25-34', '35-44', '45-54', '55+'] as const;
+const AGE_RANGES: UserProfile['age_range'][] = ['18-24', '25-34', '35-44', '45-54', '55+'];
 
 export default function BasicsScreen() {
   const router = useRouter();
   const { full_name, glow_focus, country, age_range, gender, setField } = useOnboardingStore();
 
-  const isComplete = (full_name?.trim()?.length ?? 0) > 0 && !!glow_focus && !!country && !!age_range && !!gender;
+  const isComplete =
+    (full_name?.trim()?.length ?? 0) > 0 && !!glow_focus && !!country && !!age_range && !!gender;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <ScrollView className="flex-1 px-6 pt-10">
-        <Text className="text-white text-3xl font-bold mb-2">The Basics</Text>
-        <Text className="text-slate-400 text-lg mb-8">Tell us about your training profile.</Text>
-
-        {/* Full Name */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Display Name
-          </Text>
-          <TextInput
-            className="bg-slate-800 text-white p-4 rounded-xl border border-slate-700 focus:border-blue-500"
-            placeholder="How should we call you?"
-            placeholderTextColor="#64748b"
-            value={full_name}
-            onChangeText={(text) => setField('full_name', text)}
-          />
-        </View>
-
-        {/* Age Range */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Age Range
-          </Text>
-          <View className="flex-row flex-wrap">
-            {AGE_RANGES.map((range) => (
-              <TouchableOpacity
-                key={range}
-                onPress={() => setField('age_range', range)}
-                className={`px-4 py-2 rounded-full mr-2 mb-2 border ${
-                  age_range === range 
-                    ? 'bg-blue-600 border-blue-500' 
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <Text className="text-white text-sm font-medium">{range}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Gender */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Gender
-          </Text>
-          <View className="flex-row justify-between">
-            {GENDERS.map((g) => (
-              <TouchableOpacity
-                key={g.id}
-                onPress={() => setField('gender', g.id)}
-                className={`flex-1 p-3 rounded-xl mx-1 border ${
-                  gender === g.id 
-                    ? 'bg-blue-600 border-blue-500' 
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <Text className="text-white text-center text-sm font-medium">{g.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Priority Focus */}
-...
-        {/* Country */}
-        <View className="mb-12">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Location
-          </Text>
-          <View className="flex-row justify-between">
-            {COUNTRIES.map((c) => (
-              <TouchableOpacity
-                key={c.id}
-                onPress={() => setField('country', c.id)}
-                className={`flex-1 p-3 rounded-xl mx-1 border ${
-                  country === c.id 
-                    ? 'bg-blue-600 border-blue-500' 
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <Text className="text-white text-center font-medium">{c.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <TouchableOpacity
+    <OnboardingShell
+      currentStep={1}
+      title="The basics"
+      subtitle="Tell us who’s training, where you are, and which kind of momentum matters most right now."
+      footer={
+        <Button
+          label="Continue"
+          fullWidth
           disabled={!isComplete}
           onPress={() => router.push('/(onboarding)/body')}
-          className={`w-full py-4 rounded-xl mb-10 ${
-            isComplete ? 'bg-blue-600' : 'bg-slate-700 opacity-50'
-          }`}
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            Continue
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+        />
+      }
+    >
+      <Input
+        label="Display Name"
+        placeholder="How should we call you?"
+        value={full_name}
+        onChangeText={(text) => setField('full_name', text)}
+      />
+
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>Age range</Text>
+        <View style={styles.chipWrap}>
+          {AGE_RANGES.map((range) => (
+            <TouchableOpacity
+              key={range}
+              style={[styles.chip, age_range === range ? styles.chipActive : null]}
+              onPress={() => setField('age_range', range)}
+              activeOpacity={0.82}
+            >
+              <Text style={[styles.chipText, age_range === range ? styles.chipTextActive : null]}>
+                {range}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Card>
+
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>Gender</Text>
+        <View style={styles.chipWrap}>
+          {GENDERS.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              style={[styles.chip, gender === option.id ? styles.chipActive : null]}
+              onPress={() => setField('gender', option.id)}
+              activeOpacity={0.82}
+            >
+              <Text style={[styles.chipText, gender === option.id ? styles.chipTextActive : null]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Card>
+
+      <Text style={styles.focusLabel}>Current focus</Text>
+      <View style={styles.focusGrid}>
+        {FOCUS_OPTIONS.map((option) => (
+          <TouchableOpacity
+            key={option.id}
+            style={[styles.focusCard, glow_focus === option.id ? styles.focusCardActive : null]}
+            onPress={() => setField('glow_focus', option.id)}
+            activeOpacity={0.84}
+          >
+            <Text style={styles.focusEmoji}>{option.emoji}</Text>
+            <Text style={styles.focusTitle}>{option.label}</Text>
+            <Text style={styles.focusDescription}>{option.description}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>Location</Text>
+        <View style={styles.countryRow}>
+          {COUNTRIES.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              style={[styles.countryCard, country === option.id ? styles.countryCardActive : null]}
+              onPress={() => setField('country', option.id)}
+              activeOpacity={0.82}
+            >
+              <Text
+                style={[
+                  styles.countryCardText,
+                  country === option.id ? styles.countryCardTextActive : null,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Card>
+    </OnboardingShell>
   );
 }
+
+const styles = StyleSheet.create({
+  sectionCard: {
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  sectionLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  chip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  chipActive: {
+    borderColor: withAlpha(Colors.accent, 0.44),
+    backgroundColor: withAlpha(Colors.accent, 0.12),
+  },
+  chipText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  chipTextActive: {
+    color: Colors.accent,
+  },
+  focusLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: Spacing.md,
+  },
+  focusGrid: {
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  focusCard: {
+    padding: Spacing.lg,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.card,
+  },
+  focusCardActive: {
+    borderColor: withAlpha(Colors.accent, 0.44),
+    backgroundColor: withAlpha(Colors.accent, 0.12),
+  },
+  focusEmoji: {
+    fontSize: 22,
+    marginBottom: Spacing.sm,
+  },
+  focusTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    marginBottom: 4,
+  },
+  focusDescription: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+  },
+  countryRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  countryCard: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+  },
+  countryCardActive: {
+    borderColor: withAlpha(Colors.orange, 0.42),
+    backgroundColor: withAlpha(Colors.orange, 0.12),
+  },
+  countryCardText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    textAlign: 'center',
+  },
+  countryCardTextActive: {
+    color: Colors.orange,
+  },
+});

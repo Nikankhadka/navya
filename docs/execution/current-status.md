@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-- Week 3: daily diary parity upgrade
+- Week 4: progress and adherence upgrade
 
 ## Current Step
 
-- The first Phase 1 diary upgrade slice is implemented locally: grouped meal diary, quick-add and reusable meals, hydration logging, and a real activity-derived streak are now wired into the existing Home and Nutrition surfaces while live Supabase validation remains the next backend dependency.
+- The first progress slice is implemented locally: weight check-ins now work from both Home and Profile, recent weight history is visible in demo mode and ready for Supabase persistence, and workout-history follow-through is the next adherence gap to close.
 
 ## Completed In This Session
 
@@ -38,6 +38,8 @@
 - added typed hydration and reusable-meal contracts plus a Phase 1 `water_logs` Supabase migration
 - upgraded the Nutrition tab into a grouped daily diary with hydration logging, recent meal re-log, and quick-add calories
 - replaced the Home tab's mock streak with a real streak derived from logged meals, hydration, and completed workouts
+- added typed `weight_logs` contracts, a Supabase migration, and demo-backed service methods for lightweight progress tracking
+- added weight check-in flows to both Home and Profile with recent history cards and demo-session persistence
 - passed `npm run verify`
 - passed `npm run smoke:web`
 
@@ -46,15 +48,15 @@
 - validating typed relational reads and write paths against a real Supabase project
 - finalizing schema and RLS to match the hardened typed contracts
 - replacing remaining demo fallbacks with live seeded records once the hosted schema exists
-- connecting the new hydration persistence path to a live Supabase project
-- deciding whether the next diary slice should prioritize meal templates polish or profile-driven weight check-ins
+- connecting the new hydration and weight-check-in persistence paths to a live Supabase project
+- replacing remaining Profile placeholder stats with real derived adherence and progress data
 
 ## Next Recommended Step
 
 - connect a real Supabase project and regenerate final `src/types/supabase.ts`
-- validate the new read and write paths against the live schema and fix any relation mismatches, including `water_logs`
-- extend the Profile and Home surfaces with weight check-ins and simple progress history
+- validate the new read and write paths against the live schema and fix any relation mismatches, including `water_logs` and `weight_logs`
 - add workout history summaries so the diary streak and adherence loop are fully visible
+- replace Profile placeholder stats with real workout, streak, and nutrition aggregates
 - decide whether barcode-assisted food capture should be in beta behind a feature flag or deferred until food data quality is proven
 - verify OTP email and social auth end to end on device builds
 
@@ -65,4 +67,4 @@
 
 ## Last Updated
 
-- 2026-04-11
+- 2026-04-16

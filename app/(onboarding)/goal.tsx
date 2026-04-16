@@ -1,41 +1,19 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useOnboardingStore } from '../../src/stores/useOnboardingStore';
 import { Ionicons } from '@expo/vector-icons';
-import { GoalType } from '../../src/types/app';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Button, Card } from '../../src/components/ui';
+import { OnboardingShell } from '../../src/components/ui/OnboardingShell';
+import { Colors, Radius, Spacing, Typography, withAlpha } from '../../src/constants/theme';
+import { useOnboardingStore } from '../../src/stores/useOnboardingStore';
+import type { GoalType } from '../../src/types/app';
 
-const GOALS: { id: GoalType, label: string, icon: string, description: string }[] = [
-  { 
-    id: 'lose_weight', 
-    label: 'Lose Weight', 
-    icon: 'trending-down-outline', 
-    description: 'Burn fat and get leaner' 
-  },
-  { 
-    id: 'build_muscle', 
-    label: 'Build Muscle', 
-    icon: 'barbell-outline', 
-    description: 'Gain strength and mass' 
-  },
-  { 
-    id: 'improve_endurance', 
-    label: 'Improve Endurance', 
-    icon: 'timer-outline', 
-    description: 'Run longer, breathe better' 
-  },
-  { 
-    id: 'general_fitness', 
-    label: 'General Fitness', 
-    icon: 'pulse-outline', 
-    description: 'Stay healthy and active' 
-  },
-  { 
-    id: 'maintain', 
-    label: 'Maintain', 
-    icon: 'checkmark-done-outline', 
-    description: 'Keep your current physique' 
-  },
+const GOALS: Array<{ id: GoalType; label: string; icon: keyof typeof Ionicons.glyphMap; description: string }> = [
+  { id: 'lose_weight', label: 'Lose Weight', icon: 'trending-down-outline', description: 'Build momentum around a lighter, leaner routine.' },
+  { id: 'build_muscle', label: 'Build Muscle', icon: 'barbell-outline', description: 'Bias the week toward strength and growth.' },
+  { id: 'improve_endurance', label: 'Improve Endurance', icon: 'timer-outline', description: 'Improve output, repeatability, and stamina.' },
+  { id: 'general_fitness', label: 'General Fitness', icon: 'leaf-outline', description: 'Stay capable, healthy, and active across the week.' },
+  { id: 'maintain', label: 'Maintain', icon: 'checkmark-done-outline', description: 'Keep your current shape with steady structure.' },
 ];
 
 export default function GoalScreen() {
@@ -43,58 +21,121 @@ export default function GoalScreen() {
   const { goal, setField } = useOnboardingStore();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <ScrollView className="flex-1 px-6 pt-10">
-        <TouchableOpacity onPress={() => router.back()} className="mb-6">
-          <Ionicons name="arrow-back" size={24} color="#94a3b8" />
-        </TouchableOpacity>
-
-        <Text className="text-white text-3xl font-bold mb-2">What's your goal?</Text>
-        <Text className="text-slate-400 text-lg mb-8">This tailors your fitness plan and coaching guidance.</Text>
-
-        {GOALS.map((item) => (
+    <OnboardingShell
+      currentStep={3}
+      title="Choose your main goal"
+      subtitle="This becomes the anchor for plan tone, progress cues, and how the product talks to you."
+      onBack={() => router.back()}
+      footer={
+        <Button
+          label="Continue"
+          fullWidth
+          disabled={!goal}
+          onPress={() => router.push('/(onboarding)/preferences')}
+        />
+      }
+    >
+      <View style={styles.goalList}>
+        {GOALS.map((item, index) => (
           <TouchableOpacity
             key={item.id}
+            style={[
+              styles.goalCard,
+              goal === item.id ? styles.goalCardActive : null,
+              index % 2 === 1 ? styles.goalCardOffset : null,
+            ]}
             onPress={() => setField('goal', item.id)}
-            className={`w-full p-5 rounded-2xl mb-4 border-2 flex-row items-center ${
-              goal === item.id 
-                ? 'bg-blue-600/20 border-blue-500' 
-                : 'bg-slate-800 border-slate-700'
-            }`}
-            activeOpacity={0.7}
+            activeOpacity={0.84}
           >
-            <View className={`w-12 h-12 rounded-xl items-center justify-center mr-4 ${
-              goal === item.id ? 'bg-blue-500' : 'bg-slate-700'
-            }`}>
-              <Ionicons 
-                name={item.icon as any} 
-                size={24} 
-                color="white" 
+            <View style={styles.goalIconWrap}>
+              <Ionicons
+                name={item.icon}
+                size={22}
+                color={goal === item.id ? Colors.canopyBlack : Colors.text}
               />
             </View>
-            <View className="flex-1">
-              <Text className={`text-lg font-bold ${
-                goal === item.id ? 'text-white' : 'text-slate-200'
-              }`}>
-                {item.label}
-              </Text>
-              <Text className="text-slate-400 text-sm">{item.description}</Text>
+            <View style={styles.goalText}>
+              <Text style={styles.goalTitle}>{item.label}</Text>
+              <Text style={styles.goalDescription}>{item.description}</Text>
             </View>
-            {goal === item.id && (
-              <Ionicons name="checkmark-circle" size={24} color="#3b82f6" />
-            )}
+            <Text style={styles.goalCheck}>{goal === item.id ? '✓' : '○'}</Text>
           </TouchableOpacity>
         ))}
+      </View>
 
-        <TouchableOpacity
-          onPress={() => router.push('/(onboarding)/preferences')}
-          className="w-full bg-blue-600 py-4 rounded-xl mb-10 mt-4"
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            Continue
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+      <Card style={styles.noteCard}>
+        <Text style={styles.noteEyebrow}>One primary outcome</Text>
+        <Text style={styles.noteText}>
+          You can still train holistically, but choosing one dominant goal keeps the first version
+          of the product clear and useful.
+        </Text>
+      </Card>
+    </OnboardingShell>
   );
 }
+
+const styles = StyleSheet.create({
+  goalList: {
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  goalCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    padding: Spacing.lg,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.card,
+  },
+  goalCardOffset: {
+    marginLeft: Spacing.md,
+  },
+  goalCardActive: {
+    borderColor: withAlpha(Colors.orange, 0.42),
+    backgroundColor: withAlpha(Colors.orange, 0.12),
+  },
+  goalIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.barkBrownSoft,
+  },
+  goalText: {
+    flex: 1,
+  },
+  goalTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    marginBottom: 4,
+  },
+  goalDescription: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+  },
+  goalCheck: {
+    color: Colors.orange,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+  },
+  noteCard: {
+    gap: Spacing.xs,
+  },
+  noteEyebrow: {
+    color: Colors.accent,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  noteText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+  },
+});

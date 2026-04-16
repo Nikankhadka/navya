@@ -48,7 +48,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   refreshProfile: async () => {
     if (get().isDemoSession) {
-      set({ user: MOCK_PROFILE });
+      const profile = await profileService.getProfile(MOCK_PROFILE.id);
+      set({ user: profile ?? MOCK_PROFILE });
       return;
     }
 

@@ -82,6 +82,17 @@ export interface Database {
         Insert: Partial<Database["public"]["Tables"]["water_logs"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["water_logs"]["Row"]>;
       };
+      weight_logs: {
+        Row: {
+          id: string;
+          logged_at: string;
+          notes: string | null;
+          user_id: string;
+          weight_kg: number;
+        };
+        Insert: Partial<Database["public"]["Tables"]["weight_logs"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["weight_logs"]["Row"]>;
+      };
       plan_exercises: {
         Row: {
           exercise_id: string;

@@ -5,13 +5,14 @@ import type {
   Exercise,
   FeatureFlags,
   FoodLog,
-  WaterLog,
   MuscleGroup,
   PlanExercise,
+  SessionExercise,
+  WaterLog,
+  WeightLog,
   WorkoutPlan,
   WorkoutPlanDay,
   WorkoutSession,
-  SessionExercise,
 } from '../types/app';
 import type { Database, Json } from '../types/supabase';
 
@@ -21,6 +22,7 @@ type ExerciseRow = Tables['exercise_library']['Row'];
 type FeatureFlagsRow = Tables['feature_flags']['Row'];
 type FoodLogRow = Tables['food_logs']['Row'];
 type WaterLogRow = Tables['water_logs']['Row'];
+type WeightLogRow = Tables['weight_logs']['Row'];
 type CoachMessageRow = Tables['coach_messages']['Row'];
 type SessionExerciseRow = Tables['session_exercises']['Row'];
 type WorkoutSessionRow = Tables['workout_sessions']['Row'];
@@ -187,6 +189,16 @@ export function mapWaterLogRow(row: WaterLogRow): WaterLog {
     user_id: row.user_id,
     amount_ml: row.amount_ml,
     logged_at: row.logged_at,
+  };
+}
+
+export function mapWeightLogRow(row: WeightLogRow): WeightLog {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    weight_kg: row.weight_kg,
+    logged_at: row.logged_at,
+    notes: row.notes,
   };
 }
 

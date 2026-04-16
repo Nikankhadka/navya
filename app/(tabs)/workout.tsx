@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
 import { useWorkoutStore } from '../../src/stores/useWorkoutStore';
 import { Card, EmptyState } from '../../src/components/ui';
+import { ProgressBar } from '../../src/components/ui/MacroRing';
 import { ExerciseRow, PlanDayCard } from '../../src/components/workout';
 import { formatDuration, sessionProgress } from '../../src/utils/helpers';
 import { crossAlert } from '../../src/utils/crossAlert';
@@ -168,9 +169,7 @@ export default function WorkoutScreen() {
                     <Text style={styles.progressLabel}>Progress</Text>
                     <Text style={styles.progressPct}>{progress}%</Text>
                   </View>
-                  <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${progress}%` }]} />
-                  </View>
+                  <ProgressBar value={progress} max={100} color={Colors.accent} height={8} />
                 </Card>
 
                 <View style={styles.exerciseList}>
@@ -252,14 +251,24 @@ export default function WorkoutScreen() {
             </Card>
 
             {activePlan ? (
-              activePlan.workout_plan_days.map((day) => (
-                <PlanDayCard
-                  key={day.id}
-                  day={day}
-                  isToday={day.day_of_week.toLowerCase() === todayDayOfWeek}
-                  onPress={() => setSelectedPlanDay(day)}
-                />
-              ))
+              <>
+                {activePlan.workout_plan_days.map((day) => (
+                  <PlanDayCard
+                    key={day.id}
+                    day={day}
+                    isToday={day.day_of_week.toLowerCase() === todayDayOfWeek}
+                    onPress={() => setSelectedPlanDay(day)}
+                  />
+                ))}
+                <Card style={styles.historyCard}>
+                  <Text style={styles.historyEyebrow}>Reserved space</Text>
+                  <Text style={styles.historyTitle}>Workout history stays in this tab</Text>
+                  <Text style={styles.historyText}>
+                    The next adherence slice will add completed-session summaries here so the plan
+                    and the diary stay connected.
+                  </Text>
+                </Card>
+              </>
             ) : (
               <EmptyState
                 emoji="📋"
@@ -269,7 +278,7 @@ export default function WorkoutScreen() {
             )}
           </>
         )}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 132 }} />
       </ScrollView>
 
       <Modal
@@ -436,7 +445,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.medium,
   },
   tabTextActive: {
-    color: '#fff',
+    color: Colors.canopyBlack,
     fontWeight: Typography.weight.bold,
   },
   scroll: { flex: 1 },
@@ -451,17 +460,6 @@ const styles = StyleSheet.create({
   },
   progressLabel: { color: Colors.muted, fontSize: Typography.size.sm },
   progressPct: { color: Colors.accent, fontWeight: Typography.weight.bold, fontSize: Typography.size.sm },
-  progressBar: {
-    height: 8,
-    backgroundColor: Colors.border,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.accent,
-    borderRadius: 4,
-  },
 
   exerciseList: { gap: Spacing.sm },
 
@@ -514,7 +512,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   startBtnText: {
-    color: '#fff',
+    color: Colors.canopyBlack,
     fontWeight: Typography.weight.bold,
     fontSize: Typography.size.md,
     letterSpacing: 0.3,
@@ -605,6 +603,29 @@ const styles = StyleSheet.create({
   modalExerciseList: {
     gap: Spacing.md,
   },
+  historyCard: {
+    marginTop: Spacing.lg,
+  },
+  historyEyebrow: {
+    color: Colors.accent,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: Spacing.xs,
+  },
+  historyTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    fontFamily: Typography.fontDisplay,
+    marginBottom: Spacing.sm,
+  },
+  historyText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+  },
   planExerciseCard: {
     backgroundColor: Colors.card,
     borderRadius: Radius.xl,
@@ -627,7 +648,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   exerciseOrderText: {
-    color: '#fff',
+    color: Colors.canopyBlack,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
   },

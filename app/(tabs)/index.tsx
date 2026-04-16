@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -19,19 +22,26 @@ import { useTodaySession } from '../../src/hooks/useTodaySession';
 import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
 import { useCoachMessages } from '../../src/hooks/useCoachMessages';
 import { useHabitStreak } from '../../src/hooks/useHabitStreak';
+import { useWeightHistory } from '../../src/hooks/useWeightHistory';
+import { useWeightActions } from '../../src/hooks/useWeightActions';
 
 const WEEK_LABELS = getWeekDayLabels();
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user } = useAuthStore();
+  const { user, setProfile } = useAuthStore();
   const userId = user?.id;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [showWeightModal, setShowWeightModal] = useState(false);
+  const [weightInput, setWeightInput] = useState(user?.weight_kg ? String(user.weight_kg) : '');
+  const [weightNotes, setWeightNotes] = useState('');
   const { data: todaySession } = useTodaySession(userId);
   const { data: dailyNutrition } = useDailyNutrition(userId);
   const { data: coachMessages } = useCoachMessages(userId);
   const { data: habitStreak } = useHabitStreak(userId);
+  const { data: weightHistory } = useWeightHistory(userId);
+  const { addWeightLog } = useWeightActions(userId);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -40,6 +50,12 @@ export default function HomeScreen() {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+
+  useEffect(() => {
+    if (user?.weight_kg != null) {
+      setWeightInput(String(user.weight_kg));
+    }
+  }, [user?.weight_kg]);
 
   const doneExercises = todaySession?.session_exercises.filter(
     (ex) => ex.completed_sets.length >= ex.planned_sets
@@ -56,12 +72,41 @@ export default function HomeScreen() {
     coachMessages?.[0]?.text ?? 'Your coach will start guiding you once your activity data is available.';
   const streakDays = habitStreak?.current_streak_days ?? 0;
   const weeklyActivity = habitStreak?.weekly_activity ?? Array.from({ length: 7 }, () => false);
+  const latestWeight = weightHistory?.[0]?.weight_kg ?? user?.weight_kg ?? null;
+  const previousWeight = weightHistory?.[1]?.weight_kg ?? null;
+  const weightDelta =
+    latestWeight != null && previousWeight != null
+      ? Number((latestWeight - previousWeight).toFixed(1))
+      : null;
+  const lastCheckInLabel = weightHistory?.[0]
+    ? new Date(weightHistory[0].logged_at).toLocaleDateString('en-AU', {
+        day: 'numeric',
+        month: 'short',
+      })
+    : 'No check-in yet';
 
   const greeting = () => {
     const h = new Date().getHours();
     if (h < 12) return 'Good morning';
     if (h < 17) return 'Good afternoon';
     return 'Good evening';
+  };
+
+  const handleLogWeight = async () => {
+    const parsedWeight = Number(weightInput);
+
+    if (!userId || !Number.isFinite(parsedWeight) || parsedWeight <= 0) {
+      return;
+    }
+
+    await addWeightLog.mutateAsync({
+      weight_kg: parsedWeight,
+      notes: weightNotes.trim() ? weightNotes.trim() : null,
+    });
+
+    setProfile({ weight_kg: parsedWeight });
+    setWeightNotes('');
+    setShowWeightModal(false);
   };
 
   return (
@@ -214,6 +259,56 @@ export default function HomeScreen() {
         </View>
       </Card>
 
+      <SectionHeader title="Progress Check-In" action="Log Weight" onAction={() => setShowWeightModal(true)} />
+
+      <Card style={styles.progressCard}>
+        <View style={styles.progressTopRow}>
+          <View>
+            <Text style={styles.progressValue}>
+              {latestWeight != null ? `${latestWeight.toFixed(1)} kg` : 'No data'}
+            </Text>
+            <Text style={styles.progressMeta}>Last check-in {lastCheckInLabel}</Text>
+          </View>
+          <View
+            style={[
+              styles.progressDeltaChip,
+              weightDelta != null && weightDelta <= 0 ? styles.progressDeltaChipPositive : null,
+            ]}
+          >
+            <Text
+              style={[
+                styles.progressDeltaText,
+                weightDelta != null && weightDelta <= 0 ? styles.progressDeltaTextPositive : null,
+              ]}
+            >
+              {weightDelta == null ? 'New' : `${weightDelta > 0 ? '+' : ''}${weightDelta} kg`}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.progressHistoryRow}>
+          {(weightHistory ?? []).slice(0, 4).map((entry) => (
+            <View key={entry.id} style={styles.progressHistoryItem}>
+              <Text style={styles.progressHistoryValue}>{entry.weight_kg.toFixed(1)}</Text>
+              <Text style={styles.progressHistoryDate}>
+                {new Date(entry.logged_at).toLocaleDateString('en-AU', {
+                  day: 'numeric',
+                  month: 'short',
+                })}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          style={styles.checkInBtn}
+          activeOpacity={0.85}
+          onPress={() => setShowWeightModal(true)}
+        >
+          <Text style={styles.checkInBtnText}>Log Weight Check-In</Text>
+        </TouchableOpacity>
+      </Card>
+
       {/* ── AI Coach Tip ─────────────────────────────────────────────────── */}
       <SectionHeader title="AI Coach" />
 
@@ -235,7 +330,67 @@ export default function HomeScreen() {
         </View>
       </TouchableOpacity>
 
-      <View style={{ height: Spacing.xl }} />
+      <View style={{ height: 132 }} />
+
+      <Modal
+        visible={showWeightModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowWeightModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalScreen}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Weight Check-In</Text>
+              <TouchableOpacity onPress={() => setShowWeightModal(false)}>
+                <Text style={styles.modalClose}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalHelper}>
+              Keep one lightweight check-in per week so the diary loop shows real body progress.
+            </Text>
+
+            <Text style={styles.fieldLabel}>Weight (kg)</Text>
+            <TextInput
+              style={styles.input}
+              value={weightInput}
+              onChangeText={setWeightInput}
+              placeholder="78.0"
+              placeholderTextColor={Colors.dim}
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.fieldLabel}>Note</Text>
+            <TextInput
+              style={[styles.input, styles.notesInput]}
+              value={weightNotes}
+              onChangeText={setWeightNotes}
+              placeholder="Optional note about the week"
+              placeholderTextColor={Colors.dim}
+              multiline
+            />
+
+            <TouchableOpacity
+              style={[styles.saveBtn, addWeightLog.isPending && styles.saveBtnDisabled]}
+              activeOpacity={0.85}
+              disabled={addWeightLog.isPending || !weightInput.trim()}
+              onPress={handleLogWeight}
+            >
+              <Text style={styles.saveBtnText}>
+                {addWeightLog.isPending ? 'Saving...' : 'Save Check-In'}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 }
@@ -247,7 +402,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.xl,
-    paddingBottom: 40,
+    paddingBottom: 132,
   },
   header: {
     flexDirection: 'row',
@@ -351,7 +506,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   startBtnText: {
-    color: '#fff',
+    color: Colors.canopyBlack,
     fontWeight: Typography.weight.bold,
     fontSize: Typography.size.md,
     letterSpacing: 0.3,
@@ -428,6 +583,85 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
     textAlign: 'right',
   },
+  progressCard: {
+    marginBottom: Spacing.xxl,
+  },
+  progressTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  progressValue: {
+    color: Colors.text,
+    fontSize: Typography.size.xxl,
+    fontWeight: Typography.weight.extrabold,
+    letterSpacing: -0.5,
+  },
+  progressMeta: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    marginTop: 4,
+  },
+  progressDeltaChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.orange + '22',
+    borderColor: Colors.orange + '44',
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  progressDeltaChipPositive: {
+    backgroundColor: Colors.greenMuted,
+    borderColor: Colors.green + '44',
+  },
+  progressDeltaText: {
+    color: Colors.orange,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.bold,
+  },
+  progressDeltaTextPositive: {
+    color: Colors.green,
+  },
+  progressHistoryRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  progressHistoryItem: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  progressHistoryValue: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+  },
+  progressHistoryDate: {
+    color: Colors.dim,
+    fontSize: Typography.size.xs,
+    marginTop: 4,
+  },
+  checkInBtn: {
+    backgroundColor: Colors.accentSoft,
+    borderColor: Colors.accent + '33',
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+  },
+  checkInBtnText: {
+    color: Colors.accent,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+  },
   coachCard: {
     flexDirection: 'row',
     gap: Spacing.md,
@@ -467,5 +701,75 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
+  },
+  modalScreen: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  modalScroll: {
+    flex: 1,
+  },
+  modalContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xxl,
+    paddingBottom: 48,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.lg,
+  },
+  modalTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.xxl,
+    fontWeight: Typography.weight.extrabold,
+  },
+  modalClose: {
+    color: Colors.accent,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+  },
+  modalHelper: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+    marginBottom: Spacing.md,
+  },
+  fieldLabel: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  input: {
+    backgroundColor: Colors.card,
+    borderColor: Colors.border,
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    color: Colors.text,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    fontSize: Typography.size.md,
+  },
+  notesInput: {
+    minHeight: 96,
+    textAlignVertical: 'top',
+  },
+  saveBtn: {
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.lg,
+    alignItems: 'center',
+    marginTop: Spacing.xl,
+  },
+  saveBtnDisabled: {
+    opacity: 0.6,
+  },
+  saveBtnText: {
+    color: Colors.canopyBlack,
+    fontWeight: Typography.weight.bold,
+    fontSize: Typography.size.md,
   },
 });

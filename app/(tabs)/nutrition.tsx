@@ -1,24 +1,31 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  View,
-  Text,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableOpacity,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Modal,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
-import { Card, SectionHeader } from '../../src/components/ui';
+import {
+  Button,
+  Card,
+  Input,
+  QuickActionChip,
+  SectionHeader,
+  SheetHandle,
+} from '../../src/components/ui';
 import { MacroRing, ProgressBar } from '../../src/components/ui/MacroRing';
-import { formatTime, formatWaterAmount, mealTimeLabel } from '../../src/utils/helpers';
-import type { FoodLog, RecentMealTemplate } from '../../src/types/app';
+import { Colors, Radius, Spacing, Typography, withAlpha } from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
 import { useNutritionActions } from '../../src/hooks/useNutritionActions';
+import { formatTime, formatWaterAmount, mealTimeLabel } from '../../src/utils/helpers';
+import { crossAlert } from '../../src/utils/crossAlert';
+import type { FoodLog, RecentMealTemplate } from '../../src/types/app';
 
 type MealTime = FoodLog['meal_time'];
 
@@ -41,12 +48,19 @@ const EMPTY_FORM: NewMealForm = {
 };
 
 const QUICK_ADD_OPTIONS = [
-  { label: '+250ml', amountMl: 250 },
-  { label: '+500ml', amountMl: 500 },
-  { label: '+750ml', amountMl: 750 },
+  { label: '+250 ml', amountMl: 250 },
+  { label: '+500 ml', amountMl: 500 },
+  { label: '+750 ml', amountMl: 750 },
 ];
 
 const MEAL_SECTION_ORDER: MealTime[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+const MEAL_CHOICES: Array<{ id: MealTime; label: string }> = [
+  { id: 'breakfast', label: 'Breakfast' },
+  { id: 'lunch', label: 'Lunch' },
+  { id: 'dinner', label: 'Dinner' },
+  { id: 'snack', label: 'Snack' },
+];
 
 export default function NutritionScreen() {
   const insets = useSafeAreaInsets();
@@ -70,10 +84,14 @@ export default function NutritionScreen() {
   const recentMeals = nutritionSummary?.recent_meals ?? [];
   const remaining = calorieGoal - totalCal;
 
-  const mealsByTime = MEAL_SECTION_ORDER.map((mealTime) => ({
-    mealTime,
-    meals: meals.filter((meal) => meal.meal_time === mealTime),
-  }));
+  const mealsByTime = useMemo(
+    () =>
+      MEAL_SECTION_ORDER.map((mealTime) => ({
+        mealTime,
+        meals: meals.filter((meal) => meal.meal_time === mealTime),
+      })),
+    [meals],
+  );
 
   const handleAddMeal = async () => {
     if (!form.meal_name.trim() || !form.calories) {
@@ -118,10 +136,23 @@ export default function NutritionScreen() {
     });
   };
 
+  const handleDeleteMeal = (meal: FoodLog) => {
+    crossAlert('Remove this meal?', `${meal.meal_name} will be removed from today’s diary.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          deleteMeal.mutate(meal.id);
+        },
+      },
+    ]);
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
+      style={styles.keyboard}
     >
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <View style={styles.header}>
@@ -135,63 +166,26 @@ export default function NutritionScreen() {
               })}
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.addBtn}
-            onPress={() => setShowModal(true)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.addBtnText}>+ Log Meal</Text>
-          </TouchableOpacity>
+          <Button label="Log Meal" size="sm" onPress={() => setShowModal(true)} />
         </View>
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: 128 + Math.max(insets.bottom, 0) }]}
           showsVerticalScrollIndicator={false}
         >
-          <Card style={styles.macroCard}>
+          <Card variant="hero" style={styles.heroCard}>
+            <Text style={styles.heroEyebrow}>Today’s diary</Text>
             <View style={styles.ringRow}>
-              <MacroRing
-                value={totalCal}
-                max={calorieGoal}
-                size={85}
-                color={Colors.orange}
-                label="Calories"
-                unit=" kcal"
-              />
-              <MacroRing
-                value={totalProtein}
-                max={proteinGoal}
-                size={85}
-                color={Colors.accent}
-                label="Protein"
-                unit="g"
-              />
-              <MacroRing
-                value={totalCarbs}
-                max={carbGoal}
-                size={85}
-                color={Colors.green}
-                label="Carbs"
-                unit="g"
-              />
-              <MacroRing
-                value={totalFat}
-                max={fatGoal}
-                size={85}
-                color={Colors.blue}
-                label="Fat"
-                unit="g"
-              />
+              <MacroRing value={totalCal} max={calorieGoal} color={Colors.orange} label="Calories" unit=" kcal" />
+              <MacroRing value={totalProtein} max={proteinGoal} color={Colors.accent} label="Protein" unit="g" />
+              <MacroRing value={totalCarbs} max={carbGoal} color={Colors.green} label="Carbs" unit="g" />
+              <MacroRing value={totalFat} max={fatGoal} color={Colors.blue} label="Fat" unit="g" />
             </View>
-
             <View
               style={[
                 styles.remainingBanner,
-                {
-                  backgroundColor:
-                    remaining >= 0 ? Colors.greenMuted : Colors.redMuted,
-                },
+                { backgroundColor: remaining >= 0 ? Colors.greenMuted : Colors.redMuted },
               ]}
             >
               <Text
@@ -201,56 +195,39 @@ export default function NutritionScreen() {
                 ]}
               >
                 {remaining >= 0 ? '+' : ''}
-                {remaining} kcal remaining today
+                {remaining} kcal {remaining >= 0 ? 'remaining' : 'over goal'}
               </Text>
             </View>
           </Card>
 
-          <SectionHeader title="Hydration" />
+          <SectionHeader title="Hydration" action="Quick add" />
           <Card style={styles.waterCard}>
-            <View style={styles.waterHeader}>
+            <View style={styles.waterTopRow}>
               <View>
                 <Text style={styles.waterValue}>{formatWaterAmount(waterTotal)}</Text>
-                <Text style={styles.waterMeta}>
-                  of {formatWaterAmount(waterGoal)} target
-                </Text>
+                <Text style={styles.waterMeta}>of {formatWaterAmount(waterGoal)} target</Text>
               </View>
-              <View style={styles.waterBadge}>
-                <Text style={styles.waterBadgeText}>Daily habit</Text>
-              </View>
+              <QuickActionChip label="River Blue" tone="water" />
             </View>
-            <ProgressBar
-              value={waterTotal}
-              max={waterGoal}
-              color={Colors.blue}
-              height={6}
-              showLabel={false}
-            />
+            <ProgressBar value={waterTotal} max={waterGoal} color={Colors.blue} height={8} />
             <View style={styles.waterActions}>
               {QUICK_ADD_OPTIONS.map((option) => (
-                <TouchableOpacity
+                <QuickActionChip
                   key={option.label}
-                  style={styles.waterAction}
-                  activeOpacity={0.85}
-                  disabled={addWater.isPending}
+                  label={option.label}
+                  tone="water"
                   onPress={() => addWater.mutate(option.amountMl)}
-                >
-                  <Text style={styles.waterActionText}>{option.label}</Text>
-                </TouchableOpacity>
+                />
               ))}
             </View>
           </Card>
 
-          <SectionHeader
-            title="Quick Add"
-            action="+ 200 kcal"
-            onAction={handleQuickAddCalories}
-          />
+          <SectionHeader title="Quick Add" action="+ 200 kcal" onAction={handleQuickAddCalories} />
           <View style={styles.recentMealsRow}>
             {recentMeals.length === 0 ? (
               <Card style={styles.emptyRecentCard}>
                 <Text style={styles.emptyRecentText}>
-                  Log a few meals and your fastest repeat options will appear here.
+                  Repeat meals will appear here after you log a few entries.
                 </Text>
               </Card>
             ) : (
@@ -272,59 +249,53 @@ export default function NutritionScreen() {
             )}
           </View>
 
-          <SectionHeader
-            title="Today's Diary"
-            action="+ Add"
-            onAction={() => setShowModal(true)}
-          />
+          <SectionHeader title="Today’s Diary" action="+ Add" onAction={() => setShowModal(true)} />
 
           {mealsByTime.map((section) => (
             <View key={section.mealTime} style={styles.mealSection}>
               <View style={styles.mealSectionHeader}>
-                <Text style={styles.mealSectionTitle}>
-                  {mealTimeLabel(section.mealTime)}
-                </Text>
+                <Text style={styles.mealSectionTitle}>{mealTimeLabel(section.mealTime)}</Text>
                 <Text style={styles.mealSectionMeta}>
                   {section.meals.reduce((sum, meal) => sum + meal.calories, 0)} kcal
                 </Text>
               </View>
 
               {section.meals.length === 0 ? (
-                <View style={styles.emptyMealSection}>
-                  <Text style={styles.emptyMealSectionText}>
-                    Nothing logged yet
-                  </Text>
-                </View>
+                <Card style={styles.emptyMealSection}>
+                  <Text style={styles.emptyMealSectionText}>Nothing logged yet.</Text>
+                </Card>
               ) : (
                 <View style={styles.mealList}>
                   {section.meals.map((meal) => (
-                    <TouchableOpacity
-                      key={meal.id}
-                      style={styles.mealRow}
-                      activeOpacity={0.85}
-                      onLongPress={() => deleteMeal.mutate(meal.id)}
-                    >
-                      <View style={styles.mealLeft}>
-                        <Text style={styles.mealName}>{meal.meal_name}</Text>
-                        <Text style={styles.mealTimestamp}>
-                          {formatTime(meal.logged_at)}
-                        </Text>
+                    <Card key={meal.id} style={styles.mealRow}>
+                      <View style={styles.mealRowTop}>
+                        <View style={styles.mealLeft}>
+                          <Text style={styles.mealName}>{meal.meal_name}</Text>
+                          <Text style={styles.mealTimestamp}>{formatTime(meal.logged_at)}</Text>
+                        </View>
+                        <View style={styles.mealRight}>
+                          <Text style={styles.mealCal}>{meal.calories}</Text>
+                          <Text style={styles.mealCalLabel}>kcal</Text>
+                        </View>
                       </View>
-                      <View style={styles.mealRight}>
-                        <Text style={styles.mealCal}>{meal.calories}</Text>
-                        <Text style={styles.mealCalLabel}>kcal</Text>
+                      <View style={styles.mealFooter}>
                         <Text style={styles.mealMacroLine}>
                           {meal.protein_g ?? 0}P • {meal.carbs_g ?? 0}C • {meal.fat_g ?? 0}F
                         </Text>
+                        <TouchableOpacity
+                          onPress={() => handleDeleteMeal(meal)}
+                          activeOpacity={0.82}
+                          style={styles.deleteAction}
+                        >
+                          <Text style={styles.deleteActionText}>Delete</Text>
+                        </TouchableOpacity>
                       </View>
-                    </TouchableOpacity>
+                    </Card>
                   ))}
                 </View>
               )}
             </View>
           ))}
-
-          <View style={{ height: 40 }} />
         </ScrollView>
 
         <Modal
@@ -333,110 +304,111 @@ export default function NutritionScreen() {
           presentationStyle="pageSheet"
           onRequestClose={() => setShowModal(false)}
         >
-          <View style={styles.modal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Log a Meal</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Text style={styles.modalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
+          <KeyboardAvoidingView
+            style={styles.modal}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <ScrollView
+              style={styles.modalScroll}
+              contentContainerStyle={[
+                styles.modalContent,
+                { paddingBottom: Math.max(insets.bottom, 24) + 32 },
+              ]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <SheetHandle />
+              <View style={styles.modalHeader}>
+                <View>
+                  <Text style={styles.modalTitle}>Log a meal</Text>
+                  <Text style={styles.modalSubtitle}>
+                    Fast capture for the daily diary. Keep it simple and move on.
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowModal(false)} style={styles.modalClose}>
+                  <Text style={styles.modalCloseText}>Close</Text>
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView style={styles.modalScroll} keyboardShouldPersistTaps="handled">
-              <Text style={styles.fieldLabel}>Meal Name *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Chicken Rice Bowl"
-                placeholderTextColor={Colors.dim}
+              <Input
+                label="Meal Name"
+                placeholder="Chicken rice bowl"
                 value={form.meal_name}
-                onChangeText={(v: string) => setForm((f) => ({ ...f, meal_name: v }))}
+                onChangeText={(value) => setForm((current) => ({ ...current, meal_name: value }))}
                 testID="nutrition-meal-name-input"
               />
 
-              <Text style={styles.fieldLabel}>Calories *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. 450"
-                placeholderTextColor={Colors.dim}
-                keyboardType="numeric"
-                value={form.calories}
-                onChangeText={(v: string) => setForm((f) => ({ ...f, calories: v }))}
-              />
-
-              <View style={styles.macroInputRow}>
-                <View style={styles.macroInput}>
-                  <Text style={styles.fieldLabel}>Protein (g)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="0"
-                    placeholderTextColor={Colors.dim}
-                    keyboardType="numeric"
-                    value={form.protein_g}
-                    onChangeText={(v: string) => setForm((f) => ({ ...f, protein_g: v }))}
-                  />
-                </View>
-                <View style={styles.macroInput}>
-                  <Text style={styles.fieldLabel}>Carbs (g)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="0"
-                    placeholderTextColor={Colors.dim}
-                    keyboardType="numeric"
-                    value={form.carbs_g}
-                    onChangeText={(v: string) => setForm((f) => ({ ...f, carbs_g: v }))}
-                  />
-                </View>
-                <View style={styles.macroInput}>
-                  <Text style={styles.fieldLabel}>Fat (g)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="0"
-                    placeholderTextColor={Colors.dim}
-                    keyboardType="numeric"
-                    value={form.fat_g}
-                    onChangeText={(v: string) => setForm((f) => ({ ...f, fat_g: v }))}
-                  />
-                </View>
-              </View>
-
-              <Text style={styles.fieldLabel}>Meal Time</Text>
-              <View style={styles.mealTimeRow}>
-                {MEAL_SECTION_ORDER.map((t) => (
+              <View style={styles.mealChoiceWrap}>
+                {MEAL_CHOICES.map((choice) => (
                   <TouchableOpacity
-                    key={t}
+                    key={choice.id}
                     style={[
-                      styles.mealTimePill,
-                      form.meal_time === t && styles.mealTimePillActive,
+                      styles.mealChoice,
+                      form.meal_time === choice.id ? styles.mealChoiceActive : null,
                     ]}
-                    onPress={() => setForm((f) => ({ ...f, meal_time: t }))}
+                    onPress={() => setForm((current) => ({ ...current, meal_time: choice.id }))}
+                    activeOpacity={0.82}
                   >
                     <Text
                       style={[
-                        styles.mealTimePillText,
-                        form.meal_time === t && styles.mealTimePillTextActive,
+                        styles.mealChoiceText,
+                        form.meal_time === choice.id ? styles.mealChoiceTextActive : null,
                       ]}
                     >
-                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                      {choice.label}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <TouchableOpacity
-                style={[
-                  styles.logBtn,
-                  (!form.meal_name || !form.calories) && styles.logBtnDisabled,
-                ]}
-                onPress={handleAddMeal}
-                disabled={!form.meal_name || !form.calories}
-                activeOpacity={0.85}
-                testID="nutrition-save-meal"
-              >
-                <Text style={styles.logBtnText}>Save Meal</Text>
-              </TouchableOpacity>
+              <Input
+                label="Calories"
+                placeholder="450"
+                keyboardType="numeric"
+                value={form.calories}
+                onChangeText={(value) => setForm((current) => ({ ...current, calories: value }))}
+                testID="nutrition-meal-calories-input"
+              />
 
-              <View style={{ height: 60 }} />
+              <View style={styles.macroInputRow}>
+                <View style={styles.compactField}>
+                  <Input
+                    label="Protein"
+                    placeholder="30"
+                    keyboardType="numeric"
+                    value={form.protein_g}
+                    onChangeText={(value) => setForm((current) => ({ ...current, protein_g: value }))}
+                  />
+                </View>
+                <View style={styles.compactField}>
+                  <Input
+                    label="Carbs"
+                    placeholder="45"
+                    keyboardType="numeric"
+                    value={form.carbs_g}
+                    onChangeText={(value) => setForm((current) => ({ ...current, carbs_g: value }))}
+                  />
+                </View>
+                <View style={styles.compactField}>
+                  <Input
+                    label="Fat"
+                    placeholder="15"
+                    keyboardType="numeric"
+                    value={form.fat_g}
+                    onChangeText={(value) => setForm((current) => ({ ...current, fat_g: value }))}
+                  />
+                </View>
+              </View>
+
+              <Button
+                label={addMeal.isPending ? 'Saving...' : 'Save Meal'}
+                fullWidth
+                onPress={handleAddMeal}
+                disabled={addMeal.isPending}
+                testID="nutrition-save-meal"
+              />
             </ScrollView>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       </View>
     </KeyboardAvoidingView>
@@ -444,101 +416,89 @@ export default function NutritionScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.bg },
+  keyboard: {
+    flex: 1,
+  },
+  screen: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
+    paddingBottom: Spacing.lg,
+    paddingTop: Spacing.md,
   },
   screenTitle: {
     color: Colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
   },
   dateLabel: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
-    marginTop: 2,
-  },
-  addBtn: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.lg,
-    backgroundColor: Colors.accent,
-  },
-  addBtnText: {
-    color: '#fff',
-    fontWeight: Typography.weight.bold,
-    fontSize: Typography.size.sm,
-  },
-  scroll: { flex: 1 },
-  content: { padding: Spacing.xl, paddingBottom: 40 },
-  macroCard: { marginBottom: Spacing.xxl },
-  ringRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: Spacing.lg,
-  },
-  remainingBanner: {
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-  },
-  remainingText: {
-    fontWeight: Typography.weight.bold,
-    fontSize: Typography.size.sm,
-  },
-  waterCard: {
-    marginBottom: Spacing.xxl,
-    gap: Spacing.md,
-  },
-  waterHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  waterValue: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.extrabold,
-  },
-  waterMeta: {
-    color: Colors.muted,
+    color: Colors.textSecondary,
     fontSize: Typography.size.sm,
     marginTop: 4,
   },
-  waterBadge: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.blue + '22',
-    borderWidth: 1,
-    borderColor: Colors.blue + '44',
+  scroll: {
+    flex: 1,
   },
-  waterBadgeText: {
-    color: Colors.blue,
-    fontWeight: Typography.weight.bold,
+  content: {
+    paddingHorizontal: Spacing.xl,
+  },
+  heroCard: {
+    marginBottom: Spacing.xxl,
+  },
+  heroEyebrow: {
+    color: Colors.muted,
     fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: Spacing.sm,
+  },
+  ringRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: Spacing.md,
+  },
+  remainingBanner: {
+    marginTop: Spacing.lg,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  remainingText: {
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.bold,
+  },
+  waterCard: {
+    marginBottom: Spacing.xxl,
+  },
+  waterTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.md,
+  },
+  waterValue: {
+    color: Colors.text,
+    fontSize: Typography.size.xxxl,
+    fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
+  },
+  waterMeta: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
   },
   waterActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.sm,
-  },
-  waterAction: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.lg,
-    backgroundColor: Colors.bg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  waterActionText: {
-    color: Colors.text,
-    fontWeight: Typography.weight.semibold,
-    fontSize: Typography.size.sm,
+    marginTop: Spacing.md,
   },
   recentMealsRow: {
     flexDirection: 'row',
@@ -547,159 +507,199 @@ const styles = StyleSheet.create({
   },
   emptyRecentCard: {
     flex: 1,
-    padding: Spacing.lg,
+    paddingVertical: Spacing.lg,
   },
   emptyRecentText: {
-    color: Colors.muted,
+    color: Colors.textSecondary,
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },
   recentMealChip: {
     flex: 1,
-    backgroundColor: Colors.card,
+    padding: Spacing.md,
+    borderRadius: Radius.xl,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: Radius.xl,
-    padding: Spacing.lg,
+    backgroundColor: Colors.card,
   },
   recentMealName: {
     color: Colors.text,
-    fontWeight: Typography.weight.semibold,
     fontSize: Typography.size.sm,
-    marginBottom: 6,
+    fontWeight: Typography.weight.bold,
+    marginBottom: 4,
   },
   recentMealMeta: {
-    color: Colors.muted,
+    color: Colors.textSecondary,
     fontSize: Typography.size.xs,
   },
   mealSection: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xxl,
   },
   mealSectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   mealSectionTitle: {
     color: Colors.text,
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
+    fontFamily: Typography.fontDisplay,
   },
   mealSectionMeta: {
     color: Colors.muted,
     fontSize: Typography.size.sm,
   },
   emptyMealSection: {
-    backgroundColor: Colors.card,
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.lg,
+    paddingVertical: Spacing.lg,
   },
   emptyMealSectionText: {
-    color: Colors.dim,
+    color: Colors.textSecondary,
     fontSize: Typography.size.sm,
   },
   mealList: {
-    borderRadius: Radius.xl,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
+    gap: Spacing.md,
   },
   mealRow: {
+    padding: Spacing.lg,
+  },
+  mealRowTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    gap: Spacing.md,
   },
-  mealLeft: { flex: 1, gap: 2 },
+  mealLeft: {
+    flex: 1,
+  },
   mealName: {
     color: Colors.text,
     fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
+    fontWeight: Typography.weight.bold,
+    marginBottom: 4,
   },
-  mealTimestamp: { color: Colors.dim, fontSize: Typography.size.xs },
-  mealRight: { alignItems: 'flex-end', gap: 4 },
+  mealTimestamp: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+  },
+  mealRight: {
+    alignItems: 'flex-end',
+  },
   mealCal: {
     color: Colors.orange,
     fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
+    fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
   },
-  mealCalLabel: { color: Colors.muted, fontSize: Typography.size.xs },
-  mealMacroLine: { color: Colors.accent, fontSize: Typography.size.xs },
-  modal: { flex: 1, backgroundColor: Colors.bg },
-  modalHeader: {
+  mealCalLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  mealFooter: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: withAlpha(Colors.borderLight, 0.4),
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+  },
+  mealMacroLine: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+  },
+  deleteAction: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.red, 0.36),
+    backgroundColor: withAlpha(Colors.red, 0.1),
+  },
+  deleteActionText: {
+    color: Colors.red,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  modal: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  modalScroll: {
+    flex: 1,
+  },
+  modalContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   modalTitle: {
     color: Colors.text,
-    fontSize: Typography.size.xl,
+    fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.bold,
+    fontFamily: Typography.fontDisplay,
   },
-  modalClose: { color: Colors.muted, fontSize: Typography.size.xl, padding: 4 },
-  modalScroll: { padding: Spacing.xl },
-  fieldLabel: {
-    color: Colors.muted,
+  modalSubtitle: {
+    color: Colors.textSecondary,
     fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-    marginBottom: Spacing.xs,
-    marginTop: Spacing.md,
+    lineHeight: 20,
+    marginTop: 4,
+    maxWidth: 260,
   },
-  input: {
-    backgroundColor: Colors.card,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 13,
-  },
-  macroInputRow: { flexDirection: 'row', gap: Spacing.sm },
-  macroInput: { flex: 1 },
-  mealTimeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.xs },
-  mealTimePill: {
-    paddingHorizontal: Spacing.lg,
+  modalClose: {
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
     borderWidth: 1,
     borderColor: Colors.border,
-    backgroundColor: Colors.card,
+    alignSelf: 'flex-start',
   },
-  mealTimePillActive: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
-  },
-  mealTimePillText: {
-    color: Colors.text,
+  modalCloseText: {
+    color: Colors.textSecondary,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
-  mealTimePillTextActive: {
-    color: '#fff',
+  mealChoiceWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
-  logBtn: {
-    marginTop: Spacing.xl,
-    backgroundColor: Colors.accent,
-    paddingVertical: 15,
-    borderRadius: Radius.xl,
-    alignItems: 'center',
+  mealChoice: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
   },
-  logBtnDisabled: {
-    opacity: 0.45,
+  mealChoiceActive: {
+    borderColor: withAlpha(Colors.orange, 0.42),
+    backgroundColor: withAlpha(Colors.orange, 0.12),
   },
-  logBtnText: {
-    color: '#fff',
-    fontWeight: Typography.weight.bold,
-    fontSize: Typography.size.md,
+  mealChoiceText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  mealChoiceTextActive: {
+    color: Colors.orange,
+  },
+  macroInputRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  compactField: {
+    flex: 1,
   },
 });

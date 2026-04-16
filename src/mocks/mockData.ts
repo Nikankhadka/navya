@@ -6,6 +6,7 @@ import type {
   CoachMessage,
   DailyNutritionSummary,
   WaterLog,
+  WeightLog,
 } from '../types/app';
 
 export const MOCK_PROFILE: UserProfile = {
@@ -369,6 +370,37 @@ export const MOCK_COACH_MESSAGES: CoachMessage[] = [
 export const MOCK_WEEKLY_STREAK = [true, true, false, true, true, true, false];
 
 export const MOCK_WATER_LOGS: WaterLog[] = MOCK_DAILY_NUTRITION.water_logs;
+
+export const MOCK_WEIGHT_LOGS: WeightLog[] = [
+  {
+    id: 'weight-1',
+    user_id: 'mock-user-1',
+    weight_kg: 79.2,
+    logged_at: new Date(Date.now() - 21 * 24 * 3600_000).toISOString(),
+    notes: 'Start of the current block',
+  },
+  {
+    id: 'weight-2',
+    user_id: 'mock-user-1',
+    weight_kg: 78.6,
+    logged_at: new Date(Date.now() - 14 * 24 * 3600_000).toISOString(),
+    notes: null,
+  },
+  {
+    id: 'weight-3',
+    user_id: 'mock-user-1',
+    weight_kg: 78.1,
+    logged_at: new Date(Date.now() - 7 * 24 * 3600_000).toISOString(),
+    notes: 'More consistent nutrition this week',
+  },
+  {
+    id: 'weight-4',
+    user_id: 'mock-user-1',
+    weight_kg: 78,
+    logged_at: new Date(Date.now() - 1 * 24 * 3600_000).toISOString(),
+    notes: null,
+  },
+];
 
 export const COACH_QUICK_REPLIES = [
   "Modify today's workout",

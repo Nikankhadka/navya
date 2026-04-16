@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Badge, Button, Card } from '../../src/components/ui';
+import { Colors, Spacing, Typography, withAlpha } from '../../src/constants/theme';
 import { useOnboardingStore } from '../../src/stores/useOnboardingStore';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { profileService } from '../../src/services/profileService';
-import { Ionicons } from '@expo/vector-icons';
 
 export default function CompleteScreen() {
   const router = useRouter();
@@ -16,89 +16,133 @@ export default function CompleteScreen() {
 
   useEffect(() => {
     async function saveOnboarding() {
-      if (!session?.user.id) return;
-      
+      if (!session?.user.id) {
+        setStatus('error');
+        setError('Your session is missing. Please restart onboarding.');
+        return;
+      }
+
       try {
         const payload = buildPayload();
         await profileService.upsertProfile(session.user.id, {
           ...payload,
           onboarding_complete: true,
         });
-        
-        // Update local auth store so layout redirects to tabs
+
         setProfile({ ...payload, onboarding_complete: true });
-        
         setStatus('success');
         reset();
-        
-        // Brief delay for visual confirmation
+
         setTimeout(() => {
           router.replace('/(tabs)');
-        }, 2000);
+        }, 1600);
       } catch (err) {
         console.error('Failed to save onboarding:', err);
         setStatus('error');
-        setError('Something went wrong while building your plan. Please try again.');
+        setError('Something went wrong while saving your profile. Please try again.');
       }
     }
 
     saveOnboarding();
-  }, []);
+  }, [buildPayload, reset, router, session?.user.id, setProfile]);
 
   return (
-    <LinearGradient
-      colors={['#0f172a', '#1e293b']}
-      style={{ flex: 1 }}
-    >
-      <SafeAreaView style={{ flex: 1 }}>
-        <View className="flex-1 px-6 justify-center items-center">
-          {status === 'loading' && (
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        <View style={styles.glowOne} />
+        <View style={styles.glowTwo} />
+
+        <Card variant="hero" style={styles.card}>
+          {status === 'loading' ? (
             <>
-              <ActivityIndicator size="large" color="#3b82f6" />
-              <Text className="text-white text-2xl font-bold mt-8 text-center">
-                Saving your fitness profile...
-              </Text>
-              <Text className="text-slate-400 text-center mt-4 px-8">
-                Preparing your onboarding data so your dashboard is ready to use.
+              <Badge label="Saving setup" color={Colors.accent} />
+              <ActivityIndicator size="large" color={Colors.accent} />
+              <Text style={styles.title}>Preparing your first dashboard</Text>
+              <Text style={styles.subtitle}>
+                Saving your baseline so Home, Workout, Nutrition, Coach, and Profile all start in
+                sync.
               </Text>
             </>
-          )}
+          ) : null}
 
-          {status === 'success' && (
+          {status === 'success' ? (
             <>
-              <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center mb-8">
-                <Ionicons name="checkmark" size={40} color="white" />
-              </View>
-              <Text className="text-white text-3xl font-bold text-center">
-                You're all set!
-              </Text>
-              <Text className="text-slate-400 text-center mt-4">
-                Redirecting you to your dashboard...
+              <Badge label="Ready to train" color={Colors.orange} />
+              <Text style={styles.successEmoji}>🌿</Text>
+              <Text style={styles.title}>You’re all set</Text>
+              <Text style={styles.subtitle}>
+                Redirecting you into the app now with your setup and first-day context in place.
               </Text>
             </>
-          )}
+          ) : null}
 
-          {status === 'error' && (
+          {status === 'error' ? (
             <>
-              <View className="w-20 h-20 bg-red-500 rounded-full items-center justify-center mb-8">
-                <Ionicons name="alert" size={40} color="white" />
-              </View>
-              <Text className="text-white text-2xl font-bold text-center">
-                Oops!
-              </Text>
-              <Text className="text-red-400 text-center mt-4 px-8">
-                {error}
-              </Text>
-              <TouchableOpacity
+              <Badge label="Couldn’t save" color={Colors.red} />
+              <Text style={styles.successEmoji}>⚠️</Text>
+              <Text style={styles.title}>Let’s try that again</Text>
+              <Text style={styles.subtitle}>{error}</Text>
+              <Button
+                label="Start Over"
+                fullWidth
+                variant="secondary"
                 onPress={() => router.replace('/(onboarding)/welcome')}
-                className="mt-8 bg-slate-800 px-8 py-3 rounded-xl border border-slate-700"
-              >
-                <Text className="text-white font-semibold">Start Over</Text>
-              </TouchableOpacity>
+              />
             </>
-          )}
-        </View>
-      </SafeAreaView>
-    </LinearGradient>
+          ) : null}
+        </Card>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  glowOne: {
+    position: 'absolute',
+    top: 160,
+    right: 18,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: withAlpha(Colors.accent, 0.1),
+  },
+  glowTwo: {
+    position: 'absolute',
+    bottom: 160,
+    left: 18,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: withAlpha(Colors.orange, 0.1),
+  },
+  card: {
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingVertical: Spacing.xxxl,
+  },
+  successEmoji: {
+    fontSize: 42,
+  },
+  title: {
+    color: Colors.text,
+    fontSize: Typography.size.xxxl,
+    fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.md,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+});

@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Typography } from '../../constants/theme';
+import { StyleSheet, Text, View } from 'react-native';
+import { Colors, Radius, Spacing, Typography, withAlpha } from '../../constants/theme';
 
 interface MacroRingProps {
   value: number;
@@ -15,63 +15,54 @@ interface MacroRingProps {
 export function MacroRing({
   value,
   max,
-  size = 80,
+  size = 84,
   strokeWidth = 8,
   color,
   label,
   unit = '',
 }: MacroRingProps) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const pct = Math.min(value / Math.max(max, 1), 1);
-  const strokeDashoffset = circumference * (1 - pct);
-  const cx = size / 2;
-  const cy = size / 2;
+  const pct = Math.max(0, Math.min(value / Math.max(max, 1), 1));
 
   return (
     <View style={styles.container}>
-      {/* SVG-like ring using absolute positioned views */}
-      <View style={[styles.ringOuter, { width: size, height: size }]}>
-        {/* Background ring */}
+      <View style={[styles.ringShell, { width: size, height: size, borderRadius: size / 2 }]}>
         <View
           style={[
-            styles.ringBg,
+            styles.ringTrack,
             {
               width: size,
               height: size,
               borderRadius: size / 2,
               borderWidth: strokeWidth,
-              borderColor: Colors.border,
             },
           ]}
         />
-        {/* Progress arc - using border trick for approximation */}
         <View
           style={[
-            styles.ringProgress,
+            styles.ringArc,
             {
               width: size - strokeWidth,
               height: size - strokeWidth,
               borderRadius: (size - strokeWidth) / 2,
               borderWidth: strokeWidth,
-              borderColor: color,
-              borderTopColor: pct > 0.875 ? color : 'transparent',
-              borderRightColor: pct > 0.625 ? color : 'transparent',
-              borderBottomColor: pct > 0.375 ? color : 'transparent',
-              borderLeftColor: pct > 0.125 ? color : 'transparent',
-              transform: [{ rotate: '-90deg' }],
+              borderColor: withAlpha(color, 0.28),
+              borderTopColor: color,
+              borderRightColor: pct >= 0.25 ? color : withAlpha(color, 0.18),
+              borderBottomColor: pct >= 0.5 ? color : withAlpha(color, 0.12),
+              borderLeftColor: pct >= 0.75 ? color : withAlpha(color, 0.08),
+              transform: [{ rotate: '-45deg' }],
             },
           ]}
         />
-        {/* Center text */}
-        <View style={styles.centerContent}>
+        <View style={styles.centerCore}>
+          <Text style={styles.centerLabel}>{label}</Text>
           <Text style={[styles.centerValue, { color }]}>
-            {Math.round(pct * 100)}
-            <Text style={styles.centerPct}>%</Text>
+            {Math.round(value)}
+            {unit.trim() ? ` ${unit.trim()}` : ''}
           </Text>
+          <Text style={styles.centerHint}>{Math.round(pct * 100)}% target</Text>
         </View>
       </View>
-      <Text style={styles.label}>{label}</Text>
       <Text style={styles.sublabel}>
         {value}
         {unit} / {max}
@@ -80,8 +71,6 @@ export function MacroRing({
     </View>
   );
 }
-
-// ─── Linear progress bar ──────────────────────────────────────────────────────
 
 interface ProgressBarProps {
   value: number;
@@ -100,29 +89,35 @@ export function ProgressBar({
   showLabel = false,
   label,
 }: ProgressBarProps) {
-  const pct = Math.min((value / Math.max(max, 1)) * 100, 100);
+  const totalSegments = 20;
+  const pct = Math.max(0, Math.min((value / Math.max(max, 1)) * 100, 100));
+  const filledSegments = Math.max(0, Math.min(totalSegments, Math.round((pct / 100) * totalSegments)));
 
   return (
     <View>
-      {showLabel && label && (
+      {showLabel && label ? (
         <View style={styles.barLabelRow}>
           <Text style={styles.barLabel}>{label}</Text>
           <Text style={styles.barValue}>
             {value} / {max}
           </Text>
         </View>
-      )}
-      <View style={[styles.barBg, { height }]}>
-        <View
-          style={[
-            styles.barFill,
-            {
-              width: `${pct}%`,
-              height,
-              backgroundColor: color,
-            },
-          ]}
-        />
+      ) : null}
+
+      <View style={styles.segmentRow}>
+        {Array.from({ length: totalSegments }).map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.segment,
+              {
+                height,
+                backgroundColor:
+                  index < filledSegments ? color : withAlpha(Colors.borderLight, 0.55),
+              },
+            ]}
+          />
+        ))}
       </View>
     </View>
   );
@@ -131,45 +126,59 @@ export function ProgressBar({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
-  ringOuter: {
-    position: 'relative',
+  ringShell: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: withAlpha(Colors.cardHover, 0.9),
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
   },
-  ringBg: {
+  ringTrack: {
+    position: 'absolute',
+    borderColor: Colors.border,
+  },
+  ringArc: {
     position: 'absolute',
   },
-  ringProgress: {
-    position: 'absolute',
-  },
-  centerContent: {
-    position: 'absolute',
+  centerCore: {
+    width: '70%',
+    aspectRatio: 1,
+    borderRadius: Radius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: withAlpha(Colors.bg, 0.86),
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.borderLight, 0.64),
+    paddingHorizontal: Spacing.xs,
+  },
+  centerLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 2,
   },
   centerValue: {
-    fontSize: 13,
-    fontWeight: Typography.weight.bold,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
   },
-  centerPct: {
+  centerHint: {
+    color: Colors.textSecondary,
     fontSize: 10,
-    fontWeight: Typography.weight.regular,
-  },
-  label: {
-    fontSize: Typography.size.sm,
-    color: Colors.muted,
-    fontWeight: Typography.weight.medium,
   },
   sublabel: {
-    fontSize: 10,
+    fontSize: Typography.size.xs,
     color: Colors.dim,
   },
   barLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   barLabel: {
     fontSize: Typography.size.sm,
@@ -181,12 +190,13 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontWeight: Typography.weight.semibold,
   },
-  barBg: {
-    backgroundColor: Colors.border,
-    borderRadius: 4,
-    overflow: 'hidden',
+  segmentRow: {
+    flexDirection: 'row',
+    gap: 4,
+    width: '100%',
   },
-  barFill: {
-    borderRadius: 4,
+  segment: {
+    flex: 1,
+    borderRadius: Radius.full,
   },
 });

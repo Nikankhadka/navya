@@ -1,164 +1,245 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Button, Card } from '../../src/components/ui';
+import { OnboardingShell } from '../../src/components/ui/OnboardingShell';
+import { Colors, Radius, Spacing, Typography, withAlpha } from '../../src/constants/theme';
 import { useOnboardingStore } from '../../src/stores/useOnboardingStore';
-import { Ionicons } from '@expo/vector-icons';
-import { ActivityLevel, DietPreference, EquipmentType } from '../../src/types/app';
+import type { ActivityLevel, DietPreference, EquipmentType } from '../../src/types/app';
 
-const ACTIVITY_LEVELS: { id: ActivityLevel, label: string }[] = [
-  { id: 'sedentary', label: 'Sedentary (Office job, little exercise)' },
-  { id: 'lightly_active', label: 'Lightly Active (1-2 days/week)' },
-  { id: 'moderately_active', label: 'Moderately Active (3-5 days/week)' },
-  { id: 'very_active', label: 'Very Active (6-7 days/week)' },
+const ACTIVITY_LEVELS: Array<{ id: ActivityLevel; label: string }> = [
+  { id: 'sedentary', label: 'Sedentary' },
+  { id: 'lightly_active', label: 'Lightly active' },
+  { id: 'moderately_active', label: 'Moderately active' },
+  { id: 'very_active', label: 'Very active' },
 ];
 
-const DIET_PREFS: { id: DietPreference, label: string }[] = [
-  { id: 'no_preference', label: 'No Preference' },
-  { id: 'high_protein', label: 'High Protein' },
+const DIET_PREFS: Array<{ id: DietPreference; label: string }> = [
+  { id: 'no_preference', label: 'No preference' },
+  { id: 'high_protein', label: 'High protein' },
   { id: 'vegetarian', label: 'Vegetarian' },
   { id: 'vegan', label: 'Vegan' },
   { id: 'keto', label: 'Keto' },
-  { id: 'low_carb', label: 'Low Carb' },
+  { id: 'low_carb', label: 'Low carb' },
 ];
 
-const EQUIPMENT: { id: EquipmentType, label: string }[] = [
-  { id: 'gym', label: 'Full Gym' },
+const EQUIPMENT: Array<{ id: EquipmentType; label: string }> = [
+  { id: 'gym', label: 'Full gym' },
   { id: 'dumbbells', label: 'Dumbbells' },
   { id: 'barbell', label: 'Barbell' },
   { id: 'kettlebells', label: 'Kettlebells' },
   { id: 'resistance_bands', label: 'Bands' },
   { id: 'bodyweight', label: 'Bodyweight' },
-  { id: 'pull_up_bar', label: 'Pull-up Bar' },
+  { id: 'pull_up_bar', label: 'Pull-up bar' },
 ];
 
 export default function PreferencesScreen() {
   const router = useRouter();
-  const { 
-    activity_level, 
-    diet_preference, 
-    equipment, 
-    workouts_per_week, 
-    setField 
-  } = useOnboardingStore();
+  const { activity_level, diet_preference, equipment, workouts_per_week, setField } =
+    useOnboardingStore();
 
   const toggleEquipment = (id: EquipmentType) => {
     const current = equipment || [];
     if (current.includes(id)) {
-      setField('equipment', current.filter(e => e !== id));
+      setField('equipment', current.filter((entry) => entry !== id));
     } else {
       setField('equipment', [...current, id]);
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <ScrollView className="flex-1 px-6 pt-10">
-        <TouchableOpacity onPress={() => router.back()} className="mb-6">
-          <Ionicons name="arrow-back" size={24} color="#94a3b8" />
-        </TouchableOpacity>
-
-        <Text className="text-white text-3xl font-bold mb-2">Final Touches</Text>
-        <Text className="text-slate-400 text-lg mb-8">Refine your daily lifestyle.</Text>
-
-        {/* Workouts per week */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Workouts per Week: {workouts_per_week}
-          </Text>
-          <View className="flex-row items-center justify-between bg-slate-800 p-2 rounded-xl border border-slate-700">
-            <TouchableOpacity 
-              onPress={() => setField('workouts_per_week', Math.max(1, (workouts_per_week || 3) - 1))}
-              className="w-12 h-12 items-center justify-center bg-slate-700 rounded-lg"
-            >
-              <Ionicons name="remove" size={24} color="white" />
-            </TouchableOpacity>
-            <Text className="text-white text-2xl font-bold">{workouts_per_week}</Text>
-            <TouchableOpacity 
-              onPress={() => setField('workouts_per_week', Math.min(7, (workouts_per_week || 3) + 1))}
-              className="w-12 h-12 items-center justify-center bg-blue-600 rounded-lg"
-            >
-              <Ionicons name="add" size={24} color="white" />
-            </TouchableOpacity>
+    <OnboardingShell
+      currentStep={4}
+      title="Shape the week"
+      subtitle="Choose how often you want to train and the context Navya should assume when recommending the plan."
+      onBack={() => router.back()}
+      footer={
+        <Button label="Finish Setup" fullWidth onPress={() => router.push('/(onboarding)/complete')} />
+      }
+    >
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>Workouts per week</Text>
+        <View style={styles.stepperRow}>
+          <TouchableOpacity
+            style={styles.stepperButton}
+            onPress={() => setField('workouts_per_week', Math.max(1, (workouts_per_week || 3) - 1))}
+            activeOpacity={0.82}
+          >
+            <Text style={styles.stepperButtonText}>−</Text>
+          </TouchableOpacity>
+          <View style={styles.stepperValueWrap}>
+            <Text style={styles.stepperValue}>{workouts_per_week}</Text>
+            <Text style={styles.stepperHint}>sessions</Text>
           </View>
+          <TouchableOpacity
+            style={[styles.stepperButton, styles.stepperButtonPrimary]}
+            onPress={() => setField('workouts_per_week', Math.min(7, (workouts_per_week || 3) + 1))}
+            activeOpacity={0.82}
+          >
+            <Text style={[styles.stepperButtonText, styles.stepperButtonTextPrimary]}>+</Text>
+          </TouchableOpacity>
         </View>
+      </Card>
 
-        {/* Activity Level */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Daily Activity
-          </Text>
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>Daily activity</Text>
+        <View style={styles.optionList}>
           {ACTIVITY_LEVELS.map((level) => (
             <TouchableOpacity
               key={level.id}
+              style={[styles.optionCard, activity_level === level.id ? styles.optionCardActive : null]}
               onPress={() => setField('activity_level', level.id)}
-              className={`p-4 rounded-xl mb-3 border ${
-                activity_level === level.id 
-                  ? 'bg-blue-600/20 border-blue-500' 
-                  : 'bg-slate-800 border-slate-700'
-              }`}
+              activeOpacity={0.82}
             >
-              <Text className={`font-medium ${
-                activity_level === level.id ? 'text-white' : 'text-slate-300'
-              }`}>
-                {level.label}
+              <Text style={styles.optionText}>{level.label}</Text>
+              <Text style={styles.optionCheck}>{activity_level === level.id ? '●' : '○'}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Card>
+
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>Nutrition style</Text>
+        <View style={styles.chipWrap}>
+          {DIET_PREFS.map((diet) => (
+            <TouchableOpacity
+              key={diet.id}
+              style={[styles.chip, diet_preference === diet.id ? styles.chipActive : null]}
+              onPress={() => setField('diet_preference', diet.id)}
+              activeOpacity={0.82}
+            >
+              <Text style={[styles.chipText, diet_preference === diet.id ? styles.chipTextActive : null]}>
+                {diet.label}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
+      </Card>
 
-        {/* Diet */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Dietary Preference
-          </Text>
-          <View className="flex-row flex-wrap">
-            {DIET_PREFS.map((diet) => (
-              <TouchableOpacity
-                key={diet.id}
-                onPress={() => setField('diet_preference', diet.id)}
-                className={`px-4 py-2 rounded-full mr-2 mb-2 border ${
-                  diet_preference === diet.id 
-                    ? 'bg-blue-600 border-blue-500' 
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <Text className="text-white text-sm font-medium">{diet.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>Available equipment</Text>
+        <View style={styles.chipWrap}>
+          {EQUIPMENT.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[styles.chip, equipment?.includes(item.id) ? styles.chipActive : null]}
+              onPress={() => toggleEquipment(item.id)}
+              activeOpacity={0.82}
+            >
+              <Text style={[styles.chipText, equipment?.includes(item.id) ? styles.chipTextActive : null]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-
-        {/* Equipment */}
-        <View className="mb-12">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Available Equipment
-          </Text>
-          <View className="flex-row flex-wrap">
-            {EQUIPMENT.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => toggleEquipment(item.id)}
-                className={`px-4 py-2 rounded-full mr-2 mb-2 border ${
-                  equipment?.includes(item.id) 
-                    ? 'bg-blue-600 border-blue-500' 
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <Text className="text-white text-sm font-medium">{item.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => router.push('/(onboarding)/complete')}
-          className="w-full bg-blue-600 py-4 rounded-xl mb-10"
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            Done
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+      </Card>
+    </OnboardingShell>
   );
 }
+
+const styles = StyleSheet.create({
+  sectionCard: {
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  sectionLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  stepperButton: {
+    width: 54,
+    height: 54,
+    borderRadius: Radius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  stepperButtonPrimary: {
+    backgroundColor: withAlpha(Colors.orange, 0.14),
+    borderColor: withAlpha(Colors.orange, 0.4),
+  },
+  stepperButtonText: {
+    color: Colors.text,
+    fontSize: Typography.size.xxl,
+    fontWeight: Typography.weight.bold,
+  },
+  stepperButtonTextPrimary: {
+    color: Colors.orange,
+  },
+  stepperValueWrap: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  stepperValue: {
+    color: Colors.text,
+    fontSize: 42,
+    fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
+  },
+  stepperHint: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+  },
+  optionList: {
+    gap: Spacing.sm,
+  },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  optionCardActive: {
+    borderColor: withAlpha(Colors.accent, 0.44),
+    backgroundColor: withAlpha(Colors.accent, 0.12),
+  },
+  optionText: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+  },
+  optionCheck: {
+    color: Colors.accent,
+    fontSize: Typography.size.lg,
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  chip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  chipActive: {
+    borderColor: withAlpha(Colors.accent, 0.44),
+    backgroundColor: withAlpha(Colors.accent, 0.12),
+  },
+  chipText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  chipTextActive: {
+    color: Colors.accent,
+  },
+});

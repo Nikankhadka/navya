@@ -1,14 +1,17 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Button, Card, Input } from '../../src/components/ui';
+import { OnboardingShell } from '../../src/components/ui/OnboardingShell';
+import { Colors, Radius, Spacing, Typography, withAlpha } from '../../src/constants/theme';
 import { useOnboardingStore } from '../../src/stores/useOnboardingStore';
-import { Ionicons } from '@expo/vector-icons';
+import type { ExperienceLevel } from '../../src/types/app';
 
-const EXPERIENCE_LEVELS = [
-  { id: 'beginner', label: 'New to fitness' },
-  { id: 'intermediate', label: 'Consistent for 6+ months' },
-  { id: 'advanced', label: 'Years of training' },
-] as const;
+const EXPERIENCE_LEVELS: Array<{ id: ExperienceLevel; label: string; hint: string }> = [
+  { id: 'beginner', label: 'New to fitness', hint: 'Just getting into training.' },
+  { id: 'intermediate', label: 'Building consistency', hint: 'You have some rhythm already.' },
+  { id: 'advanced', label: 'Experienced athlete', hint: 'You want stronger structure and detail.' },
+];
 
 export default function BodyScreen() {
   const router = useRouter();
@@ -17,81 +20,130 @@ export default function BodyScreen() {
   const isComplete = !!weight_kg && !!height_cm && !!experience_level;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <ScrollView className="flex-1 px-6 pt-10">
-        <TouchableOpacity onPress={() => router.back()} className="mb-6">
-          <Ionicons name="arrow-back" size={24} color="#94a3b8" />
-        </TouchableOpacity>
+    <OnboardingShell
+      currentStep={2}
+      title="Your baseline"
+      subtitle="These numbers help Navya shape effort, recovery, and progress expectations from day one."
+      onBack={() => router.back()}
+      footer={
+        <Button
+          label="Continue"
+          fullWidth
+          disabled={!isComplete}
+          onPress={() => router.push('/(onboarding)/goal')}
+        />
+      }
+    >
+      <View style={styles.metricsRow}>
+        <Card style={styles.metricCard}>
+          <Text style={styles.metricLabel}>Weight</Text>
+          <Input
+            placeholder="0.0"
+            keyboardType="numeric"
+            value={weight_kg?.toString() || ''}
+            onChangeText={(text) => setField('weight_kg', parseFloat(text) || null)}
+          />
+          <Text style={styles.metricHint}>kg</Text>
+        </Card>
 
-        <Text className="text-white text-3xl font-bold mb-2">Metrics</Text>
-        <Text className="text-slate-400 text-lg mb-8">Your baseline for training, recovery, and progress.</Text>
+        <Card style={styles.metricCard}>
+          <Text style={styles.metricLabel}>Height</Text>
+          <Input
+            placeholder="0"
+            keyboardType="numeric"
+            value={height_cm?.toString() || ''}
+            onChangeText={(text) => setField('height_cm', parseInt(text, 10) || null)}
+          />
+          <Text style={styles.metricHint}>cm</Text>
+        </Card>
+      </View>
 
-        {/* Biometrics */}
-        <View className="flex-row justify-between mb-8">
-          <View className="w-[48%]">
-            <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-              Weight (kg)
-            </Text>
-            <TextInput
-              keyboardType="numeric"
-              className="bg-slate-800 text-white p-4 rounded-xl border border-slate-700 focus:border-blue-500"
-              placeholder="0.0"
-              placeholderTextColor="#64748b"
-              value={weight_kg?.toString() || ''}
-              onChangeText={(text) => setField('weight_kg', parseFloat(text) || null)}
-            />
-          </View>
-          <View className="w-[48%]">
-            <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider" >
-              Height (cm)
-            </Text>
-            <TextInput
-              keyboardType="numeric"
-              className="bg-slate-800 text-white p-4 rounded-xl border border-slate-700 focus:border-blue-500"
-              placeholder="0"
-              placeholderTextColor="#64748b"
-              value={height_cm?.toString() || ''}
-              onChangeText={(text) => setField('height_cm', parseInt(text) || null)}
-            />
-          </View>
-        </View>
-
-        {/* Experience Level */}
-        <View className="mb-12">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Experience Level
-          </Text>
+      <Card style={styles.sectionCard}>
+        <Text style={styles.sectionLabel}>Training experience</Text>
+        <View style={styles.levelList}>
           {EXPERIENCE_LEVELS.map((level) => (
             <TouchableOpacity
               key={level.id}
+              style={[
+                styles.levelCard,
+                experience_level === level.id ? styles.levelCardActive : null,
+              ]}
               onPress={() => setField('experience_level', level.id)}
-              className={`w-full p-4 rounded-xl mb-4 border ${
-                experience_level === level.id 
-                  ? 'bg-blue-600/20 border-blue-500' 
-                  : 'bg-slate-800 border-slate-700'
-              }`}
+              activeOpacity={0.84}
             >
-              <Text className={`text-lg font-medium ${
-                experience_level === level.id ? 'text-white' : 'text-slate-300'
-              }`}>
-                {level.label}
-              </Text>
+              <View>
+                <Text style={styles.levelTitle}>{level.label}</Text>
+                <Text style={styles.levelHint}>{level.hint}</Text>
+              </View>
+              <Text style={styles.levelState}>{experience_level === level.id ? '●' : '○'}</Text>
             </TouchableOpacity>
           ))}
         </View>
-
-        <TouchableOpacity
-          disabled={!isComplete}
-          onPress={() => router.push('/(onboarding)/goal')}
-          className={`w-full py-4 rounded-xl mb-10 ${
-            isComplete ? 'bg-blue-600' : 'bg-slate-700 opacity-50'
-          }`}
-        >
-          <Text className="text-white text-center text-lg font-semibold">
-            Continue
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+      </Card>
+    </OnboardingShell>
   );
 }
+
+const styles = StyleSheet.create({
+  metricsRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  metricCard: {
+    flex: 1,
+    gap: Spacing.xs,
+  },
+  metricLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  metricHint: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+  },
+  sectionCard: {
+    gap: Spacing.md,
+  },
+  sectionLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  levelList: {
+    gap: Spacing.sm,
+  },
+  levelCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.lg,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  levelCardActive: {
+    borderColor: withAlpha(Colors.accent, 0.44),
+    backgroundColor: withAlpha(Colors.accent, 0.12),
+  },
+  levelTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    marginBottom: 4,
+  },
+  levelHint: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+  },
+  levelState: {
+    color: Colors.accent,
+    fontSize: Typography.size.lg,
+  },
+});

@@ -175,6 +175,14 @@ export interface WaterLog {
   logged_at: string;
 }
 
+export interface WeightLog {
+  id: string;
+  user_id: string;
+  weight_kg: number;
+  logged_at: string;
+  notes: string | null;
+}
+
 export interface RecentMealTemplate {
   id: string;
   meal_name: string;

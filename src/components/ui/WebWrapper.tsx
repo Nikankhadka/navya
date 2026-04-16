@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Platform, type ViewStyle } from 'react-native';
-import { Colors } from '../../constants/theme';
+import { Colors, withAlpha } from '../../constants/theme';
 
 interface WebWrapperProps {
   children: React.ReactNode;
@@ -26,7 +26,7 @@ export function WebWrapper({ children, style }: WebWrapperProps) {
 const styles = StyleSheet.create({
   webRoot: {
     flex: 1,
-    backgroundColor: '#06060B', // slightly darker than card bg, looks like a browser bg
+    backgroundColor: Colors.canopyBlack,
     alignItems: 'center',
   },
   webContent: {
@@ -34,10 +34,15 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 430,
     backgroundColor: Colors.bg,
-    // Subtle shadow to lift the phone frame off the web bg
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: withAlpha(Colors.borderLight, 0.45),
     ...(Platform.OS === 'web'
       ? ({
-          boxShadow: '0 0 60px rgba(0,0,0,0.8)',
+          boxShadow: `0 28px 90px ${withAlpha('#000000', 0.58)}, 0 0 0 1px ${withAlpha(
+            Colors.border,
+            0.28,
+          )}`,
         } as ViewStyle)
       : {}),
   },

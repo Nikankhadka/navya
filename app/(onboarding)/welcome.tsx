@@ -1,42 +1,134 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Badge, Button, Card, QuickActionChip } from '../../src/components/ui';
+import { Colors, Radius, Spacing, Typography, withAlpha } from '../../src/constants/theme';
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <LinearGradient
-      colors={['#0f172a', '#1e293b']}
-      style={{ flex: 1 }}
-    >
-      <SafeAreaView style={{ flex: 1 }}>
-        <View className="flex-1 px-6 justify-center items-center">
-          <View className="w-20 h-20 bg-blue-500 rounded-2xl rotate-12 mb-8 items-center justify-center shadow-lg shadow-blue-500/50">
-            <Text className="text-4xl text-white font-bold -rotate-12">N</Text>
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        <View style={styles.glowOne} />
+        <View style={styles.glowTwo} />
+
+        <Card variant="hero" style={styles.heroCard}>
+          <View style={styles.brandMark}>
+            <Text style={styles.brandMarkText}>N</Text>
           </View>
-          
-          <Text className="text-white text-4xl font-bold text-center mb-4">
-            Welcome to Navya
-          </Text>
-          
-          <Text className="text-slate-400 text-lg text-center mb-12 px-4 leading-6">
-            Your AI fitness companion. Let's build your personalized training and nutrition foundation.
+          <Badge label="5-minute setup" color={Colors.accent} />
+          <Text style={styles.title}>Build your{'\n'}forest path</Text>
+          <Text style={styles.subtitle}>
+            We’ll shape your training, nutrition, and progress rhythm around the way you actually
+            want to move.
           </Text>
 
-          <TouchableOpacity
+          <View style={styles.promiseRow}>
+            <QuickActionChip label="Workout-ready" tone="accent" />
+            <QuickActionChip label="Nutrition-first" tone="neutral" />
+            <QuickActionChip label="Demo-safe" tone="water" />
+          </View>
+        </Card>
+
+        <Card style={styles.detailCard}>
+          <Text style={styles.detailTitle}>What comes next</Text>
+          <Text style={styles.detailText}>
+            A short sequence to capture your baseline, main goal, and plan preferences. Every step
+            exists to make your first dashboard immediately useful.
+          </Text>
+
+          <Button
+            label="Get Started"
+            fullWidth
             onPress={() => router.push('/(onboarding)/basics')}
-            className="w-full bg-blue-600 py-4 rounded-xl shadow-lg shadow-blue-600/30"
-            activeOpacity={0.8}
             testID="onboarding-get-started"
-          >
-            <Text className="text-white text-center text-lg font-semibold">
-              Get Started
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </LinearGradient>
+          />
+        </Card>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xxl,
+  },
+  glowOne: {
+    position: 'absolute',
+    top: 110,
+    right: 20,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: withAlpha(Colors.accent, 0.1),
+  },
+  glowTwo: {
+    position: 'absolute',
+    bottom: 110,
+    left: 20,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: withAlpha(Colors.orange, 0.1),
+  },
+  heroCard: {
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  brandMark: {
+    width: 70,
+    height: 70,
+    borderRadius: Radius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: withAlpha(Colors.accent, 0.14),
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.accent, 0.22),
+  },
+  brandMarkText: {
+    color: Colors.text,
+    fontSize: 32,
+    fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
+  },
+  title: {
+    color: Colors.text,
+    fontSize: Typography.size.display,
+    lineHeight: 40,
+    fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
+  },
+  subtitle: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.md,
+    lineHeight: 22,
+  },
+  promiseRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  detailCard: {
+    gap: Spacing.md,
+  },
+  detailTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.bold,
+    fontFamily: Typography.fontDisplay,
+  },
+  detailText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.md,
+    lineHeight: 22,
+  },
+});
