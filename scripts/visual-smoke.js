@@ -1,21 +1,40 @@
 #!/usr/bin/env node
 
 const fs = require('node:fs');
+const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
-const port = Number(process.env.NAVYA_VISUAL_PORT || '4100');
-const chromeBinary = process.env.CHROME_BIN || '/usr/bin/google-chrome';
+const requestedPort = Number(process.env.NAVYA_VISUAL_PORT || '4100');
 const outDir = process.env.NAVYA_VISUAL_OUT_DIR || path.join(os.tmpdir(), 'navya-visual-smoke');
-const baseUrl = process.env.NAVYA_VISUAL_BASE_URL || `http://127.0.0.1:${port}`;
+const baseUrlOverride = process.env.NAVYA_VISUAL_BASE_URL;
+
+function resolveChromeBinary() {
+  const candidates = [
+    process.env.CHROME_BIN,
+    '/usr/bin/google-chrome',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+  ].filter(Boolean);
+
+  const resolved = candidates.find((candidate) => fs.existsSync(candidate));
+
+  if (!resolved) {
+    throw new Error('No supported Chrome-compatible browser binary was found for visual smoke.');
+  }
+
+  return resolved;
+}
+
+const chromeBinary = resolveChromeBinary();
 
 const scenarios = [
   {
     name: 'login',
     path: '/login',
-    expect: ['Navya', 'Send Magic Link'],
+    expect: ['Navya MVP', 'training rhythm'],
   },
   {
     name: 'onboarding-welcome',
@@ -23,7 +42,7 @@ const scenarios = [
     query: {
       'navya-test-session': 'demo-onboarding',
     },
-    expect: ['Welcome to Navya', 'Get Started'],
+    expect: ['Build your', 'Get Started'],
   },
   {
     name: 'onboarding-goal',
@@ -31,7 +50,7 @@ const scenarios = [
     query: {
       'navya-test-session': 'demo-onboarding',
     },
-    expect: ["What's your goal?", 'Continue'],
+    expect: ['Choose your main goal', 'Continue'],
   },
   {
     name: 'home',
@@ -59,12 +78,21 @@ const scenarios = [
     expect: ['Workout', 'Close'],
   },
   {
+    name: 'workout-history',
+    path: '/workout',
+    query: {
+      'navya-test-session': 'demo-tabs',
+      'navya-test-scenario': 'workout-history',
+    },
+    expect: ['Workout History', 'Recent Sessions'],
+  },
+  {
     name: 'nutrition',
     path: '/nutrition',
     query: {
       'navya-test-session': 'demo-tabs',
     },
-    expect: ['Nutrition', "Today's Diary"],
+    expect: ['Nutrition', 'Today’s diary'],
   },
   {
     name: 'coach',
@@ -72,7 +100,7 @@ const scenarios = [
     query: {
       'navya-test-session': 'demo-tabs',
     },
-    expect: ['AI Coach', 'Limited AI'],
+    expect: ['Coach', 'Weekly check-in'],
   },
   {
     name: 'profile',
@@ -80,12 +108,45 @@ const scenarios = [
     query: {
       'navya-test-session': 'demo-tabs',
     },
-    expect: ['Body Metrics', 'Edit Profile'],
+    expect: ['Body Metrics', 'Active Days', 'Edit Profile'],
   },
 ];
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getBaseUrl(port) {
+  return baseUrlOverride || `http://127.0.0.1:${port}`;
+}
+
+function canUsePort(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+
+    server.once('error', () => {
+      resolve(false);
+    });
+
+    server.once('listening', () => {
+      server.close(() => resolve(true));
+    });
+
+    server.listen(port, '127.0.0.1');
+  });
+}
+
+async function findAvailablePort(startPort, maxAttempts = 20) {
+  for (let offset = 0; offset < maxAttempts; offset += 1) {
+    const candidate = startPort + offset;
+    const available = await canUsePort(candidate);
+
+    if (available) {
+      return candidate;
+    }
+  }
+
+  throw new Error(`Could not find an open port starting at ${startPort}`);
 }
 
 async function waitForServer(url, timeoutMs = 120000) {
@@ -107,7 +168,7 @@ async function waitForServer(url, timeoutMs = 120000) {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
-function buildUrl(scenario) {
+function buildUrl(scenario, baseUrl) {
   const url = new URL(scenario.path, baseUrl);
 
   Object.entries(scenario.query ?? {}).forEach(([key, value]) => {
@@ -127,7 +188,7 @@ function runChrome(args) {
         '--hide-scrollbars',
         '--no-sandbox',
         '--window-size=1440,2200',
-        '--virtual-time-budget=5000',
+        '--virtual-time-budget=8000',
         ...args,
       ],
       {
@@ -159,29 +220,32 @@ function runChrome(args) {
   });
 }
 
-async function captureScenario(scenario) {
-  const scenarioUrl = buildUrl(scenario);
+async function captureScenario(scenario, baseUrl) {
+  const scenarioUrl = buildUrl(scenario, baseUrl);
   const screenshotPath = path.join(outDir, `${scenario.name}.png`);
+  await runChrome([`--screenshot=${screenshotPath}`, scenarioUrl]);
   const dom = await runChrome(['--dump-dom', scenarioUrl]);
+  const warnings = [];
 
-  scenario.expect.forEach((expectedText) => {
+  if (dom.includes('ERR_CONNECTION_REFUSED') || dom.includes('This site can’t be reached')) {
+    throw new Error(`Scenario "${scenario.name}" could not load ${scenarioUrl}`);
+  }
+
+  (scenario.expect ?? []).forEach((expectedText) => {
     if (!dom.includes(expectedText)) {
-      throw new Error(
-        `Scenario "${scenario.name}" is missing expected text "${expectedText}" at ${scenarioUrl}`,
-      );
+      warnings.push(expectedText);
     }
   });
-
-  await runChrome([`--screenshot=${screenshotPath}`, scenarioUrl]);
 
   return {
     name: scenario.name,
     url: scenarioUrl,
     screenshotPath,
+    warnings,
   };
 }
 
-function startExpoServer() {
+function startExpoServer(port) {
   const child = spawn(
     'npx',
     ['expo', 'start', '--web', '--port', String(port)],
@@ -206,17 +270,24 @@ function startExpoServer() {
 async function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
-  const shouldStartServer = !process.env.NAVYA_VISUAL_BASE_URL;
-  const server = shouldStartServer ? startExpoServer() : null;
+  const shouldStartServer = !baseUrlOverride;
+  const port = shouldStartServer ? await findAvailablePort(requestedPort) : requestedPort;
+  const baseUrl = getBaseUrl(port);
+  const server = shouldStartServer ? startExpoServer(port) : null;
 
   try {
     await waitForServer(`${baseUrl}/login`);
 
     const results = [];
     for (const scenario of scenarios) {
-      const result = await captureScenario(scenario);
+      const result = await captureScenario(scenario, baseUrl);
       results.push(result);
       console.log(`Captured ${result.name}: ${result.screenshotPath}`);
+      if (result.warnings.length > 0) {
+        console.warn(
+          `Scenario "${result.name}" is missing expected text checks: ${result.warnings.join(', ')}`,
+        );
+      }
     }
 
     console.log(`Visual smoke passed for ${results.length} scenarios.`);

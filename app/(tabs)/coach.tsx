@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Card, QuickActionChip } from '../../src/components/ui';
+import { Badge, Card, QuickActionChip } from '../../src/components/ui';
 import { Colors, Radius, Spacing, Typography, withAlpha } from '../../src/constants/theme';
 import { COACH_QUICK_REPLIES } from '../../src/mocks/mockData';
 import { formatTimeAgo } from '../../src/utils/helpers';
@@ -22,6 +22,30 @@ import { useFeatureFlags } from '../../src/hooks/useFeatureFlags';
 import { useCoachActions } from '../../src/hooks/useCoachActions';
 import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
 import { useHabitStreak } from '../../src/hooks/useHabitStreak';
+import { useWeeklyCoachSummary } from '../../src/hooks/useWeeklyCoachSummary';
+
+const METRIC_TONE_STYLES = {
+  accent: {
+    backgroundColor: withAlpha(Colors.accent, 0.12),
+    borderColor: withAlpha(Colors.accent, 0.28),
+    valueColor: Colors.accent,
+  },
+  success: {
+    backgroundColor: withAlpha(Colors.green, 0.12),
+    borderColor: withAlpha(Colors.green, 0.24),
+    valueColor: Colors.green,
+  },
+  warning: {
+    backgroundColor: withAlpha(Colors.orange, 0.12),
+    borderColor: withAlpha(Colors.orange, 0.26),
+    valueColor: Colors.orange,
+  },
+  neutral: {
+    backgroundColor: withAlpha(Colors.surface, 0.84),
+    borderColor: withAlpha(Colors.border, 0.95),
+    valueColor: Colors.text,
+  },
+} as const;
 
 export default function CoachScreen() {
   const insets = useSafeAreaInsets();
@@ -31,6 +55,11 @@ export default function CoachScreen() {
   const { requestQuickReply } = useCoachActions(user?.id);
   const { data: nutrition } = useDailyNutrition(user?.id);
   const { data: streak } = useHabitStreak(user?.id);
+  const weeklySummaryEnabled = featureFlags?.weekly_summary_enabled !== false;
+  const {
+    data: weeklySummary,
+    isLoading: weeklySummaryLoading,
+  } = useWeeklyCoachSummary(user?.id, weeklySummaryEnabled);
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -104,11 +133,11 @@ export default function CoachScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Card variant="hero" style={styles.heroCard}>
-            <Text style={styles.heroEyebrow}>Bounded guidance</Text>
-            <Text style={styles.heroTitle}>A calm room for quick coaching</Text>
+            <Text style={styles.heroEyebrow}>Weekly recap + quick coaching</Text>
+            <Text style={styles.heroTitle}>A calm room for your next best move</Text>
             <Text style={styles.heroText}>
-              Review recent guidance, send a quick reply, and keep the conversation anchored to
-              your actual training day.
+              Check the week in one glance, then use quick coaching to stay close to the plan you
+              already started.
             </Text>
             <View style={styles.contextRow}>
               {contextChips.map((chip) => (
@@ -117,14 +146,73 @@ export default function CoachScreen() {
             </View>
           </Card>
 
-          <Card style={styles.summaryCard}>
-            <Text style={styles.summaryEyebrow}>Reserved space</Text>
-            <Text style={styles.summaryTitle}>Weekly coach summary will surface here</Text>
-            <Text style={styles.summaryText}>
-              This tab will host the next weekly recap slice instead of sending users into a new
-              navigation area.
-            </Text>
-          </Card>
+          {weeklySummaryEnabled ? (
+            <Card style={styles.summaryCard}>
+              {weeklySummaryLoading ? (
+                <View style={styles.summaryLoadingRow}>
+                  <ActivityIndicator size="small" color={Colors.accent} />
+                  <Text style={styles.summaryLoadingText}>Preparing this week’s check-in...</Text>
+                </View>
+              ) : weeklySummary ? (
+                <>
+                  <View style={styles.summaryHeader}>
+                    <View style={styles.summaryHeaderText}>
+                      <Text style={styles.summaryEyebrow}>{weeklySummary.focus_label}</Text>
+                      <Text style={styles.summaryTitle}>{weeklySummary.title}</Text>
+                    </View>
+                    {weeklySummary.is_demo ? (
+                      <Badge label="Demo Summary" color={Colors.orange} />
+                    ) : null}
+                  </View>
+                  <Text style={styles.summaryTimeframe}>{weeklySummary.timeframe_label}</Text>
+                  <Text style={styles.summaryText}>{weeklySummary.body}</Text>
+
+                  <View style={styles.summaryMetricsRow}>
+                    {weeklySummary.metrics.map((metric) => {
+                      const toneStyle = METRIC_TONE_STYLES[metric.tone];
+                      return (
+                        <View
+                          key={metric.label}
+                          style={[
+                            styles.summaryMetricCard,
+                            {
+                              backgroundColor: toneStyle.backgroundColor,
+                              borderColor: toneStyle.borderColor,
+                            },
+                          ]}
+                        >
+                          <Text style={styles.summaryMetricLabel}>{metric.label}</Text>
+                          <Text
+                            style={[
+                              styles.summaryMetricValue,
+                              { color: toneStyle.valueColor },
+                            ]}
+                          >
+                            {metric.value}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+
+                  <View style={styles.summaryNextStepBlock}>
+                    <Text style={styles.summaryNextStepLabel}>What to do next</Text>
+                    <Text style={styles.summaryNextStepText}>{weeklySummary.next_step}</Text>
+                  </View>
+                  <Text style={styles.summarySourceText}>{weeklySummary.source_label}</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.summaryEyebrow}>Weekly check-in</Text>
+                  <Text style={styles.summaryTitle}>No weekly summary yet</Text>
+                  <Text style={styles.summaryText}>
+                    Log one workout and one meal to unlock your first check-in and give the coach
+                    a real pattern to read.
+                  </Text>
+                </>
+              )}
+            </Card>
+          ) : null}
 
           {!coachActive ? (
             <Card style={styles.offlineCard}>
@@ -313,6 +401,16 @@ const styles = StyleSheet.create({
   summaryCard: {
     marginBottom: Spacing.lg,
   },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    marginBottom: Spacing.xs,
+    alignItems: 'flex-start',
+  },
+  summaryHeaderText: {
+    flex: 1,
+  },
   summaryEyebrow: {
     color: Colors.orange,
     fontSize: Typography.size.xs,
@@ -331,6 +429,71 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Typography.size.sm,
     lineHeight: 20,
+  },
+  summaryTimeframe: {
+    color: Colors.dim,
+    fontSize: Typography.size.xs,
+    marginBottom: Spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  summaryMetricsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+  },
+  summaryMetricCard: {
+    minWidth: 92,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+  },
+  summaryMetricLabel: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    marginBottom: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+  },
+  summaryMetricValue: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+  },
+  summaryNextStepBlock: {
+    marginTop: Spacing.lg,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: withAlpha(Colors.border, 0.85),
+  },
+  summaryNextStepLabel: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    marginBottom: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+  },
+  summaryNextStepText: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    lineHeight: 22,
+    fontWeight: Typography.weight.medium,
+  },
+  summarySourceText: {
+    color: Colors.dim,
+    fontSize: Typography.size.xs,
+    lineHeight: 18,
+    marginTop: Spacing.md,
+  },
+  summaryLoadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  summaryLoadingText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
   },
   offlineCard: {
     marginBottom: Spacing.lg,

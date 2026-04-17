@@ -1,7 +1,16 @@
 import { Tabs } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Radius, Shadow, Spacing, Typography, withAlpha } from '../../src/constants/theme';
+import {
+  Colors,
+  Radius,
+  Shadow,
+  Spacing,
+  Typography,
+  getLineHeightScale,
+  getTypeScale,
+  withAlpha,
+} from '../../src/constants/theme';
 
 interface TabIconProps {
   emoji: string;
@@ -10,12 +19,24 @@ interface TabIconProps {
 }
 
 function TabIcon({ emoji, label, focused }: TabIconProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
+
   return (
     <View style={[styles.tabIcon, focused ? styles.tabIconFocused : null]}>
       <View style={[styles.tabGlow, focused ? styles.tabGlowFocused : null]}>
         <Text style={styles.tabEmoji}>{emoji}</Text>
       </View>
-      <Text style={[styles.tabLabel, focused ? styles.tabLabelActive : null]}>{label}</Text>
+      <Text
+        style={[
+          styles.tabLabel,
+          focused ? styles.tabLabelActive : null,
+          { fontSize: typeScale.xs, lineHeight: lineHeights.xs },
+        ]}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
@@ -38,12 +59,12 @@ export default function TabsLayout() {
           height: 78,
           paddingTop: 10,
           paddingBottom: 8,
-          backgroundColor: withAlpha(Colors.wetSoil, 0.96),
+          backgroundColor: withAlpha(Colors.surfaceVariant, 0.82),
           borderWidth: 1,
           borderTopWidth: 1,
-          borderColor: withAlpha(Colors.borderLight, 0.86),
+          borderColor: withAlpha(Colors.outlineVariant, 0.14),
           borderRadius: 28,
-          ...Shadow.lg,
+          ...Shadow.md,
         },
         tabBarShowLabel: false,
         tabBarItemStyle: {
@@ -104,21 +125,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   tabGlowFocused: {
-    backgroundColor: withAlpha(Colors.accent, 0.14),
+    backgroundColor: withAlpha(Colors.secondaryContainer, 0.42),
     borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.24),
+    borderColor: withAlpha(Colors.secondary, 0.14),
   },
   tabEmoji: {
     fontSize: 18,
   },
   tabLabel: {
-    fontSize: 10,
     color: Colors.dim,
     fontWeight: Typography.weight.medium,
     letterSpacing: 0.3,
   },
   tabLabelActive: {
-    color: Colors.text,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
   },
 });

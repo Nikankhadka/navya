@@ -26,56 +26,76 @@ export function withAlpha(color: string, alpha: number): string {
 }
 
 export const Colors = {
-  // Base
-  bg: '#120F0D',
-  surface: '#191511',
-  card: '#231C16',
-  cardHover: '#2D241D',
-  border: '#463728',
-  borderLight: '#5B4937',
+  // Mist & Moss foundation
+  canopyBlack: '#0A0D0B',
+  surface: '#111412',
+  surfaceContainerLowest: '#0C0F0D',
+  surfaceContainerLow: '#191C1A',
+  surfaceContainer: '#1D201E',
+  surfaceContainerHigh: '#272A28',
+  surfaceContainerHighest: '#323533',
+  surfaceBright: '#373A37',
+  surfaceVariant: '#323533',
 
-  // Nature palette
-  canopyBlack: '#14120E',
-  wetSoil: '#231B14',
-  barkBrown: '#3A2A1C',
-  barkBrownSoft: '#4C3927',
-  forestGlass: '#364133',
-  stoneFog: '#C9D1C2',
-  youngLeaf: '#9FD36B',
-  fern: '#6FA14A',
-  wildflowerAmber: '#F2A93B',
-  berryRed: '#C65A4B',
-  riverBlue: '#6EA8B9',
-  parchment: '#F4F1E8',
-  softLichen: '#C9C2B4',
-  mutedBark: '#8D8477',
+  primary: '#78DC77',
+  primaryContainer: '#4CAF50',
+  onPrimary: '#00390A',
+  secondary: '#B1CAD7',
+  secondaryContainer: '#334A55',
+  secondaryFixedDim: '#88A2B0',
+  onSecondaryContainer: '#A0B9C5',
+  onSurface: '#E1E3DF',
+  onSurfaceVariant: '#BECAB9',
+  outlineVariant: '#3F4A3C',
 
-  // Accent
-  accent: '#9FD36B',
-  accentSoft: '#6FA14A',
-  accentMuted: 'rgba(159, 211, 107, 0.15)',
+  // Compatibility aliases for the current app layer
+  bg: '#111412',
+  card: '#1D201E',
+  cardHover: '#272A28',
+  border: '#3F4A3C',
+  borderLight: '#59645D',
+
+  // Nature palette aliases
+  wetSoil: '#151917',
+  barkBrown: '#202520',
+  barkBrownSoft: '#2A302A',
+  forestGlass: '#323533',
+  stoneFog: '#BECAB9',
+  youngLeaf: '#9AE196',
+  fern: '#6CC56A',
+  wildflowerAmber: '#D4BE67',
+  berryRed: '#CB7D78',
+  riverBlue: '#7DA9BC',
+  parchment: '#E7E9E3',
+  softLichen: '#C7D0C4',
+  mutedBark: '#7B857B',
+
+  // Accent aliases
+  accent: '#78DC77',
+  accentSoft: '#4CAF50',
+  accentMuted: 'rgba(120, 220, 119, 0.16)',
 
   // Semantic
-  green: '#6FA14A',
-  greenMuted: 'rgba(111, 161, 74, 0.14)',
-  orange: '#F2A93B',
-  orangeMuted: 'rgba(242, 169, 59, 0.14)',
-  red: '#C65A4B',
-  redMuted: 'rgba(198, 90, 75, 0.14)',
-  blue: '#6EA8B9',
-  blueMuted: 'rgba(110, 168, 185, 0.14)',
+  green: '#78DC77',
+  greenMuted: 'rgba(120, 220, 119, 0.14)',
+  orange: '#D4BE67',
+  orangeMuted: 'rgba(212, 190, 103, 0.14)',
+  red: '#CB7D78',
+  redMuted: 'rgba(203, 125, 120, 0.14)',
+  blue: '#7DA9BC',
+  blueMuted: 'rgba(125, 169, 188, 0.16)',
 
-  // Text
-  text: '#F4F1E8',
-  textSecondary: '#C9C2B4',
-  muted: '#A79A87',
-  dim: '#756A5C',
+  // Text aliases
+  text: '#E1E3DF',
+  textSecondary: '#BECAB9',
+  muted: '#94A093',
+  dim: '#68726A',
 
   // Gradients (as arrays for LinearGradient)
-  gradientAccent: ['#A6D972', '#6FA14A'] as const,
-  gradientGreen: ['#8AB85A', '#557A35'] as const,
-  gradientOrange: ['#F2A93B', '#C97B1D'] as const,
-  gradientDark: ['#231B14', '#120F0D'] as const,
+  gradientAccent: ['#78DC77', '#4CAF50'] as const,
+  gradientGreen: ['#8CE28B', '#58B758'] as const,
+  gradientOrange: ['#D9C978', '#A69247'] as const,
+  gradientDark: ['#1D201E', '#0C0F0D'] as const,
 } as const;
 
 export const Spacing = {
@@ -90,12 +110,67 @@ export const Spacing = {
 
 export const Radius = {
   sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
+  md: 16,
+  lg: 20,
+  xl: 24,
+  xxl: 32,
   full: 999,
 } as const;
+
+export type TypeScale = {
+  xs: number;
+  sm: number;
+  md: number;
+  lg: number;
+  xl: number;
+  xxl: number;
+  xxxl: number;
+  display: number;
+};
+
+const MOBILE_TYPE_SCALE: TypeScale = {
+  xs: 11,
+  sm: 13,
+  md: 15,
+  lg: 18,
+  xl: 22,
+  xxl: 28,
+  xxxl: 34,
+  display: 42,
+};
+
+const TABLET_TYPE_SCALE: TypeScale = {
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 19,
+  xl: 24,
+  xxl: 31,
+  xxxl: 38,
+  display: 46,
+};
+
+const MOBILE_LINE_HEIGHT_SCALE: TypeScale = {
+  xs: 16,
+  sm: 18,
+  md: 22,
+  lg: 24,
+  xl: 28,
+  xxl: 34,
+  xxxl: 40,
+  display: 46,
+};
+
+const TABLET_LINE_HEIGHT_SCALE: TypeScale = {
+  xs: 17,
+  sm: 20,
+  md: 24,
+  lg: 26,
+  xl: 31,
+  xxl: 38,
+  xxxl: 44,
+  display: 50,
+};
 
 export const Typography = {
   // Font families
@@ -116,15 +191,16 @@ export const Typography = {
   }),
 
   // Sizes
-  size: {
-    xs: 11,
-    sm: 13,
-    md: 15,
-    lg: 17,
-    xl: 20,
-    xxl: 24,
-    xxxl: 30,
-    display: 36,
+  size: MOBILE_TYPE_SCALE,
+  scale: {
+    mobile: MOBILE_TYPE_SCALE,
+    tablet: TABLET_TYPE_SCALE,
+    desktop: TABLET_TYPE_SCALE,
+  },
+  lineHeight: {
+    mobile: MOBILE_LINE_HEIGHT_SCALE,
+    tablet: TABLET_LINE_HEIGHT_SCALE,
+    desktop: TABLET_LINE_HEIGHT_SCALE,
   },
 
   // Weights
@@ -147,28 +223,38 @@ export const Motion = {
 
 export const Shadow = {
   sm: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: Colors.secondaryContainer,
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.18,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowRadius: 24,
+    elevation: 4,
   },
   md: {
-    shadowColor: '#6FA14A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 6,
+    shadowColor: Colors.secondaryContainer,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.2,
+    shadowRadius: 32,
+    elevation: 8,
   },
   lg: {
-    shadowColor: '#F2A93B',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.14,
-    shadowRadius: 28,
-    elevation: 10,
+    shadowColor: Colors.secondaryContainer,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.24,
+    shadowRadius: 40,
+    elevation: 12,
   },
 } as const;
 
 // Responsive helpers
 export const MOBILE_MAX_WIDTH = 430;
 export const TABLET_BREAKPOINT = 768;
+
+export function getTypeScale(width: number): TypeScale {
+  return width >= TABLET_BREAKPOINT ? Typography.scale.tablet : Typography.scale.mobile;
+}
+
+export function getLineHeightScale(width: number): TypeScale {
+  return width >= TABLET_BREAKPOINT
+    ? Typography.lineHeight.tablet
+    : Typography.lineHeight.mobile;
+}

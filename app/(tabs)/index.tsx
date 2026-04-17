@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
   Animated,
   Modal,
   TextInput,
@@ -13,7 +14,15 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
+import {
+  Colors,
+  Spacing,
+  Radius,
+  Typography,
+  getLineHeightScale,
+  getTypeScale,
+  withAlpha,
+} from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { Card, Badge, SectionHeader } from '../../src/components/ui';
 import { ProgressBar } from '../../src/components/ui/MacroRing';
@@ -21,15 +30,20 @@ import { formatWaterAmount, getWeekDayLabels, sessionProgress } from '../../src/
 import { useTodaySession } from '../../src/hooks/useTodaySession';
 import { useDailyNutrition } from '../../src/hooks/useDailyNutrition';
 import { useCoachMessages } from '../../src/hooks/useCoachMessages';
+import { useFeatureFlags } from '../../src/hooks/useFeatureFlags';
 import { useHabitStreak } from '../../src/hooks/useHabitStreak';
 import { useWeightHistory } from '../../src/hooks/useWeightHistory';
 import { useWeightActions } from '../../src/hooks/useWeightActions';
+import { useWeeklyCoachSummary } from '../../src/hooks/useWeeklyCoachSummary';
 
 const WEEK_LABELS = getWeekDayLabels();
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
   const { user, setProfile } = useAuthStore();
   const userId = user?.id;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -39,9 +53,12 @@ export default function HomeScreen() {
   const { data: todaySession } = useTodaySession(userId);
   const { data: dailyNutrition } = useDailyNutrition(userId);
   const { data: coachMessages } = useCoachMessages(userId);
+  const { data: featureFlags } = useFeatureFlags();
   const { data: habitStreak } = useHabitStreak(userId);
   const { data: weightHistory } = useWeightHistory(userId);
   const { addWeightLog } = useWeightActions(userId);
+  const weeklySummaryEnabled = featureFlags?.weekly_summary_enabled !== false;
+  const { data: weeklyCoachSummary } = useWeeklyCoachSummary(userId, weeklySummaryEnabled);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -69,7 +86,10 @@ export default function HomeScreen() {
     ? Math.min(Math.round((dailyNutrition.water_total_ml / dailyNutrition.water_goal_ml) * 100), 100)
     : 0;
   const coachPreview =
-    coachMessages?.[0]?.text ?? 'Your coach will start guiding you once your activity data is available.';
+    weeklyCoachSummary?.body ??
+    coachMessages?.[coachMessages.length - 1]?.text ??
+    'Your coach will start guiding you once your activity data is available.';
+  const coachBadge = weeklyCoachSummary?.focus_label ?? 'Daily Insight';
   const streakDays = habitStreak?.current_streak_days ?? 0;
   const weeklyActivity = habitStreak?.weekly_activity ?? Array.from({ length: 7 }, () => false);
   const latestWeight = weightHistory?.[0]?.weight_kg ?? user?.weight_kg ?? null;
@@ -118,13 +138,19 @@ export default function HomeScreen() {
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
         <View>
-          <Text style={styles.greeting}>{greeting()} 👋</Text>
-          <Text style={styles.userName}>{user?.full_name?.split(' ')[0] ?? 'Athlete'}</Text>
+          <Text style={[styles.greeting, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+            {greeting()} 👋
+          </Text>
+          <Text style={[styles.userName, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
+            {user?.full_name?.split(' ')[0] ?? 'Athlete'}
+          </Text>
         </View>
         <View style={styles.streakChip}>
           <Text style={styles.streakFire}>🔥</Text>
-          <Text style={styles.streakCount}>{streakDays}</Text>
-          <Text style={styles.streakLabel}>
+          <Text style={[styles.streakCount, { fontSize: typeScale.lg, lineHeight: lineHeights.lg }]}>
+            {streakDays}
+          </Text>
+          <Text style={[styles.streakLabel, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
             {streakDays === 1 ? 'day streak' : 'day streak'}
           </Text>
         </View>
@@ -142,7 +168,9 @@ export default function HomeScreen() {
             >
               {done && <Text style={styles.weekCheck}>✓</Text>}
             </View>
-            <Text style={styles.weekLabel}>{WEEK_LABELS[i]}</Text>
+            <Text style={[styles.weekLabel, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+              {WEEK_LABELS[i]}
+            </Text>
           </View>
         ))}
       </Animated.View>
@@ -153,8 +181,10 @@ export default function HomeScreen() {
       <Card style={styles.workoutCard}>
         <View style={styles.workoutCardTop}>
           <View>
-            <Text style={styles.workoutTitle}>{todaySession?.day_name ?? 'No session scheduled yet'}</Text>
-            <Text style={styles.workoutMeta}>
+            <Text style={[styles.workoutTitle, { fontSize: typeScale.lg, lineHeight: lineHeights.lg }]}>
+              {todaySession?.day_name ?? 'No session scheduled yet'}
+            </Text>
+            <Text style={[styles.workoutMeta, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
               {todaySession ? `${totalExercises} exercises` : 'Create or sync a plan to see today’s session'}
             </Text>
           </View>
@@ -171,14 +201,16 @@ export default function HomeScreen() {
           height={6}
           showLabel={false}
         />
-        <Text style={styles.progressLabel}>{workoutPct}% complete</Text>
+        <Text style={[styles.progressLabel, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+          {workoutPct}% complete
+        </Text>
 
         <TouchableOpacity
           style={styles.startBtn}
           activeOpacity={0.85}
           onPress={() => router.push('/(tabs)/workout')}
         >
-          <Text style={styles.startBtnText}>
+          <Text style={[styles.startBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
             {todaySession ? (doneExercises > 0 ? 'Continue Workout →' : 'Start Workout →') : 'Open Workout →'}
           </Text>
         </TouchableOpacity>
@@ -190,8 +222,10 @@ export default function HomeScreen() {
       <Card>
         <View style={styles.calRow}>
           <View style={styles.calMain}>
-            <Text style={styles.calNumber}>{dailyNutrition?.total_calories ?? 0}</Text>
-            <Text style={styles.calLabel}>
+            <Text style={[styles.calNumber, { fontSize: typeScale.xxxl, lineHeight: lineHeights.xxxl }]}>
+              {dailyNutrition?.total_calories ?? 0}
+            </Text>
+            <Text style={[styles.calLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
               of {dailyNutrition?.calorie_goal ?? 0} kcal
             </Text>
           </View>
@@ -204,13 +238,14 @@ export default function HomeScreen() {
             <Text
               style={[
                 styles.calRemainingText,
+                { fontSize: typeScale.lg, lineHeight: lineHeights.lg },
                 { color: calorieRemaining > 0 ? Colors.green : Colors.red },
               ]}
             >
               {calorieRemaining > 0 ? '+' : ''}
               {calorieRemaining} kcal
             </Text>
-            <Text style={styles.calRemainingLabel}>
+            <Text style={[styles.calRemainingLabel, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
               {calorieRemaining > 0 ? 'remaining' : 'over goal'}
             </Text>
           </View>
@@ -231,7 +266,12 @@ export default function HomeScreen() {
                 showLabel
                 label={macro.label}
               />
-              <Text style={[styles.macroValue, { color: macro.color }]}>
+              <Text
+                style={[
+                  styles.macroValue,
+                  { fontSize: typeScale.xs, lineHeight: lineHeights.xs, color: macro.color },
+                ]}
+              >
                 {macro.value}
                 {macro.unit}
               </Text>
@@ -241,8 +281,10 @@ export default function HomeScreen() {
 
         <View style={styles.waterRow}>
           <View>
-            <Text style={styles.waterLabel}>Hydration</Text>
-            <Text style={styles.waterValue}>
+            <Text style={[styles.waterLabel, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+              Hydration
+            </Text>
+            <Text style={[styles.waterValue, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
               {formatWaterAmount(dailyNutrition?.water_total_ml ?? 0)} / {formatWaterAmount(dailyNutrition?.water_goal_ml ?? 2500)}
             </Text>
           </View>
@@ -254,7 +296,9 @@ export default function HomeScreen() {
               height={6}
               showLabel={false}
             />
-            <Text style={styles.waterProgressText}>{waterProgress}% of goal</Text>
+            <Text style={[styles.waterProgressText, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+              {waterProgress}% of goal
+            </Text>
           </View>
         </View>
       </Card>
@@ -264,10 +308,12 @@ export default function HomeScreen() {
       <Card style={styles.progressCard}>
         <View style={styles.progressTopRow}>
           <View>
-            <Text style={styles.progressValue}>
+            <Text style={[styles.progressValue, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
               {latestWeight != null ? `${latestWeight.toFixed(1)} kg` : 'No data'}
             </Text>
-            <Text style={styles.progressMeta}>Last check-in {lastCheckInLabel}</Text>
+            <Text style={[styles.progressMeta, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Last check-in {lastCheckInLabel}
+            </Text>
           </View>
           <View
             style={[
@@ -278,6 +324,7 @@ export default function HomeScreen() {
             <Text
               style={[
                 styles.progressDeltaText,
+                { fontSize: typeScale.sm, lineHeight: lineHeights.sm },
                 weightDelta != null && weightDelta <= 0 ? styles.progressDeltaTextPositive : null,
               ]}
             >
@@ -289,8 +336,10 @@ export default function HomeScreen() {
         <View style={styles.progressHistoryRow}>
           {(weightHistory ?? []).slice(0, 4).map((entry) => (
             <View key={entry.id} style={styles.progressHistoryItem}>
-              <Text style={styles.progressHistoryValue}>{entry.weight_kg.toFixed(1)}</Text>
-              <Text style={styles.progressHistoryDate}>
+              <Text style={[styles.progressHistoryValue, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+                {entry.weight_kg.toFixed(1)}
+              </Text>
+              <Text style={[styles.progressHistoryDate, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
                 {new Date(entry.logged_at).toLocaleDateString('en-AU', {
                   day: 'numeric',
                   month: 'short',
@@ -305,7 +354,9 @@ export default function HomeScreen() {
           activeOpacity={0.85}
           onPress={() => setShowWeightModal(true)}
         >
-          <Text style={styles.checkInBtnText}>Log Weight Check-In</Text>
+          <Text style={[styles.checkInBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+            Log Weight Check-In
+          </Text>
         </TouchableOpacity>
       </Card>
 
@@ -321,11 +372,15 @@ export default function HomeScreen() {
             <Text style={styles.coachAvatarEmoji}>🤖</Text>
           </View>
           <View style={styles.coachContent}>
-            <Text style={styles.coachBadge}>Daily Insight</Text>
-            <Text style={styles.coachText} numberOfLines={3}>
+            <Text style={[styles.coachBadge, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+              {coachBadge}
+            </Text>
+            <Text style={[styles.coachText, { fontSize: typeScale.sm, lineHeight: lineHeights.sm + 2 }]} numberOfLines={3}>
               {coachPreview}
             </Text>
-            <Text style={styles.coachCta}>Chat with coach →</Text>
+            <Text style={[styles.coachCta, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Chat with coach →
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -348,19 +403,25 @@ export default function HomeScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Weight Check-In</Text>
+              <Text style={[styles.modalTitle, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
+                Weight Check-In
+              </Text>
               <TouchableOpacity onPress={() => setShowWeightModal(false)}>
-                <Text style={styles.modalClose}>Close</Text>
+                <Text style={[styles.modalClose, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+                  Close
+                </Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalHelper}>
+            <Text style={[styles.modalHelper, { fontSize: typeScale.sm, lineHeight: lineHeights.sm + 2 }]}>
               Keep one lightweight check-in per week so the diary loop shows real body progress.
             </Text>
 
-            <Text style={styles.fieldLabel}>Weight (kg)</Text>
+            <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Weight (kg)
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}
               value={weightInput}
               onChangeText={setWeightInput}
               placeholder="78.0"
@@ -368,9 +429,11 @@ export default function HomeScreen() {
               keyboardType="numeric"
             />
 
-            <Text style={styles.fieldLabel}>Note</Text>
+            <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Note
+            </Text>
             <TextInput
-              style={[styles.input, styles.notesInput]}
+              style={[styles.input, styles.notesInput, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}
               value={weightNotes}
               onChangeText={setWeightNotes}
               placeholder="Optional note about the week"
@@ -384,7 +447,7 @@ export default function HomeScreen() {
               disabled={addWeightLog.isPending || !weightInput.trim()}
               onPress={handleLogWeight}
             >
-              <Text style={styles.saveBtnText}>
+              <Text style={[styles.saveBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
                 {addWeightLog.isPending ? 'Saving...' : 'Save Check-In'}
               </Text>
             </TouchableOpacity>
@@ -412,35 +475,32 @@ const styles = StyleSheet.create({
   },
   greeting: {
     color: Colors.muted,
-    fontSize: Typography.size.sm,
   },
   userName: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
     marginTop: 2,
+    fontFamily: Typography.fontDisplay,
   },
   streakChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.card,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.surfaceContainerLow,
+    borderRadius: Radius.xl,
     paddingHorizontal: 14,
     paddingVertical: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
   },
   streakFire: { fontSize: 18 },
   streakCount: {
     color: Colors.orange,
     fontWeight: Typography.weight.extrabold,
-    fontSize: Typography.size.lg,
   },
   streakLabel: {
-    color: Colors.muted,
-    fontSize: Typography.size.xs,
+    color: Colors.onSurfaceVariant,
   },
   weekRow: {
     flexDirection: 'row',
@@ -462,15 +522,14 @@ const styles = StyleSheet.create({
   },
   weekDotDone: {
     backgroundColor: Colors.greenMuted,
-    borderColor: Colors.green,
+    borderColor: withAlpha(Colors.green, 0.3),
   },
   weekDotEmpty: {
-    backgroundColor: Colors.card,
-    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
   },
   weekCheck: { fontSize: 12, color: Colors.green },
   weekLabel: {
-    fontSize: 10,
     color: Colors.dim,
   },
   workoutCard: {
@@ -483,32 +542,30 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   workoutTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
     marginBottom: 3,
   },
   workoutMeta: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurfaceVariant,
   },
   progressLabel: {
-    color: Colors.muted,
-    fontSize: Typography.size.xs,
+    color: Colors.onSurfaceVariant,
     marginTop: Spacing.xs,
     marginBottom: Spacing.md,
   },
   startBtn: {
-    backgroundColor: Colors.accent,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.primaryContainer,
+    borderRadius: Radius.xl,
     paddingVertical: 13,
     alignItems: 'center',
     marginTop: Spacing.md,
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.primary, 0.16),
   },
   startBtnText: {
-    color: Colors.canopyBlack,
+    color: Colors.onPrimary,
     fontWeight: Typography.weight.bold,
-    fontSize: Typography.size.md,
     letterSpacing: 0.3,
   },
   calRow: {
@@ -519,28 +576,27 @@ const styles = StyleSheet.create({
   },
   calMain: {},
   calNumber: {
-    color: Colors.text,
-    fontSize: Typography.size.xxxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -1,
+    fontFamily: Typography.fontDisplay,
   },
   calLabel: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurfaceVariant,
   },
   calRemaining: {
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     paddingHorizontal: 14,
     paddingVertical: Spacing.sm,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.outlineVariant, 0.12),
   },
   calRemainingText: {
-    fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
   },
   calRemainingLabel: {
-    fontSize: Typography.size.xs,
-    color: Colors.muted,
+    color: Colors.onSurfaceVariant,
     marginTop: 1,
   },
   macrosGrid: {
@@ -558,20 +614,18 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: withAlpha(Colors.outlineVariant, 0.12),
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: Spacing.md,
   },
   waterLabel: {
-    color: Colors.muted,
-    fontSize: Typography.size.xs,
+    color: Colors.onSurfaceVariant,
     marginBottom: 4,
   },
   waterValue: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.semibold,
   },
   waterProgressWrap: {
@@ -593,32 +647,30 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   progressValue: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -0.5,
+    fontFamily: Typography.fontDisplay,
   },
   progressMeta: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurfaceVariant,
     marginTop: 4,
   },
   progressDeltaChip: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.orange + '22',
-    borderColor: Colors.orange + '44',
+    backgroundColor: Colors.orangeMuted,
+    borderColor: withAlpha(Colors.orange, 0.16),
     borderWidth: 1,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
   progressDeltaChipPositive: {
     backgroundColor: Colors.greenMuted,
-    borderColor: Colors.green + '44',
+    borderColor: withAlpha(Colors.green, 0.16),
   },
   progressDeltaText: {
     color: Colors.orange,
-    fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
   },
   progressDeltaTextPositive: {
@@ -631,53 +683,50 @@ const styles = StyleSheet.create({
   },
   progressHistoryItem: {
     flex: 1,
-    backgroundColor: Colors.bg,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderRadius: Radius.xl,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
     alignItems: 'center',
   },
   progressHistoryValue: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
   },
   progressHistoryDate: {
     color: Colors.dim,
-    fontSize: Typography.size.xs,
     marginTop: 4,
   },
   checkInBtn: {
-    backgroundColor: Colors.accentSoft,
-    borderColor: Colors.accent + '33',
+    backgroundColor: withAlpha(Colors.secondaryContainer, 0.38),
+    borderColor: withAlpha(Colors.secondary, 0.14),
     borderWidth: 1,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     paddingVertical: Spacing.md,
     alignItems: 'center',
   },
   checkInBtnText: {
-    color: Colors.accent,
-    fontSize: Typography.size.md,
+    color: Colors.onSecondaryContainer,
     fontWeight: Typography.weight.bold,
   },
   coachCard: {
     flexDirection: 'row',
     gap: Spacing.md,
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.surfaceContainerHigh,
     borderRadius: Radius.xl,
     padding: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.accent + '44',
+    borderColor: withAlpha(Colors.secondary, 0.14),
     marginBottom: Spacing.xxl,
     overflow: 'hidden',
   },
   coachAvatar: {
     width: 44,
     height: 44,
-    borderRadius: Radius.lg,
-    backgroundColor: Colors.accent,
+    borderRadius: Radius.xl,
+    backgroundColor: withAlpha(Colors.secondaryContainer, 0.9),
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -685,21 +734,17 @@ const styles = StyleSheet.create({
   coachAvatarEmoji: { fontSize: 22 },
   coachContent: { flex: 1 },
   coachBadge: {
-    color: Colors.accent,
-    fontSize: Typography.size.xs,
+    color: Colors.secondary,
     fontWeight: Typography.weight.bold,
     letterSpacing: 0.5,
     marginBottom: 5,
   },
   coachText: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
+    color: Colors.onSurface,
     marginBottom: Spacing.sm,
   },
   coachCta: {
-    color: Colors.accent,
-    fontSize: Typography.size.sm,
+    color: Colors.primary,
     fontWeight: Typography.weight.semibold,
   },
   modalScreen: {
@@ -721,55 +766,53 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   modalTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
   },
   modalClose: {
-    color: Colors.accent,
-    fontSize: Typography.size.md,
+    color: Colors.primary,
     fontWeight: Typography.weight.semibold,
   },
   modalHelper: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
+    color: Colors.onSurfaceVariant,
     marginBottom: Spacing.md,
   },
   fieldLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
+    color: Colors.onSecondaryContainer,
     fontWeight: Typography.weight.semibold,
     marginBottom: Spacing.sm,
     marginTop: Spacing.md,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: Colors.card,
-    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
     borderWidth: 1,
-    borderRadius: Radius.lg,
-    color: Colors.text,
+    borderRadius: Radius.xl,
+    color: Colors.onSurface,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    fontSize: Typography.size.md,
   },
   notesInput: {
     minHeight: 96,
     textAlignVertical: 'top',
   },
   saveBtn: {
-    backgroundColor: Colors.accent,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.primaryContainer,
+    borderRadius: Radius.xl,
     paddingVertical: Spacing.lg,
     alignItems: 'center',
     marginTop: Spacing.xl,
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.primary, 0.16),
   },
   saveBtnDisabled: {
     opacity: 0.6,
   },
   saveBtnText: {
-    color: Colors.canopyBlack,
+    color: Colors.onPrimary,
     fontWeight: Typography.weight.bold,
-    fontSize: Typography.size.md,
   },
 });

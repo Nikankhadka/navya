@@ -11,6 +11,8 @@ export function useNutritionActions(userId?: string) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
       await queryClient.invalidateQueries({ queryKey: ['habit-streak', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['profile-adherence', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['weekly-coach-summary', userId] });
     },
   });
 
@@ -19,6 +21,8 @@ export function useNutritionActions(userId?: string) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
       await queryClient.invalidateQueries({ queryKey: ['habit-streak', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['profile-adherence', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['weekly-coach-summary', userId] });
     },
   });
 
@@ -27,6 +31,8 @@ export function useNutritionActions(userId?: string) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
       await queryClient.invalidateQueries({ queryKey: ['habit-streak', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['profile-adherence', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['weekly-coach-summary', userId] });
     },
   });
 

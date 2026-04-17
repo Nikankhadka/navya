@@ -6,13 +6,23 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import { Badge, Button, Card, Input, QuickActionChip } from '../../src/components/ui';
-import { Colors, Radius, Shadow, Spacing, Typography, withAlpha } from '../../src/constants/theme';
+import {
+  Colors,
+  Radius,
+  Shadow,
+  Spacing,
+  Typography,
+  getLineHeightScale,
+  getTypeScale,
+  withAlpha,
+} from '../../src/constants/theme';
 import {
   createSessionFromUrl,
   getAuthRedirectUrl,
@@ -27,6 +37,9 @@ WebBrowser.maybeCompleteAuthSession();
 const ENTRY_POINTS = ['Secure magic link', 'Demo mode', 'Google or Apple'];
 
 export default function LoginScreen() {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sentEmail, setSentEmail] = useState<string | null>(null);
@@ -151,8 +164,10 @@ export default function LoginScreen() {
           <Card variant="hero" style={styles.heroCard}>
             <View style={styles.heroCardGlow} />
             <Badge label="Navya MVP" color={Colors.accent} />
-            <Text style={styles.title}>Start your{'\n'}training rhythm</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { fontSize: typeScale.display, lineHeight: lineHeights.display }]}>
+              Start your{'\n'}training rhythm
+            </Text>
+            <Text style={[styles.subtitle, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
               Move from login to today’s plan in one calm flow. Use a secure magic link or explore
               the full app in demo mode.
             </Text>
@@ -163,8 +178,20 @@ export default function LoginScreen() {
         <Card style={styles.formCard}>
           {!isSupabaseConfigured ? (
             <View style={styles.infoBanner}>
-              <Text style={styles.infoBannerTitle}>Local setup still needs Supabase</Text>
-              <Text style={styles.infoBannerText}>
+              <Text
+                style={[
+                  styles.infoBannerTitle,
+                  { fontSize: typeScale.sm, lineHeight: lineHeights.sm },
+                ]}
+              >
+                Local setup still needs Supabase
+              </Text>
+              <Text
+                style={[
+                  styles.infoBannerText,
+                  { fontSize: typeScale.sm, lineHeight: lineHeights.sm + 2 },
+                ]}
+              >
                 Real auth stays disabled until `.env.local` contains a valid Supabase URL and anon
                 key. Demo mode still lets you review the full MVP safely.
               </Text>
@@ -173,9 +200,13 @@ export default function LoginScreen() {
 
           {sentEmail ? (
             <View style={styles.sentCard}>
-              <Text style={styles.sentEyebrow}>Magic link sent</Text>
-              <Text style={styles.sentTitle}>{sentEmail}</Text>
-              <Text style={styles.sentText}>
+              <Text style={[styles.sentEyebrow, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+                Magic link sent
+              </Text>
+              <Text style={[styles.sentTitle, { fontSize: typeScale.lg, lineHeight: lineHeights.lg }]}>
+                {sentEmail}
+              </Text>
+              <Text style={[styles.sentText, { fontSize: typeScale.sm, lineHeight: lineHeights.sm + 2 }]}>
                 Open the email on this device to continue into onboarding or your existing tabs.
               </Text>
             </View>
@@ -214,7 +245,9 @@ export default function LoginScreen() {
 
         <View style={styles.dividerContainer}>
           <View style={styles.line} />
-          <Text style={styles.dividerText}>utility sign in</Text>
+          <Text style={[styles.dividerText, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+            utility sign in
+          </Text>
           <View style={styles.line} />
         </View>
 
@@ -265,7 +298,7 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor: withAlpha(Colors.accent, 0.12),
+    backgroundColor: withAlpha(Colors.primary, 0.12),
   },
   heroOrbSecondary: {
     position: 'absolute',
@@ -274,7 +307,7 @@ const styles = StyleSheet.create({
     width: 92,
     height: 92,
     borderRadius: 46,
-    backgroundColor: withAlpha(Colors.blue, 0.12),
+    backgroundColor: withAlpha(Colors.secondaryContainer, 0.28),
   },
   heroCard: {
     paddingTop: Spacing.xxl,
@@ -287,20 +320,17 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: withAlpha(Colors.accent, 0.1),
+    backgroundColor: withAlpha(Colors.primary, 0.1),
   },
   title: {
-    color: Colors.text,
-    fontSize: Typography.size.display,
-    lineHeight: 40,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
     fontFamily: Typography.fontDisplay,
     marginTop: Spacing.sm,
+    letterSpacing: -0.8,
   },
   subtitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.md,
-    lineHeight: 22,
+    color: Colors.onSurfaceVariant,
     maxWidth: 320,
   },
   chipRow: {
@@ -314,7 +344,7 @@ const styles = StyleSheet.create({
   },
   infoBanner: {
     backgroundColor: Colors.orangeMuted,
-    borderColor: withAlpha(Colors.orange, 0.42),
+    borderColor: withAlpha(Colors.orange, 0.16),
     borderWidth: 1,
     borderRadius: Radius.xl,
     padding: Spacing.md,
@@ -329,15 +359,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   infoBannerText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
+    color: Colors.onSurfaceVariant,
   },
   sentCard: {
     borderRadius: Radius.xl,
     borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.32),
-    backgroundColor: withAlpha(Colors.accent, 0.08),
+    borderColor: withAlpha(Colors.primary, 0.14),
+    backgroundColor: withAlpha(Colors.primary, 0.08),
     padding: Spacing.md,
     gap: 4,
   },
@@ -349,14 +377,11 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   sentTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
   },
   sentText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
+    color: Colors.onSurfaceVariant,
   },
   demoButton: {
     marginTop: Spacing.xs,
@@ -370,11 +395,10 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: withAlpha(Colors.outlineVariant, 0.14),
   },
   dividerText: {
     color: Colors.dim,
-    fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
     letterSpacing: 1.1,
     textTransform: 'uppercase',

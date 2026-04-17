@@ -6,9 +6,18 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
-import { Colors, Radius, Spacing, Typography, withAlpha } from '../../constants/theme';
+import {
+  Colors,
+  Radius,
+  Spacing,
+  Typography,
+  getLineHeightScale,
+  getTypeScale,
+  withAlpha,
+} from '../../constants/theme';
 
 interface OnboardingShellProps {
   currentStep: number;
@@ -29,6 +38,10 @@ export function OnboardingShell({
   children,
   footer,
 }: OnboardingShellProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
@@ -46,7 +59,12 @@ export function OnboardingShell({
           )}
 
           <View style={styles.progressBadge}>
-            <Text style={styles.progressBadgeText}>
+            <Text
+              style={[
+                styles.progressBadgeText,
+                { fontSize: typeScale.xs, lineHeight: lineHeights.xs },
+              ]}
+            >
               Step {currentStep} of {totalSteps}
             </Text>
           </View>
@@ -65,8 +83,12 @@ export function OnboardingShell({
           ))}
         </View>
 
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={[styles.title, { fontSize: typeScale.xxxl, lineHeight: lineHeights.xxxl }]}>
+          {title}
+        </Text>
+        <Text style={[styles.subtitle, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+          {subtitle}
+        </Text>
 
         {children}
         {footer}
@@ -100,9 +122,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
   },
   backSpacer: {
     width: 42,
@@ -112,13 +134,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: 8,
     borderRadius: Radius.full,
-    backgroundColor: withAlpha(Colors.accent, 0.12),
+    backgroundColor: withAlpha(Colors.secondaryContainer, 0.38),
     borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.22),
+    borderColor: withAlpha(Colors.secondary, 0.14),
   },
   progressBadgeText: {
-    color: Colors.accent,
-    fontSize: Typography.size.xs,
+    color: Colors.onSecondaryContainer,
     fontWeight: Typography.weight.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
@@ -132,25 +153,23 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: Radius.full,
-    backgroundColor: withAlpha(Colors.borderLight, 0.55),
+    backgroundColor: withAlpha(Colors.outlineVariant, 0.24),
   },
   trackSegmentActive: {
-    backgroundColor: withAlpha(Colors.accent, 0.58),
+    backgroundColor: withAlpha(Colors.secondary, 0.38),
   },
   trackSegmentCurrent: {
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.primary,
   },
   title: {
-    color: Colors.text,
-    fontSize: Typography.size.xxxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
     fontFamily: Typography.fontDisplay,
     marginBottom: Spacing.sm,
+    letterSpacing: -0.6,
   },
   subtitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.md,
-    lineHeight: 22,
+    color: Colors.onSurfaceVariant,
     marginBottom: Spacing.xxl,
   },
 });

@@ -2,11 +2,12 @@
 
 ## Current Phase
 
-- Week 4: progress and adherence upgrade
+- Week 5: coach summaries and beta hardening
 
 ## Current Step
 
-- The first progress slice is implemented locally: weight check-ins now work from both Home and Profile, recent weight history is visible in demo mode and ready for Supabase persistence, and workout-history follow-through is the next adherence gap to close.
+- The weekly coach summary slice is implemented locally: Coach now renders a real in-tab weekly check-in derived from workouts, nutrition, hydration, streak, and weight signals, Home can preview that recap, and demo mode uses richer seeded week data for repeat testing.
+- The app-wide Mist & Moss editorial refresh is in progress locally through shared tokens, ambient surface layering, and responsive typography without changing screen structure or the centered mobile web shell.
 
 ## Completed In This Session
 
@@ -40,8 +41,18 @@
 - replaced the Home tab's mock streak with a real streak derived from logged meals, hydration, and completed workouts
 - added typed `weight_logs` contracts, a Supabase migration, and demo-backed service methods for lightweight progress tracking
 - added weight check-in flows to both Home and Profile with recent history cards and demo-session persistence
+- added completed-session workout history summaries to the Workout tab with demo-backed persistence and live Supabase reads
+- replaced Profile placeholder stats with derived adherence metrics for workouts, active days, streak, and latest weight
+- extended deterministic smoke coverage for workout-history and adherence-stat demo states
+- added a dedicated weekly coach summary read model with hook and service boundaries instead of screen-level aggregation
+- turned the Coach tab placeholder summary area into a real weekly recap card with metrics, next-step guidance, and demo-aware fallback states
+- upgraded Home to preview the weekly coach summary when it is available instead of relying on stale oldest-first message ordering
+- improved demo-week consistency by seeding richer weekly food, hydration, and streak signals for recap testing
 - passed `npm run verify`
 - passed `npm run smoke:web`
+- refreshed the shared design tokens to the Mist & Moss editorial palette with cooler ambient shadows and a surface hierarchy
+- added responsive typography helpers and applied them to shared UI, auth, onboarding, home, profile, and tab chrome
+- updated the design-system and frontend standards docs to match the live token-first React Native implementation
 
 ## In Progress
 
@@ -49,14 +60,15 @@
 - finalizing schema and RLS to match the hardened typed contracts
 - replacing remaining demo fallbacks with live seeded records once the hosted schema exists
 - connecting the new hydration and weight-check-in persistence paths to a live Supabase project
-- replacing remaining Profile placeholder stats with real derived adherence and progress data
+- validating the new workout-history, adherence-summary, and weekly-summary reads against a real Supabase project
 
 ## Next Recommended Step
 
 - connect a real Supabase project and regenerate final `src/types/supabase.ts`
 - validate the new read and write paths against the live schema and fix any relation mismatches, including `water_logs` and `weight_logs`
-- add workout history summaries so the diary streak and adherence loop are fully visible
-- replace Profile placeholder stats with real workout, streak, and nutrition aggregates
+- verify the new workout history summaries, adherence metrics, and weekly coach summary against live seeded records
+- run a focused visual review of the Mist & Moss refresh on device widths and tighten any remaining hardcoded borders or type outliers in the remaining tabs
+- build the next MVP speed layer with meal templates and reusable logging
 - decide whether barcode-assisted food capture should be in beta behind a feature flag or deferred until food data quality is proven
 - verify OTP email and social auth end to end on device builds
 
@@ -67,4 +79,4 @@
 
 ## Last Updated
 
-- 2026-04-16
+- 2026-04-17

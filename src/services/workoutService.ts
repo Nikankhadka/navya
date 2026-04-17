@@ -1,7 +1,12 @@
-import type { WorkoutPlan, WorkoutSession } from '../types/app';
+import type { WorkoutHistoryEntry, WorkoutPlan, WorkoutSession } from '../types/app';
 import type { Database } from '../types/supabase';
 import { supabase, isSupabaseConfigured } from './supabase';
-import { MOCK_PLAN, MOCK_PROFILE, MOCK_TODAY_SESSION } from '../mocks/mockData';
+import {
+  MOCK_PLAN,
+  MOCK_PROFILE,
+  MOCK_TODAY_SESSION,
+  MOCK_WORKOUT_HISTORY,
+} from '../mocks/mockData';
 import {
   mapSessionExerciseRow,
   mapWorkoutPlanRow,
@@ -44,6 +49,44 @@ function shouldUseDemoWorkout(userId: string): boolean {
   return userId === MOCK_PROFILE.id || !isSupabaseConfigured;
 }
 
+function cloneSession(session: WorkoutSession): WorkoutSession {
+  return {
+    ...session,
+    session_exercises: session.session_exercises.map((exercise) => ({
+      ...exercise,
+      completed_sets: exercise.completed_sets.map((entry) => ({ ...entry })),
+    })),
+  };
+}
+
+function toHistoryEntry(session: WorkoutSession): WorkoutHistoryEntry {
+  const completedExerciseCount = session.session_exercises.filter(
+    (exercise) => exercise.is_skipped || exercise.completed_sets.length >= exercise.planned_sets,
+  ).length;
+  const skippedExerciseCount = session.session_exercises.filter((exercise) => exercise.is_skipped).length;
+  const completedSetCount = session.session_exercises.reduce(
+    (sum, exercise) => sum + exercise.completed_sets.length,
+    0,
+  );
+
+  return {
+    id: session.id,
+    day_name: session.day_name,
+    started_at: session.started_at,
+    completed_at: session.completed_at ?? session.started_at,
+    duration_seconds: session.duration_seconds,
+    exercise_count: session.session_exercises.length,
+    completed_exercise_count: completedExerciseCount,
+    completed_set_count: completedSetCount,
+    skipped_exercise_count: skippedExerciseCount,
+  };
+}
+
+let demoTodaySession: WorkoutSession = cloneSession(MOCK_TODAY_SESSION);
+let demoWorkoutHistory: WorkoutHistoryEntry[] = [...MOCK_WORKOUT_HISTORY].sort((left, right) =>
+  right.completed_at.localeCompare(left.completed_at),
+);
+
 export const workoutService = {
   async getActivePlan(userId: string): Promise<WorkoutPlan | null> {
     if (shouldUseDemoWorkout(userId)) {
@@ -78,7 +121,7 @@ export const workoutService = {
 
   async getTodaySession(userId: string): Promise<WorkoutSession | null> {
     if (shouldUseDemoWorkout(userId)) {
-      return MOCK_TODAY_SESSION;
+      return cloneSession(demoTodaySession);
     }
 
     const { data, error } = await supabase
@@ -100,6 +143,54 @@ export const workoutService = {
     return data ? mapWorkoutSessionRow(data) : null;
   },
 
+  async getWorkoutHistory(userId: string, limit = 5): Promise<WorkoutHistoryEntry[]> {
+    if (shouldUseDemoWorkout(userId)) {
+      return demoWorkoutHistory.slice(0, limit).map((entry) => ({ ...entry }));
+    }
+
+    const { data, error } = await supabase
+      .from('workout_sessions')
+      .select(`
+        *,
+        session_exercises (*)
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching workout history:', error);
+      return [];
+    }
+
+    return (data ?? []).map((row) => toHistoryEntry(mapWorkoutSessionRow(row)));
+  },
+
+  async getCompletedSessionCount(userId: string, days = 30): Promise<number> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cutoffIso = cutoff.toISOString();
+
+    if (shouldUseDemoWorkout(userId)) {
+      return demoWorkoutHistory.filter((entry) => entry.completed_at >= cutoffIso).length;
+    }
+
+    const { count, error } = await supabase
+      .from('workout_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .gte('completed_at', cutoffIso);
+
+    if (error) {
+      console.error('Error counting workout sessions:', error);
+      return 0;
+    }
+
+    return count ?? 0;
+  },
+
   async startSession(userId: string, plan: WorkoutPlan | null): Promise<WorkoutSession | null> {
     if (!plan) {
       return null;
@@ -108,7 +199,11 @@ export const workoutService = {
     const localSession = buildSessionFromPlan(plan);
 
     if (shouldUseDemoWorkout(userId) || !localSession) {
-      return localSession ?? MOCK_TODAY_SESSION;
+      if (localSession) {
+        demoTodaySession = cloneSession(localSession);
+      }
+
+      return localSession ? cloneSession(localSession) : cloneSession(demoTodaySession);
     }
 
     const { data: sessionRowRaw, error: sessionError } = await supabase
@@ -164,7 +259,13 @@ export const workoutService = {
     };
 
     if (shouldUseDemoWorkout(session.user_id)) {
-      return completedSession;
+      demoTodaySession = cloneSession(completedSession);
+      demoWorkoutHistory = [
+        toHistoryEntry(completedSession),
+        ...demoWorkoutHistory.filter((entry) => entry.id !== completedSession.id),
+      ].sort((left, right) => right.completed_at.localeCompare(left.completed_at));
+
+      return cloneSession(completedSession);
     }
 
     const { error: sessionError } = await supabase

@@ -153,6 +153,18 @@ export interface WorkoutSession {
   session_exercises: SessionExercise[];
 }
 
+export interface WorkoutHistoryEntry {
+  id: string;
+  day_name: string;
+  started_at: string;
+  completed_at: string;
+  duration_seconds: number | null;
+  exercise_count: number;
+  completed_exercise_count: number;
+  completed_set_count: number;
+  skipped_exercise_count: number;
+}
+
 // ─── Nutrition ────────────────────────────────────────────────────────────────
 
 export interface FoodLog {
@@ -215,6 +227,13 @@ export interface HabitStreakSummary {
   completed_days_this_week: number;
 }
 
+export interface ProfileAdherenceSummary {
+  workouts_completed_30d: number;
+  active_days_this_week: number;
+  current_streak_days: number;
+  latest_weight_kg: number | null;
+}
+
 // ─── AI Coach ─────────────────────────────────────────────────────────────────
 
 export type CoachActionType =
@@ -232,6 +251,25 @@ export interface CoachMessage {
   role: 'coach' | 'user';
   text: string;
   created_at: string;
+}
+
+export type WeeklyCoachSummaryTone = 'accent' | 'success' | 'warning' | 'neutral';
+
+export interface WeeklyCoachSummaryMetric {
+  label: string;
+  value: string;
+  tone: WeeklyCoachSummaryTone;
+}
+
+export interface WeeklyCoachSummary {
+  timeframe_label: string;
+  focus_label: string;
+  title: string;
+  body: string;
+  next_step: string;
+  source_label: string;
+  metrics: WeeklyCoachSummaryMetric[];
+  is_demo: boolean;
 }
 
 // ─── Feature Flags ────────────────────────────────────────────────────────────

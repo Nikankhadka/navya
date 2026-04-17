@@ -36,12 +36,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bg,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: withAlpha(Colors.borderLight, 0.45),
+    borderColor: withAlpha(Colors.outlineVariant, 0.12),
     ...(Platform.OS === 'web'
       ? ({
-          boxShadow: `0 28px 90px ${withAlpha('#000000', 0.58)}, 0 0 0 1px ${withAlpha(
-            Colors.border,
-            0.28,
+          boxShadow: `0 30px 100px ${withAlpha(Colors.secondaryContainer, 0.24)}, 0 0 0 1px ${withAlpha(
+            Colors.outlineVariant,
+            0.12,
           )}`,
         } as ViewStyle)
       : {}),

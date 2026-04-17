@@ -86,10 +86,12 @@ Steps:
 6. Finish the workout.
 7. Switch to `Full Plan`.
 8. Open a plan day and review the detail sheet.
+9. Return to the plan list and confirm the completed session appears in the Workout History block.
 
 Expected result:
 - Session progress changes as sets are completed.
 - The workout can be finished without silent failure.
+- Completed sessions appear in the Workout tab history after finishing.
 - The correct current weekday is highlighted in the plan instead of always highlighting Monday.
 
 Failure signals:
@@ -127,16 +129,20 @@ As a user seeking guidance, I want to read prior coach messages and send a quick
 
 Steps:
 1. Open `/coach?navya-test-session=demo-tabs`.
-2. Confirm prior messages render with clear role separation.
-3. Tap one quick reply chip.
-4. Confirm the user message appears immediately.
-5. Confirm the typing state appears and a coach response follows.
+2. Confirm the weekly check-in card renders before the conversation thread.
+3. Confirm the summary shows a title, three summary metrics, and one concrete next-step prompt.
+4. Confirm prior messages render with clear role separation.
+5. Tap one quick reply chip.
+6. Confirm the user message appears immediately.
+7. Confirm the typing state appears and a coach response follows.
 
 Expected result:
+- The weekly check-in gives a useful recap from workout, nutrition, hydration, and streak behavior.
 - The conversation feels responsive.
 - AI status is visible so users know whether the coach is active.
 
 Failure signals:
+- The weekly summary area is blank even though demo data is present.
 - Sending input gives no UI response.
 - The coach status badge and disabled state disagree.
 
@@ -173,6 +179,7 @@ Failure signals:
 - home
 - workout
 - workout plan modal
+- workout history
 - nutrition
 - coach
 - profile

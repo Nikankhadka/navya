@@ -9,9 +9,18 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '../../src/constants/theme';
+import {
+  Colors,
+  Spacing,
+  Radius,
+  Typography,
+  getLineHeightScale,
+  getTypeScale,
+  withAlpha,
+} from '../../src/constants/theme';
 import { useAuthStore } from '../../src/stores/useAuthStore';
 import { Card, Badge, Divider } from '../../src/components/ui';
 import { goalLabel } from '../../src/utils/helpers';
@@ -24,6 +33,7 @@ import { crossAlert } from '../../src/utils/crossAlert';
 import { isVisualTestScenario } from '../../src/utils/visualTest';
 import { useWeightHistory } from '../../src/hooks/useWeightHistory';
 import { useWeightActions } from '../../src/hooks/useWeightActions';
+import { useProfileAdherence } from '../../src/hooks/useProfileAdherence';
 
 type EditProfileForm = {
   full_name: string;
@@ -43,11 +53,15 @@ const GOAL_OPTIONS: Array<{ id: GoalType; label: string }> = [
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
   const queryClient = useQueryClient();
   const { user, signOut, isDemoSession, setProfile } = useAuthStore();
   const { data: profile } = useProfile(user?.id);
   const { data: weightHistory } = useWeightHistory(user?.id);
   const { addWeightLog } = useWeightActions(user?.id);
+  const { data: adherenceSummary } = useProfileAdherence(user?.id);
   const activeUser = profile ?? user;
   const [showEditModal, setShowEditModal] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
@@ -128,6 +142,7 @@ export default function ProfileScreen() {
       await profileService.upsertProfile(user.id, payload);
       setProfile(payload);
       await queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      await queryClient.invalidateQueries({ queryKey: ['weekly-coach-summary', user.id] });
       setShowEditModal(false);
     } catch (error) {
       console.error('Failed to save profile updates:', error);
@@ -137,12 +152,29 @@ export default function ProfileScreen() {
   };
 
   const stats = [
-    { label: 'Workouts', value: '24', suffix: 'this month' },
-    { label: 'Streak', value: '7', suffix: 'days' },
-    { label: 'Cal Burned', value: '~18k', suffix: 'kcal' },
+    {
+      label: 'Workouts',
+      value: String(adherenceSummary?.workouts_completed_30d ?? 0),
+      suffix: 'last 30 days',
+    },
+    {
+      label: 'Active Days',
+      value: `${adherenceSummary?.active_days_this_week ?? 0}/7`,
+      suffix: 'this week',
+    },
+    {
+      label: 'Streak',
+      value: String(adherenceSummary?.current_streak_days ?? 0),
+      suffix: 'days',
+    },
     {
       label: 'Latest Weight',
-      value: latestWeight != null ? `${latestWeight.toFixed(1)}kg` : '—',
+      value:
+        adherenceSummary?.latest_weight_kg != null
+          ? `${adherenceSummary.latest_weight_kg.toFixed(1)}kg`
+          : latestWeight != null
+            ? `${latestWeight.toFixed(1)}kg`
+            : '—',
       suffix: 'latest check-in',
     },
   ];
@@ -184,8 +216,12 @@ export default function ProfileScreen() {
         <View style={styles.avatarContainer}>
           <Text style={styles.avatarEmoji}>🧑‍💪</Text>
         </View>
-        <Text style={styles.fullName}>{activeUser.full_name ?? 'Navya User'}</Text>
-        <Text style={styles.email}>{activeUser.email}</Text>
+        <Text style={[styles.fullName, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
+          {activeUser.full_name ?? 'Navya User'}
+        </Text>
+        <Text style={[styles.email, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+          {activeUser.email}
+        </Text>
         <View style={styles.badgeRow}>
           {isDemoSession && <Badge label="Demo Session" color={Colors.orange} />}
           {activeUser?.goal && <Badge label={goalLabel(activeUser.goal)} color={Colors.accent} />}
@@ -197,52 +233,72 @@ export default function ProfileScreen() {
       <View style={styles.statsGrid}>
         {stats.map((stat) => (
           <View key={stat.label} style={styles.statCard}>
-            <Text style={styles.statValue}>{stat.value}</Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-            <Text style={styles.statSuffix}>{stat.suffix}</Text>
+            <Text style={[styles.statValue, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
+              {stat.value}
+            </Text>
+            <Text style={[styles.statLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              {stat.label}
+            </Text>
+            <Text style={[styles.statSuffix, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+              {stat.suffix}
+            </Text>
           </View>
         ))}
       </View>
 
       {/* Body metrics */}
       <Card style={styles.metricsCard}>
-        <Text style={styles.sectionTitle}>Body Metrics</Text>
+        <Text style={[styles.sectionTitle, { fontSize: typeScale.lg, lineHeight: lineHeights.lg }]}>
+          Body Metrics
+        </Text>
         <View style={styles.metricsRow}>
           <View style={styles.metric}>
-            <Text style={styles.metricVal}>
+            <Text style={[styles.metricVal, { fontSize: typeScale.xl, lineHeight: lineHeights.xl }]}>
               {activeUser.weight_kg ?? '—'}
-              <Text style={styles.metricUnit}> kg</Text>
+              <Text style={[styles.metricUnit, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+                {' '}kg
+              </Text>
             </Text>
-            <Text style={styles.metricLabel}>Weight</Text>
+            <Text style={[styles.metricLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Weight
+            </Text>
           </View>
           <View style={styles.metricDivider} />
           <View style={styles.metric}>
-            <Text style={styles.metricVal}>
+            <Text style={[styles.metricVal, { fontSize: typeScale.xl, lineHeight: lineHeights.xl }]}>
               {activeUser.height_cm ?? '—'}
-              <Text style={styles.metricUnit}> cm</Text>
+              <Text style={[styles.metricUnit, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+                {' '}cm
+              </Text>
             </Text>
-            <Text style={styles.metricLabel}>Height</Text>
+            <Text style={[styles.metricLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Height
+            </Text>
           </View>
           <View style={styles.metricDivider} />
           <View style={styles.metric}>
-            <Text style={styles.metricVal}>
+            <Text style={[styles.metricVal, { fontSize: typeScale.xl, lineHeight: lineHeights.xl }]}>
               {activeUser.weight_kg && activeUser.height_cm
                 ? (activeUser.weight_kg / Math.pow(activeUser.height_cm / 100, 2)).toFixed(1)
                 : '—'}
             </Text>
-            <Text style={styles.metricLabel}>BMI</Text>
+            <Text style={[styles.metricLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              BMI
+            </Text>
           </View>
         </View>
       </Card>
 
-      <Text style={styles.sectionTitle}>Progress Check-Ins</Text>
+      <Text style={[styles.sectionTitle, { fontSize: typeScale.lg, lineHeight: lineHeights.lg }]}>
+        Progress Check-Ins
+      </Text>
       <Card style={styles.checkInCard}>
         <View style={styles.checkInHeader}>
           <View>
-            <Text style={styles.checkInValue}>
+            <Text style={[styles.checkInValue, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
               {latestWeight != null ? `${latestWeight.toFixed(1)} kg` : 'No check-in yet'}
             </Text>
-            <Text style={styles.checkInMeta}>
+            <Text style={[styles.checkInMeta, { fontSize: typeScale.sm, lineHeight: lineHeights.sm + 2 }]}>
               {weightHistory?.[0]
                 ? `Logged ${new Date(weightHistory[0].logged_at).toLocaleDateString('en-AU', {
                     day: 'numeric',
@@ -261,6 +317,7 @@ export default function ProfileScreen() {
             <Text
               style={[
                 styles.checkInDeltaText,
+                { fontSize: typeScale.sm, lineHeight: lineHeights.sm },
                 weightDelta != null && weightDelta <= 0 ? styles.checkInDeltaTextPositive : null,
               ]}
             >
@@ -272,8 +329,10 @@ export default function ProfileScreen() {
         <View style={styles.historyRow}>
           {(weightHistory ?? []).slice(0, 4).map((entry) => (
             <View key={entry.id} style={styles.historyItem}>
-              <Text style={styles.historyValue}>{entry.weight_kg.toFixed(1)}</Text>
-              <Text style={styles.historyDate}>
+              <Text style={[styles.historyValue, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+                {entry.weight_kg.toFixed(1)}
+              </Text>
+              <Text style={[styles.historyDate, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
                 {new Date(entry.logged_at).toLocaleDateString('en-AU', {
                   day: 'numeric',
                   month: 'short',
@@ -287,21 +346,29 @@ export default function ProfileScreen() {
           style={styles.inlineActionBtn}
           onPress={() => setShowWeightModal(true)}
         >
-          <Text style={styles.inlineActionBtnText}>+ Log Weight Check-In</Text>
+          <Text style={[styles.inlineActionBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+            + Log Weight Check-In
+          </Text>
         </TouchableOpacity>
       </Card>
 
       {/* Setup rows */}
-      <Text style={styles.sectionTitle}>My Setup</Text>
+      <Text style={[styles.sectionTitle, { fontSize: typeScale.lg, lineHeight: lineHeights.lg }]}>
+        My Setup
+      </Text>
       <View style={styles.setupList}>
         {setupRows.map((row, i) => (
           <View key={row.label}>
             <View style={styles.setupRow}>
               <View style={styles.setupLeft}>
                 <Text style={styles.setupIcon}>{row.icon}</Text>
-                <Text style={styles.setupLabel}>{row.label}</Text>
+                <Text style={[styles.setupLabel, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+                  {row.label}
+                </Text>
               </View>
-              <Text style={styles.setupValue}>{row.value}</Text>
+              <Text style={[styles.setupValue, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+                {row.value}
+              </Text>
             </View>
             {i < setupRows.length - 1 && <Divider style={styles.rowDivider} />}
           </View>
@@ -315,7 +382,9 @@ export default function ProfileScreen() {
           onPress={() => setShowEditModal(true)}
           testID="profile-edit-button"
         >
-          <Text style={styles.actionBtnText}>✏️  Edit Profile</Text>
+          <Text style={[styles.actionBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+            ✏️  Edit Profile
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionBtn}
@@ -326,7 +395,9 @@ export default function ProfileScreen() {
             )
           }
         >
-          <Text style={styles.actionBtnText}>🔔  Notification Settings</Text>
+          <Text style={[styles.actionBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+            🔔  Notification Settings
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionBtn}
@@ -337,13 +408,17 @@ export default function ProfileScreen() {
             )
           }
         >
-          <Text style={styles.actionBtnText}>🤖  Regenerate Workout Plan</Text>
+          <Text style={[styles.actionBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+            🤖  Regenerate Workout Plan
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, styles.signOutBtn]}
           onPress={signOut}
         >
-          <Text style={styles.signOutText}>{isDemoSession ? 'Exit Demo' : 'Sign Out'}</Text>
+          <Text style={[styles.signOutText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+            {isDemoSession ? 'Exit Demo' : 'Sign Out'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -365,15 +440,21 @@ export default function ProfileScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <Text style={[styles.modalTitle, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
+                Edit Profile
+              </Text>
               <TouchableOpacity onPress={() => setShowEditModal(false)}>
-                <Text style={styles.modalClose}>Close</Text>
+                <Text style={[styles.modalClose, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+                  Close
+                </Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.fieldLabel}>Full Name</Text>
+            <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Full Name
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}
               value={form.full_name}
               onChangeText={(value) => setForm((current) => ({ ...current, full_name: value }))}
               placeholder="Your name"
@@ -381,7 +462,9 @@ export default function ProfileScreen() {
               testID="profile-full-name-input"
             />
 
-            <Text style={styles.fieldLabel}>Goal</Text>
+            <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Goal
+            </Text>
             <View style={styles.goalGrid}>
               {GOAL_OPTIONS.map((option) => {
                 const selected = form.goal === option.id;
@@ -391,7 +474,13 @@ export default function ProfileScreen() {
                     style={[styles.goalChip, selected && styles.goalChipActive]}
                     onPress={() => setForm((current) => ({ ...current, goal: option.id }))}
                   >
-                    <Text style={[styles.goalChipText, selected && styles.goalChipTextActive]}>
+                    <Text
+                      style={[
+                        styles.goalChipText,
+                        { fontSize: typeScale.sm, lineHeight: lineHeights.sm },
+                        selected && styles.goalChipTextActive,
+                      ]}
+                    >
                       {option.label}
                     </Text>
                   </TouchableOpacity>
@@ -401,9 +490,11 @@ export default function ProfileScreen() {
 
             <View style={styles.inputRow}>
               <View style={styles.inputCol}>
-                <Text style={styles.fieldLabel}>Weight (kg)</Text>
+                <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+                  Weight (kg)
+                </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}
                   value={form.weight_kg}
                   onChangeText={(value) => setForm((current) => ({ ...current, weight_kg: value }))}
                   placeholder="78"
@@ -412,9 +503,11 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={styles.inputCol}>
-                <Text style={styles.fieldLabel}>Height (cm)</Text>
+                <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+                  Height (cm)
+                </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}
                   value={form.height_cm}
                   onChangeText={(value) => setForm((current) => ({ ...current, height_cm: value }))}
                   placeholder="178"
@@ -424,9 +517,11 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <Text style={styles.fieldLabel}>Workouts Per Week</Text>
+            <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Workouts Per Week
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}
               value={form.workouts_per_week}
               onChangeText={(value) =>
                 setForm((current) => ({ ...current, workouts_per_week: value }))
@@ -442,7 +537,7 @@ export default function ProfileScreen() {
               disabled={isSaving || !form.full_name.trim()}
               testID="profile-save-button"
             >
-              <Text style={styles.saveBtnText}>
+              <Text style={[styles.saveBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
                 {isSaving ? 'Saving...' : isDemoSession ? 'Save Demo Profile' : 'Save Changes'}
               </Text>
             </TouchableOpacity>
@@ -466,19 +561,25 @@ export default function ProfileScreen() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Weight Check-In</Text>
+              <Text style={[styles.modalTitle, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
+                Weight Check-In
+              </Text>
               <TouchableOpacity onPress={() => setShowWeightModal(false)}>
-                <Text style={styles.modalClose}>Close</Text>
+                <Text style={[styles.modalClose, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+                  Close
+                </Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.weightHelper}>
+            <Text style={[styles.weightHelper, { fontSize: typeScale.sm, lineHeight: lineHeights.sm + 2 }]}>
               Use this for lightweight weekly progress. The latest entry also updates your profile weight.
             </Text>
 
-            <Text style={styles.fieldLabel}>Weight (kg)</Text>
+            <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Weight (kg)
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}
               value={weightInput}
               onChangeText={setWeightInput}
               placeholder="78.0"
@@ -486,9 +587,11 @@ export default function ProfileScreen() {
               keyboardType="numeric"
             />
 
-            <Text style={styles.fieldLabel}>Note</Text>
+            <Text style={[styles.fieldLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+              Note
+            </Text>
             <TextInput
-              style={[styles.input, styles.weightNotesInput]}
+              style={[styles.input, styles.weightNotesInput, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}
               value={weightNotes}
               onChangeText={setWeightNotes}
               placeholder="Optional note about sleep, stress, or consistency"
@@ -501,7 +604,7 @@ export default function ProfileScreen() {
               onPress={handleSaveWeightLog}
               disabled={addWeightLog.isPending || !weightInput.trim()}
             >
-              <Text style={styles.saveBtnText}>
+              <Text style={[styles.saveBtnText, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
                 {addWeightLog.isPending ? 'Saving...' : 'Save Check-In'}
               </Text>
             </TouchableOpacity>
@@ -525,25 +628,24 @@ const styles = StyleSheet.create({
   avatarContainer: {
     width: 84,
     height: 84,
-    borderRadius: 24,
-    backgroundColor: Colors.accentSoft,
+    borderRadius: Radius.xl,
+    backgroundColor: withAlpha(Colors.secondaryContainer, 0.9),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
-    borderWidth: 2,
-    borderColor: Colors.accent + '55',
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.secondary, 0.16),
   },
   avatarEmoji: { fontSize: 40 },
   fullName: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
     marginBottom: 4,
+    fontFamily: Typography.fontDisplay,
   },
   email: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurfaceVariant,
     marginBottom: Spacing.md,
   },
   badgeRow: { flexDirection: 'row', gap: Spacing.sm },
@@ -558,32 +660,32 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.surfaceContainerHigh,
     borderRadius: Radius.xl,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
   },
   statValue: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -0.5,
+    fontFamily: Typography.fontDisplay,
   },
-  statLabel: { color: Colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
-  statSuffix: { color: Colors.dim, fontSize: Typography.size.xs },
+  statLabel: { color: Colors.onSurfaceVariant, marginTop: 2 },
+  statSuffix: { color: Colors.dim },
 
   metricsCard: { marginHorizontal: Spacing.xl, marginBottom: Spacing.xxl },
   metricsRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: Spacing.md },
   metric: { alignItems: 'center' },
   metricVal: {
-    color: Colors.text,
-    fontSize: Typography.size.xl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
+    fontFamily: Typography.fontDisplay,
   },
-  metricUnit: { color: Colors.muted, fontSize: Typography.size.sm },
-  metricLabel: { color: Colors.muted, fontSize: Typography.size.sm, marginTop: 2 },
-  metricDivider: { width: 1, backgroundColor: Colors.border },
+  metricUnit: { color: Colors.onSurfaceVariant },
+  metricLabel: { color: Colors.onSurfaceVariant, marginTop: 2 },
+  metricDivider: { width: 1, backgroundColor: withAlpha(Colors.outlineVariant, 0.12) },
   checkInCard: { marginHorizontal: Spacing.xl, marginBottom: Spacing.xxl },
   checkInHeader: {
     flexDirection: 'row',
@@ -592,32 +694,30 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   checkInValue: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -0.5,
+    fontFamily: Typography.fontDisplay,
   },
   checkInMeta: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurfaceVariant,
     marginTop: 4,
   },
   checkInDeltaBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.orange + '22',
-    borderColor: Colors.orange + '44',
+    backgroundColor: Colors.orangeMuted,
+    borderColor: withAlpha(Colors.orange, 0.16),
     borderWidth: 1,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
   checkInDeltaBadgePositive: {
     backgroundColor: Colors.greenMuted,
-    borderColor: Colors.green + '44',
+    borderColor: withAlpha(Colors.green, 0.16),
   },
   checkInDeltaText: {
     color: Colors.orange,
-    fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
   },
   checkInDeltaTextPositive: {
@@ -630,52 +730,49 @@ const styles = StyleSheet.create({
   },
   historyItem: {
     flex: 1,
-    backgroundColor: Colors.bg,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderRadius: Radius.xl,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
     alignItems: 'center',
   },
   historyValue: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
   },
   historyDate: {
     color: Colors.dim,
-    fontSize: Typography.size.xs,
     marginTop: 4,
   },
   inlineActionBtn: {
-    backgroundColor: Colors.accentSoft,
-    borderColor: Colors.accent + '33',
+    backgroundColor: withAlpha(Colors.secondaryContainer, 0.38),
+    borderColor: withAlpha(Colors.secondary, 0.14),
     borderWidth: 1,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     paddingVertical: Spacing.md,
     alignItems: 'center',
   },
   inlineActionBtnText: {
-    color: Colors.accent,
-    fontSize: Typography.size.md,
+    color: Colors.onSecondaryContainer,
     fontWeight: Typography.weight.bold,
   },
 
   sectionTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
+    fontFamily: Typography.fontDisplay,
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.md,
   },
 
   setupList: {
     marginHorizontal: Spacing.xl,
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.surfaceContainerHigh,
     borderRadius: Radius.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.xxl,
   },
@@ -687,10 +784,9 @@ const styles = StyleSheet.create({
   },
   setupLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   setupIcon: { fontSize: 18 },
-  setupLabel: { color: Colors.muted, fontSize: Typography.size.md },
+  setupLabel: { color: Colors.onSurfaceVariant },
   setupValue: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.semibold,
     textTransform: 'capitalize',
   },
@@ -701,12 +797,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   actionBtn: {
-    backgroundColor: Colors.card,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.surfaceContainerLow,
+    borderRadius: Radius.xl,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
   },
   modalScreen: {
     flex: 1,
@@ -727,36 +823,33 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   modalTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
+    fontFamily: Typography.fontDisplay,
   },
   modalClose: {
-    color: Colors.accent,
-    fontSize: Typography.size.md,
+    color: Colors.primary,
     fontWeight: Typography.weight.semibold,
   },
   fieldLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
+    color: Colors.onSecondaryContainer,
     fontWeight: Typography.weight.semibold,
     marginBottom: Spacing.sm,
     marginTop: Spacing.md,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: Colors.card,
-    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
     borderWidth: 1,
-    borderRadius: Radius.lg,
-    color: Colors.text,
+    borderRadius: Radius.xl,
+    color: Colors.onSurface,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    fontSize: Typography.size.md,
   },
   weightHelper: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
+    color: Colors.onSurfaceVariant,
     marginBottom: Spacing.md,
   },
   weightNotesInput: {
@@ -776,53 +869,51 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   goalChip: {
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.surfaceContainerLowest,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
   goalChipActive: {
     backgroundColor: Colors.accentMuted,
-    borderColor: Colors.accent,
+    borderColor: withAlpha(Colors.primary, 0.22),
   },
   goalChipText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurfaceVariant,
     fontWeight: Typography.weight.semibold,
   },
   goalChipTextActive: {
-    color: Colors.accent,
+    color: Colors.primary,
   },
   saveBtn: {
     marginTop: Spacing.xxl,
-    backgroundColor: Colors.accent,
-    borderRadius: Radius.lg,
+    backgroundColor: Colors.primaryContainer,
+    borderRadius: Radius.xl,
     paddingVertical: Spacing.lg,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.primary, 0.16),
   },
   saveBtnDisabled: {
     opacity: 0.6,
   },
   saveBtnText: {
-    color: Colors.canopyBlack,
-    fontSize: Typography.size.md,
+    color: Colors.onPrimary,
     fontWeight: Typography.weight.bold,
   },
   actionBtnText: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.medium,
   },
   signOutBtn: {
-    borderColor: Colors.red + '44',
+    borderColor: withAlpha(Colors.red, 0.16),
     backgroundColor: Colors.redMuted,
     marginTop: Spacing.sm,
   },
   signOutText: {
     color: Colors.red,
-    fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
     textAlign: 'center',
   },

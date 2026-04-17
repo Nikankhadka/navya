@@ -11,6 +11,8 @@ export function useWeightActions(userId?: string) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['weight-history', userId] });
       await queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['profile-adherence', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['weekly-coach-summary', userId] });
     },
   });
 

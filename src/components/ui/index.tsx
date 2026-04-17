@@ -1,10 +1,12 @@
-import React from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
   type TextInputProps,
   type TouchableOpacityProps,
@@ -16,6 +18,8 @@ import {
   Shadow,
   Spacing,
   Typography,
+  getLineHeightScale,
+  getTypeScale,
   withAlpha,
 } from '../../constants/theme';
 
@@ -36,11 +40,12 @@ export function Card({
   onPress,
   variant = 'default',
 }: CardProps) {
+  const elevated = glow || variant === 'hero';
   const cardStyle = [
     styles.card,
     variant === 'hero' ? styles.cardHero : null,
     variant === 'glass' ? styles.cardGlass : null,
-    glow ? Shadow.md : null,
+    elevated ? Shadow.md : null,
     style,
   ];
 
@@ -62,20 +67,23 @@ interface BadgeProps {
 }
 
 export function Badge({ label, color = Colors.accent, size = 'md' }: BadgeProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+
   return (
     <View
       style={[
         styles.badge,
         {
-          backgroundColor: withAlpha(color, 0.12),
-          borderColor: withAlpha(color, 0.24),
+          backgroundColor: withAlpha(color, 0.14),
+          borderColor: withAlpha(color, 0.14),
         },
       ]}
     >
       <Text
         style={[
           styles.badgeText,
-          { color, fontSize: size === 'sm' ? Typography.size.xs : Typography.size.sm },
+          { color, fontSize: size === 'sm' ? typeScale.xs : typeScale.sm },
         ]}
       >
         {label}
@@ -104,18 +112,20 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
   const bgMap = {
-    primary: Colors.orange,
-    secondary: Colors.card,
+    primary: 'transparent',
+    secondary: Colors.surfaceContainerLowest,
     ghost: 'transparent',
-    danger: Colors.red,
+    danger: withAlpha(Colors.red, 0.18),
   };
 
   const textColorMap = {
-    primary: Colors.canopyBlack,
-    secondary: Colors.text,
-    ghost: Colors.accent,
-    danger: Colors.parchment,
+    primary: Colors.onPrimary,
+    secondary: Colors.onSurface,
+    ghost: Colors.primary,
+    danger: Colors.red,
   };
 
   const paddingMap = {
@@ -125,9 +135,9 @@ export function Button({
   };
 
   const fontSizeMap = {
-    sm: Typography.size.sm,
-    md: Typography.size.md,
-    lg: Typography.size.lg,
+    sm: typeScale.sm,
+    md: typeScale.md,
+    lg: typeScale.lg,
   };
 
   return (
@@ -141,14 +151,27 @@ export function Button({
           backgroundColor: bgMap[variant],
           opacity: disabled ? 0.5 : 1,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
-          borderWidth: variant === 'secondary' || variant === 'ghost' ? 1 : 0,
-          borderColor: variant === 'secondary' ? Colors.borderLight : Colors.accent,
+          borderWidth: variant === 'secondary' || variant === 'ghost' || variant === 'danger' ? 1 : 0,
+          borderColor:
+            variant === 'secondary'
+              ? withAlpha(Colors.outlineVariant, 0.18)
+              : variant === 'ghost'
+                ? withAlpha(Colors.primary, 0.18)
+                : withAlpha(Colors.red, 0.18),
           ...paddingMap[size],
         },
         style as ViewStyle,
       ]}
       {...props}
     >
+      {variant === 'primary' ? (
+        <LinearGradient
+          colors={Colors.gradientAccent}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.buttonGradient}
+        />
+      ) : null}
       {loading ? (
         <ActivityIndicator color={textColorMap[variant]} size="small" />
       ) : (
@@ -173,16 +196,49 @@ interface InputProps extends TextInputProps {
   error?: string;
 }
 
-export function Input({ label, error, style, ...props }: InputProps) {
+export function Input({ label, error, style, onBlur, onFocus, ...props }: InputProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <View style={styles.inputWrap}>
-      {label ? <Text style={styles.inputLabel}>{label}</Text> : null}
+      {label ? (
+        <Text style={[styles.inputLabel, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+          {label}
+        </Text>
+      ) : null}
       <TextInput
-        style={[styles.input, error ? styles.inputErrorState : null, style]}
+        style={[
+          styles.input,
+          isFocused ? styles.inputFocused : null,
+          error ? styles.inputErrorState : null,
+          {
+            backgroundColor: isFocused ? Colors.surfaceBright : Colors.surfaceContainerLowest,
+            borderColor: isFocused ? withAlpha(Colors.primary, 0.6) : withAlpha(Colors.outlineVariant, 0.16),
+            fontSize: typeScale.md,
+            lineHeight: lineHeights.md,
+          },
+          style,
+        ]}
         placeholderTextColor={Colors.dim}
+        selectionColor={Colors.primary}
+        onFocus={(event) => {
+          setIsFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setIsFocused(false);
+          onBlur?.(event);
+        }}
         {...props}
       />
-      {error ? <Text style={styles.inputError}>{error}</Text> : null}
+      {error ? (
+        <Text style={[styles.inputError, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -195,12 +251,20 @@ interface SectionHeaderProps {
 }
 
 export function SectionHeader({ title, action, onAction, style }: SectionHeaderProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
+
   return (
     <View style={[styles.sectionHeader, style]}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { fontSize: typeScale.lg, lineHeight: lineHeights.lg }]}>
+        {title}
+      </Text>
       {action ? (
         <TouchableOpacity onPress={onAction}>
-          <Text style={styles.sectionAction}>{action}</Text>
+          <Text style={[styles.sectionAction, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+            {action}
+          </Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -220,13 +284,23 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ emoji, title, subtitle, action, onAction }: EmptyStateProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
+
   return (
     <View style={styles.emptyState}>
       <View style={styles.emptyEmojiWrap}>
         <Text style={styles.emptyEmoji}>{emoji}</Text>
       </View>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      {subtitle ? <Text style={styles.emptySubtitle}>{subtitle}</Text> : null}
+      <Text style={[styles.emptyTitle, { fontSize: typeScale.lg, lineHeight: lineHeights.lg }]}>
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text style={[styles.emptySubtitle, { fontSize: typeScale.md, lineHeight: lineHeights.md }]}>
+          {subtitle}
+        </Text>
+      ) : null}
       {action && onAction ? <Button label={action} onPress={onAction} style={styles.emptyAction} /> : null}
     </View>
   );
@@ -247,12 +321,24 @@ export function MetricTile({
   accentColor = Colors.accent,
   style,
 }: MetricTileProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
+  const lineHeights = getLineHeightScale(width);
+
   return (
     <View style={[styles.metricTile, style]}>
       <View style={[styles.metricGlow, { backgroundColor: withAlpha(accentColor, 0.16) }]} />
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
-      {hint ? <Text style={styles.metricHint}>{hint}</Text> : null}
+      <Text style={[styles.metricLabel, { fontSize: typeScale.xs, lineHeight: lineHeights.xs }]}>
+        {label}
+      </Text>
+      <Text style={[styles.metricValue, { fontSize: typeScale.xxl, lineHeight: lineHeights.xxl }]}>
+        {value}
+      </Text>
+      {hint ? (
+        <Text style={[styles.metricHint, { fontSize: typeScale.sm, lineHeight: lineHeights.sm }]}>
+          {hint}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -270,8 +356,10 @@ export function QuickActionChip({
   tone = 'neutral',
   style,
 }: QuickActionChipProps) {
+  const { width } = useWindowDimensions();
+  const typeScale = getTypeScale(width);
   const toneColor =
-    tone === 'accent' ? Colors.accent : tone === 'water' ? Colors.blue : Colors.borderLight;
+    tone === 'accent' ? Colors.primary : tone === 'water' ? Colors.secondary : Colors.onSurfaceVariant;
 
   return (
     <TouchableOpacity
@@ -280,13 +368,22 @@ export function QuickActionChip({
       style={[
         styles.quickChip,
         {
-          borderColor: withAlpha(toneColor, tone === 'neutral' ? 0.5 : 0.34),
-          backgroundColor: withAlpha(toneColor, tone === 'neutral' ? 0.08 : 0.12),
+          borderColor: withAlpha(toneColor, tone === 'neutral' ? 0.12 : 0.18),
+          backgroundColor:
+            tone === 'water'
+              ? withAlpha(Colors.secondaryContainer, 0.28)
+              : withAlpha(toneColor, tone === 'neutral' ? 0.08 : 0.12),
         },
         style,
       ]}
     >
-      <Text style={[styles.quickChipText, tone !== 'neutral' ? { color: toneColor } : null]}>
+      <Text
+        style={[
+          styles.quickChipText,
+          { fontSize: typeScale.sm },
+          tone !== 'neutral' ? { color: toneColor } : null,
+        ]}
+      >
         {label}
       </Text>
     </TouchableOpacity>
@@ -299,21 +396,21 @@ export function SheetHandle() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.surfaceContainer,
     borderRadius: Radius.xl,
     padding: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.16),
     ...Shadow.sm,
   },
   cardHero: {
-    backgroundColor: Colors.wetSoil,
-    borderColor: Colors.borderLight,
+    backgroundColor: Colors.surfaceContainerLow,
+    borderColor: withAlpha(Colors.outlineVariant, 0.12),
     overflow: 'hidden',
   },
   cardGlass: {
-    backgroundColor: withAlpha(Colors.forestGlass, 0.48),
-    borderColor: withAlpha(Colors.stoneFog, 0.16),
+    backgroundColor: withAlpha(Colors.surfaceVariant, 0.6),
+    borderColor: withAlpha(Colors.secondary, 0.12),
   },
   badge: {
     paddingHorizontal: 10,
@@ -331,11 +428,17 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  buttonGradient: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: Radius.xl,
   },
   buttonInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
   },
   buttonIcon: {
     marginRight: 8,
@@ -348,22 +451,21 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   inputLabel: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
+    color: Colors.onSecondaryContainer,
     marginBottom: Spacing.xs,
     fontWeight: Typography.weight.semibold,
-    letterSpacing: 0.3,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: Radius.xl,
-    color: Colors.text,
+    color: Colors.onSurface,
     paddingHorizontal: Spacing.lg,
     paddingVertical: 16,
-    fontSize: Typography.size.md,
+  },
+  inputFocused: {
+    ...Shadow.sm,
   },
   inputErrorState: {
     borderColor: Colors.red,
@@ -380,20 +482,18 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   sectionTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
     fontFamily: Typography.fontDisplay,
   },
   sectionAction: {
-    color: Colors.accent,
-    fontSize: Typography.size.sm,
+    color: Colors.primary,
     fontWeight: Typography.weight.semibold,
     letterSpacing: 0.3,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: withAlpha(Colors.outlineVariant, 0.14),
     marginVertical: Spacing.md,
   },
   emptyState: {
@@ -408,35 +508,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
-    backgroundColor: withAlpha(Colors.accent, 0.12),
+    backgroundColor: withAlpha(Colors.primary, 0.12),
     borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.18),
+    borderColor: withAlpha(Colors.primary, 0.12),
   },
   emptyEmoji: {
     fontSize: 32,
   },
   emptyTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.bold,
     textAlign: 'center',
   },
   emptySubtitle: {
-    color: Colors.muted,
-    fontSize: Typography.size.md,
+    color: Colors.onSurfaceVariant,
     textAlign: 'center',
     marginTop: Spacing.sm,
-    lineHeight: 22,
   },
   emptyAction: {
     marginTop: Spacing.lg,
   },
   metricTile: {
     flex: 1,
-    backgroundColor: Colors.card,
+    backgroundColor: Colors.surfaceContainerHigh,
     borderRadius: Radius.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: withAlpha(Colors.outlineVariant, 0.14),
     padding: Spacing.lg,
     gap: Spacing.xs,
     overflow: 'hidden',
@@ -450,21 +547,18 @@ const styles = StyleSheet.create({
     borderRadius: 34,
   },
   metricLabel: {
-    color: Colors.muted,
-    fontSize: Typography.size.xs,
+    color: Colors.onSurfaceVariant,
     fontWeight: Typography.weight.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   metricValue: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
+    color: Colors.onSurface,
     fontWeight: Typography.weight.extrabold,
     fontFamily: Typography.fontDisplay,
   },
   metricHint: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurfaceVariant,
   },
   quickChip: {
     paddingHorizontal: Spacing.md,
@@ -473,15 +567,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   quickChipText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
+    color: Colors.onSurfaceVariant,
     fontWeight: Typography.weight.semibold,
   },
   sheetHandle: {
     width: 42,
     height: 5,
     borderRadius: Radius.full,
-    backgroundColor: Colors.borderLight,
+    backgroundColor: withAlpha(Colors.secondary, 0.42),
     alignSelf: 'center',
     marginBottom: Spacing.lg,
   },

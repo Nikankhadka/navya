@@ -20,8 +20,9 @@ import { useActivePlan } from '../../src/hooks/useActivePlan';
 import { useTodaySession } from '../../src/hooks/useTodaySession';
 import { useWorkoutActions } from '../../src/hooks/useWorkoutActions';
 import type { WorkoutPlanDay } from '../../src/types/app';
-import { isVisualTestScenario } from '../../src/utils/visualTest';
+import { getVisualTestScenario, isVisualTestScenario } from '../../src/utils/visualTest';
 import { MOCK_PLAN } from '../../src/mocks/mockData';
+import { useWorkoutHistory } from '../../src/hooks/useWorkoutHistory';
 
 export default function WorkoutScreen() {
   const insets = useSafeAreaInsets();
@@ -29,6 +30,7 @@ export default function WorkoutScreen() {
   const userId = user?.id;
   const { data: activePlan } = useActivePlan(userId);
   const { data: todaySessionData } = useTodaySession(userId);
+  const { data: workoutHistory } = useWorkoutHistory(userId);
   const { startSession: startSessionMutation, saveSession } = useWorkoutActions(userId);
   const { activeSession, elapsedSeconds, timerActive, startSession, endSession, skipExercise, markExerciseDone, tickTimer } = useWorkoutStore();
   const [tab, setTab] = useState<'today' | 'plan'>('today');
@@ -40,7 +42,8 @@ export default function WorkoutScreen() {
   const visualPlanDay = isVisualTestScenario('workout-plan-modal')
     ? activePlan?.workout_plan_days[0] ?? MOCK_PLAN.workout_plan_days[0] ?? null
     : null;
-  const activeTab = visualPlanDay ? 'plan' : tab;
+  const visualScenario = getVisualTestScenario();
+  const activeTab = visualPlanDay || visualScenario === 'workout-history' ? 'plan' : tab;
   const planDayDetail = visualPlanDay ?? selectedPlanDay;
 
   // Timer
@@ -119,10 +122,10 @@ export default function WorkoutScreen() {
         {(['today', 'plan'] as const).map((t) => (
           <TouchableOpacity
             key={t}
-            style={[styles.tab, tab === t && styles.tabActive]}
+            style={[styles.tab, activeTab === t && styles.tabActive]}
             onPress={() => setTab(t)}
           >
-            <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
+            <Text style={[styles.tabText, activeTab === t && styles.tabTextActive]}>
               {t === 'today' ? "Today's Session" : 'Full Plan'}
             </Text>
           </TouchableOpacity>
@@ -261,12 +264,52 @@ export default function WorkoutScreen() {
                   />
                 ))}
                 <Card style={styles.historyCard}>
-                  <Text style={styles.historyEyebrow}>Reserved space</Text>
-                  <Text style={styles.historyTitle}>Workout history stays in this tab</Text>
+                  <Text style={styles.historyEyebrow}>Workout History</Text>
+                  <Text style={styles.historyTitle}>Recent Sessions</Text>
                   <Text style={styles.historyText}>
-                    The next adherence slice will add completed-session summaries here so the plan
-                    and the diary stay connected.
+                    Completed sessions stay here so the plan and your recent adherence are visible
+                    in one place.
                   </Text>
+
+                  {workoutHistory && workoutHistory.length > 0 ? (
+                    <View style={styles.historyList}>
+                      {workoutHistory.map((entry) => (
+                        <View key={entry.id} style={styles.historyItem}>
+                          <View style={styles.historyItemTop}>
+                            <View style={styles.historyItemText}>
+                              <Text style={styles.historyItemTitle}>{entry.day_name}</Text>
+                              <Text style={styles.historyItemMeta}>
+                                {new Date(entry.completed_at).toLocaleDateString('en-AU', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                                {' · '}
+                                {formatDuration(entry.duration_seconds ?? 0)}
+                              </Text>
+                            </View>
+                            <View style={styles.historyDoneBadge}>
+                              <Text style={styles.historyDoneText}>
+                                {entry.completed_exercise_count}/{entry.exercise_count}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text style={styles.historyItemSummary}>
+                            {entry.completed_set_count} sets logged
+                            {entry.skipped_exercise_count > 0
+                              ? ` · ${entry.skipped_exercise_count} skipped`
+                              : ' · full session complete'}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <EmptyState
+                      emoji="🗓️"
+                      title="No completed sessions yet"
+                      subtitle="Finish a workout in demo mode and it will appear here as part of your recent training history."
+                    />
+                  )}
                 </Card>
               </>
             ) : (
@@ -625,6 +668,54 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Typography.size.sm,
     lineHeight: 20,
+    marginBottom: Spacing.lg,
+  },
+  historyList: {
+    gap: Spacing.md,
+  },
+  historyItem: {
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+  },
+  historyItemTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    marginBottom: Spacing.xs,
+  },
+  historyItemText: {
+    flex: 1,
+  },
+  historyItemTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+  },
+  historyItemMeta: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    marginTop: 2,
+  },
+  historyItemSummary: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+  },
+  historyDoneBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.greenMuted,
+    borderWidth: 1,
+    borderColor: Colors.green + '44',
+  },
+  historyDoneText: {
+    color: Colors.green,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
   },
   planExerciseCard: {
     backgroundColor: Colors.card,

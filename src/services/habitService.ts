@@ -1,7 +1,7 @@
 import type { HabitStreakSummary } from '../types/app';
 import type { Database } from '../types/supabase';
 import { supabase, isSupabaseConfigured } from './supabase';
-import { MOCK_DAILY_NUTRITION, MOCK_TODAY_SESSION } from '../mocks/mockData';
+import { MOCK_TODAY_SESSION, MOCK_WEEKLY_STREAK } from '../mocks/mockData';
 
 type FoodLogActivityRow = Pick<Database['public']['Tables']['food_logs']['Row'], 'logged_at'>;
 type WaterLogActivityRow = Pick<Database['public']['Tables']['water_logs']['Row'], 'logged_at'>;
@@ -63,10 +63,14 @@ function buildHabitSummary(activityKeys: Set<string>): HabitStreakSummary {
 export const habitService = {
   async getHabitStreak(userId: string): Promise<HabitStreakSummary> {
     if (!isSupabaseConfigured) {
-      const activityKeys = new Set<string>([
-        ...MOCK_DAILY_NUTRITION.meals.map((meal) => dayKeyFromIso(meal.logged_at)),
-        ...MOCK_DAILY_NUTRITION.water_logs.map((entry) => dayKeyFromIso(entry.logged_at)),
-      ]);
+      const weekKeys = currentWeekKeys();
+      const activityKeys = new Set<string>();
+
+      MOCK_WEEKLY_STREAK.forEach((didShowUp, index) => {
+        if (didShowUp) {
+          activityKeys.add(weekKeys[index]);
+        }
+      });
 
       if (MOCK_TODAY_SESSION.status === 'in_progress' || MOCK_TODAY_SESSION.status === 'completed') {
         activityKeys.add(dayKeyFromIso(MOCK_TODAY_SESSION.started_at));

@@ -6,7 +6,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   ai_enabled: true,
   food_search_enabled: false,
   notifications_enabled: false,
-  weekly_summary_enabled: false,
+  weekly_summary_enabled: true,
 };
 
 export const featureFlagService = {

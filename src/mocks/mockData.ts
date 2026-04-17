@@ -2,6 +2,7 @@ import type {
   UserProfile,
   WorkoutPlan,
   WorkoutSession,
+  WorkoutHistoryEntry,
   FoodLog,
   CoachMessage,
   DailyNutritionSummary,
@@ -252,6 +253,42 @@ export const MOCK_TODAY_SESSION: WorkoutSession = {
   })),
 };
 
+export const MOCK_WORKOUT_HISTORY: WorkoutHistoryEntry[] = [
+  {
+    id: 'history-1',
+    day_name: 'Legs — Quads & Hamstrings',
+    started_at: new Date(Date.now() - 2 * 24 * 3600_000 - 58 * 60_000).toISOString(),
+    completed_at: new Date(Date.now() - 2 * 24 * 3600_000).toISOString(),
+    duration_seconds: 58 * 60,
+    exercise_count: 5,
+    completed_exercise_count: 5,
+    completed_set_count: 17,
+    skipped_exercise_count: 0,
+  },
+  {
+    id: 'history-2',
+    day_name: 'Pull — Back & Biceps',
+    started_at: new Date(Date.now() - 5 * 24 * 3600_000 - 47 * 60_000).toISOString(),
+    completed_at: new Date(Date.now() - 5 * 24 * 3600_000).toISOString(),
+    duration_seconds: 47 * 60,
+    exercise_count: 4,
+    completed_exercise_count: 3,
+    completed_set_count: 12,
+    skipped_exercise_count: 1,
+  },
+  {
+    id: 'history-3',
+    day_name: 'Push — Chest & Shoulders',
+    started_at: new Date(Date.now() - 8 * 24 * 3600_000 - 52 * 60_000).toISOString(),
+    completed_at: new Date(Date.now() - 8 * 24 * 3600_000).toISOString(),
+    duration_seconds: 52 * 60,
+    exercise_count: 5,
+    completed_exercise_count: 5,
+    completed_set_count: 18,
+    skipped_exercise_count: 0,
+  },
+];
+
 export const MOCK_FOOD_LOGS: FoodLog[] = [
   {
     id: 'food-1',
@@ -287,6 +324,42 @@ export const MOCK_FOOD_LOGS: FoodLog[] = [
     fat_g: 3,
     meal_time: 'snack',
     logged_at: new Date(Date.now() - 1 * 3600_000).toISOString(),
+    notes: null,
+  },
+  {
+    id: 'food-4',
+    user_id: 'mock-user-1',
+    meal_name: 'Eggs on Sourdough',
+    calories: 420,
+    protein_g: 28,
+    carbs_g: 31,
+    fat_g: 16,
+    meal_time: 'breakfast',
+    logged_at: new Date(Date.now() - 2 * 24 * 3600_000 - 3 * 3600_000).toISOString(),
+    notes: null,
+  },
+  {
+    id: 'food-5',
+    user_id: 'mock-user-1',
+    meal_name: 'Salmon Rice Plate',
+    calories: 710,
+    protein_g: 46,
+    carbs_g: 58,
+    fat_g: 22,
+    meal_time: 'dinner',
+    logged_at: new Date(Date.now() - 4 * 24 * 3600_000 - 2 * 3600_000).toISOString(),
+    notes: null,
+  },
+  {
+    id: 'food-6',
+    user_id: 'mock-user-1',
+    meal_name: 'Greek Yogurt Bowl',
+    calories: 260,
+    protein_g: 24,
+    carbs_g: 21,
+    fat_g: 8,
+    meal_time: 'snack',
+    logged_at: new Date(Date.now() - 6 * 24 * 3600_000 - 90 * 60_000).toISOString(),
     notes: null,
   },
 ];
@@ -369,7 +442,39 @@ export const MOCK_COACH_MESSAGES: CoachMessage[] = [
 
 export const MOCK_WEEKLY_STREAK = [true, true, false, true, true, true, false];
 
-export const MOCK_WATER_LOGS: WaterLog[] = MOCK_DAILY_NUTRITION.water_logs;
+export const MOCK_WATER_LOGS: WaterLog[] = [
+  ...MOCK_DAILY_NUTRITION.water_logs,
+  {
+    id: 'water-3',
+    user_id: 'mock-user-1',
+    amount_ml: 1250,
+    logged_at: new Date(Date.now() - 2 * 24 * 3600_000 - 5 * 3600_000).toISOString(),
+  },
+  {
+    id: 'water-4',
+    user_id: 'mock-user-1',
+    amount_ml: 1000,
+    logged_at: new Date(Date.now() - 2 * 24 * 3600_000 - 2 * 3600_000).toISOString(),
+  },
+  {
+    id: 'water-5',
+    user_id: 'mock-user-1',
+    amount_ml: 1000,
+    logged_at: new Date(Date.now() - 4 * 24 * 3600_000 - 4 * 3600_000).toISOString(),
+  },
+  {
+    id: 'water-6',
+    user_id: 'mock-user-1',
+    amount_ml: 1200,
+    logged_at: new Date(Date.now() - 4 * 24 * 3600_000 - 90 * 60_000).toISOString(),
+  },
+  {
+    id: 'water-7',
+    user_id: 'mock-user-1',
+    amount_ml: 1800,
+    logged_at: new Date(Date.now() - 6 * 24 * 3600_000 - 3 * 3600_000).toISOString(),
+  },
+];
 
 export const MOCK_WEIGHT_LOGS: WeightLog[] = [
   {
