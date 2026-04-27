@@ -8,7 +8,7 @@ This document serves as a quick technical summary for Navya. Canonical architect
 - **Framework:** Expo (React Native)
 - **Navigation:** Expo Router (File-based routing)
 - **Language:** TypeScript (Strict mode)
-- **Styling:** Tailwind CSS (via NativeWind v4+)
+- **Styling:** Tamagui as the shared UI foundation, with NativeWind retained only for legacy-screen migration
 - **State Management:** Zustand (Client state), TanStack Query (Server state)
 - **Platform:** iOS, Android (Primary), Web (Secondary)
 
@@ -27,4 +27,3 @@ This document serves as a quick technical summary for Navya. Canonical architect
 - **Package Manager:** npm (with `--legacy-peer-deps` for React 19 compatibility)
 - **Tools:** Claude CLI, Supabase CLI
 - **Linting/Types:** Strict TypeScript, ESLint (Standard Expo config)
-

@@ -51,7 +51,7 @@
 
 ## Next Recommended Step
 
-- connect a real Supabase project and regenerate final `src/types/supabase.ts`
+- connect a real Supabase project and regenerate final `src/types/database.ts`
 - validate the new read and write paths against the live schema and fix any relation mismatches, including `water_logs`
 - extend the Profile and Home surfaces with weight check-ins and simple progress history
 - add workout history summaries so the diary streak and adherence loop are fully visible

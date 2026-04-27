@@ -3,9 +3,9 @@
 ## Repo Map
 
 - `app/`: route files and screens
-- `src/hooks/`: query hooks
-- `src/services/`: Supabase access
-- `src/stores/`: local transient state
+- `src/features/*/hooks/`: feature query hooks
+- `src/features/*/api/` and `src/lib/`: backend access and shared platform helpers
+- `src/store/`: local transient state
 - `src/types/`: shared contracts
 - `docs/`: architecture, standards, sprint, and execution context
 - `plugins/navya-ai-team/`: Codex role system

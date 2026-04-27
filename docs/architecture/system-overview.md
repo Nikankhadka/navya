@@ -8,8 +8,8 @@ Navya is an Expo application backed by Supabase.
 - Presentation: `app/`
 - Shared UI and helpers: `src/components`, `src/constants`, `src/utils`
 - Client state: Zustand
-- Server state: TanStack Query hooks in `src/hooks`
-- Backend access: services in `src/services`
+- Server state: TanStack Query hooks in `src/features/*/hooks`
+- Backend access: feature services in `src/features/*/api` plus shared clients in `src/lib`
 - Backend platform: Supabase Auth, Postgres, RLS, Edge Functions
 
 ## Product Focus

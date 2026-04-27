@@ -25,6 +25,8 @@
     "@expo/vector-icons": "15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "2.99.1",
+    "@tamagui/babel-plugin": "^2.0.0-rc.41",
+    "@tamagui/config": "^2.0.0-rc.41",
     "@tanstack/react-query": "^5.90.21",
     "expo": "~55.0.5",
     "expo-apple-authentication": "^55.0.8",
@@ -49,6 +51,7 @@
     "react-native-screens": "~4.23.0",
     "react-native-web": "^0.21.2",
     "tailwindcss": "^3.4.19",
+    "tamagui": "^2.0.0-rc.41",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
   },

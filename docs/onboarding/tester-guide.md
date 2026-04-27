@@ -19,7 +19,7 @@ You need these before Navya can be tested end to end:
 
 ## Important Truth About The Current Repo
 
-The repo contains mock data in [src/mocks/mockData.ts](/home/nikan/projects/navya/src/mocks/mockData.ts:1), but that does not currently give a true beginner a full app walkthrough by itself.
+The repo contains mock data in [src/features/demo/mockData.ts](/Users/nikankhadka/projects/navya/src/features/demo/mockData.ts:1), but that does not currently give a true beginner a full app walkthrough by itself.
 
 Why:
 

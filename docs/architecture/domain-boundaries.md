@@ -7,15 +7,16 @@
 
 ## Hooks
 
-- `src/hooks/` owns TanStack Query usage and app-facing data composition
+- `src/features/*/hooks/` owns TanStack Query usage and app-facing data composition
 
 ## Services
 
-- `src/services/` owns Supabase calls and backend-side shaping
+- `src/features/*/api/` owns feature-specific Supabase calls and backend-side shaping
+- `src/lib/` owns shared platform clients, auth redirects, and Supabase mappers
 
 ## Stores
 
-- `src/stores/` owns transient local state only
+- `src/store/` owns transient local state only
 - stores must not become the persistent source of truth
 
 ## Types

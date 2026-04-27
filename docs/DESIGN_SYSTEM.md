@@ -4,9 +4,13 @@ This document is the absolute single source of truth for the **Navya** applicati
 
 ---
 
-## 1. Core Aesthetic Principles (Tailwind First)
+## 1. Core Aesthetic Principles
 
-We use **NativeWind v4** (Tailwind CSS) for all styling. **Do not** use `StyleSheet.create` or inline styles.
+Navya now uses **Tamagui** as the long-term shared UI foundation, with shared tokens living under `src/theme/` and shared primitives in `src/components/ui/`.
+
+NativeWind remains acceptable on legacy screens during migration, but new shared component APIs should not depend on `className`.
+
+`StyleSheet.create` is still allowed inside legacy screen implementations while those screens are being migrated, but new shared primitives should use the shared theme tokens rather than inventing ad hoc values.
 
 - **Premium Dark Mode First**: The application relies on deep, inky backgrounds contrasted with vibrant accents and glowing elements.
 - **Intentional Negative Space**: UIs should breathe. Do not cram elements together. Group related information closely, but separate distinct sections with generous spacing classes (`p-xl`, `gap-xxl`, `mb-xxxl`).

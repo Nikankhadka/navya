@@ -1,4 +1,4 @@
-import type { GoalType, ActivityLevel, DayOfWeek } from '../types/app';
+import type { GoalType, ActivityLevel, DayOfWeek } from '@/types/app';
 
 // ─── Time ─────────────────────────────────────────────────────────────────────
 

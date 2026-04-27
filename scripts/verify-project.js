@@ -34,7 +34,7 @@ function verifyFiles() {
     "docs/ai-team/README.md",
     "docs/execution/current-status.md",
     "scripts/sync-codex-skills.js",
-    "src/types/supabase.ts",
+    "src/types/database.ts",
   ];
 
   requiredFiles.forEach((relativePath) => {

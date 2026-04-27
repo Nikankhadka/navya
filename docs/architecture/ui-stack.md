@@ -5,8 +5,8 @@
 Navya currently uses:
 
 - Expo + React Native
-- a small custom component layer in `src/components/ui`
-- shared design tokens in `src/constants/theme.ts`
+- a shared component layer in `src/components/ui`
+- shared design tokens in `src/theme/`
 - `nativewind` as an available styling utility, not as the primary component system
 
 This means the app is functional today, but the UI layer is still mostly hand-rolled and will become harder to scale as more screens and states are added.
@@ -40,7 +40,7 @@ Use the current custom components only as a temporary compatibility layer while 
 ### Phase 1
 
 - add Tamagui dependencies and config
-- map the current design tokens from `src/constants/theme.ts` into Tamagui tokens
+- map the current design tokens from `src/theme/` into Tamagui tokens
 - prove the setup on one non-critical shared primitive
 
 ### Phase 2
@@ -80,8 +80,8 @@ Use the current custom components only as a temporary compatibility layer while 
 
 ## Immediate Practical Guidance
 
-Until Tamagui is installed and adopted:
+Until all screens are migrated to Tamagui primitives:
 
-- keep using the existing `src/components/ui` components
+- keep using the shared `src/components/ui` primitives and `src/theme/` tokens
 - avoid expanding that layer more than necessary
 - route any new shared primitive decisions through this doc and the related ADR
