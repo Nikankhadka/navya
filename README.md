@@ -37,6 +37,7 @@ If Supabase is not configured yet, you can still use the `Explore Demo App` entr
 npm run typecheck
 npm run verify
 npm run smoke:web
+npm run export:web
 npm run seed:tester -- YOUR_SUPABASE_USER_ID
 npm run sync:codex-skills
 ```

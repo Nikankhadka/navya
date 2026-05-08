@@ -1,5 +1,7 @@
 import Constants from 'expo-constants';
 
+export const appEnv = process.env.EXPO_PUBLIC_APP_ENV ?? Constants.expoConfig?.extra?.appEnv ?? 'development';
+
 export const supabaseUrl =
   Constants.expoConfig?.extra?.supabaseUrl ??
   process.env.EXPO_PUBLIC_SUPABASE_URL ??
@@ -18,4 +20,7 @@ export const demoModeFlag =
 export const isSupabaseConfigured =
   !supabaseUrl.includes('placeholder') && supabaseAnonKey !== 'placeholder-anon-key';
 
-export const isDemoModeAvailable = demoModeFlag === 'true' || !isSupabaseConfigured;
+export const isHostedAppEnv = appEnv === 'preview' || appEnv === 'production';
+
+export const isDemoModeAvailable =
+  demoModeFlag === 'true' || (!isHostedAppEnv && !isSupabaseConfigured);

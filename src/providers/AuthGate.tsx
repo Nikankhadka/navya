@@ -1,38 +1,21 @@
 import { useEffect } from 'react';
-import { useRouter, useSegments } from 'expo-router';
-import * as Linking from 'expo-linking';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { usePathname, useRouter, useSegments } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
-import { createSessionFromUrl, getAuthCallbackError } from '@/lib/auth/redirects';
 import { Colors } from '@/theme';
 
 export function AuthGate() {
-  const { initializeAuth, isInitialized, isAuthenticated } = useAuthStore();
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const onboardingComplete = useAuthStore((state) => state.user?.onboarding_complete);
   const segments = useSegments();
   const router = useRouter();
-  const incomingUrl = Linking.useURL();
+  const pathname = usePathname();
 
   useEffect(() => {
-    initializeAuth();
+    void initializeAuth();
   }, [initializeAuth]);
-
-  useEffect(() => {
-    if (!incomingUrl) {
-      return;
-    }
-
-    const authCallbackError = getAuthCallbackError(incomingUrl);
-
-    if (authCallbackError) {
-      Alert.alert('Sign-in link issue', authCallbackError);
-      router.replace('/(auth)/login');
-      return;
-    }
-
-    createSessionFromUrl(incomingUrl).catch((error) => {
-      console.error('Deep link auth error:', error);
-    });
-  }, [incomingUrl, router]);
 
   useEffect(() => {
     if (!isInitialized) {
@@ -41,7 +24,11 @@ export function AuthGate() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
-    const onboardingComplete = useAuthStore.getState().user?.onboarding_complete;
+    const inAuthCallbackRoute = pathname === '/auth/callback';
+
+    if (inAuthCallbackRoute) {
+      return;
+    }
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login');
@@ -65,7 +52,7 @@ export function AuthGate() {
     if (onboardingComplete && inOnboardingGroup) {
       router.replace('/(tabs)');
     }
-  }, [isAuthenticated, isInitialized, segments, router]);
+  }, [isAuthenticated, isInitialized, onboardingComplete, pathname, router, segments]);
 
   if (isInitialized) {
     return null;

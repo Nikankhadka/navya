@@ -2,11 +2,11 @@
 
 ## Current Phase
 
-- Week 4: progress and adherence upgrade
+- Week 2: live Supabase reliability and hosted web auth hardening
 
 ## Current Step
 
-- Progress and adherence are now implemented locally: `weight_logs` exists as a first-class contract, Profile supports logged weight check-ins and recent history, Home shows a compact progress/adherence card, Workout shows recent completed-session history, and the tester seed plus validation SQL now cover those flows. Live Supabase proof for `W5-001` remains blocked because this workspace does not currently have runtime `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, or a real magic-link tester UUID loaded.
+- Auth and deployment plumbing now target the real hosted-web path: browser auth sessions persist on web, `/auth/callback` owns session completion instead of the gate, demo fallback is disabled for preview/production app envs, and Vercel clean-URL hosting is documented as the first web deployment target. Live Supabase proof still remains blocked in this workspace because no real `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, Google provider config, or tester UUID is loaded here.
 
 ## Completed In This Session
 
@@ -22,27 +22,34 @@
 - expanded the tester seed to cover profile completeness, water, weight history, completed workouts, session exercises, and weekly-summary feature-flag readiness
 - added a tester validation SQL template and renderer script for repeatable hosted-Supabase checks
 - refreshed the tester seed README to document both seed and validation flows
+- switched web Supabase auth persistence from in-memory fallback to browser `localStorage`
+- moved auth callback completion into the dedicated callback screen and kept `/auth/callback` public inside routing
+- hardened auth store initialization so Supabase auth subscription registration is idempotent
+- disabled automatic demo fallback for `preview` and `production` app environments
+- added the first Vercel deployment config and documented preview/production env requirements
 - passed `npm run verify`
 - passed `npm run smoke:web`
 
 ## In Progress
 
 - hosted Supabase validation for `W5-001`
-- applying the new progress migration and regenerated contracts to a real Supabase project
-- confirming how weekly-summary behavior should evolve beyond the current coach-message plus feature-flag path
+- applying the existing migrations to a real Supabase project
+- configuring Supabase Email + Google auth for stable preview and production callback URLs
+- verifying hosted web auth and seeded-data reads on Vercel preview
 
 ## Next Recommended Step
 
-- load real `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` values into the runtime environment
-- create a real tester account through the magic-link flow and capture the Auth UUID
-- apply `supabase/migrations/20260508_mvp_phase2_progress_logs.sql` in the hosted Supabase project
+- create the new Supabase project and load real preview/production env values into Vercel and local `.env.local`
+- enable Email auth plus Google auth in Supabase and allow-list the local, preview, and production callback URLs
+- apply all three Navya migrations in the hosted Supabase project
+- create a real tester account through the web magic-link flow and capture the Auth UUID
 - render and run `npm run seed:tester -- <tester-uuid>` and `npm run validate:tester -- <tester-uuid>` in the Supabase SQL editor
-- verify live reads and writes for profile edits, weight check-ins, hydration, workout completion, Home adherence, and coach thread loading
+- verify live reads and writes for login, onboarding routing, profile edits, weight check-ins, hydration, workout completion, Home adherence, and coach thread loading on Vercel preview
 
 ## Blockers
 
-- `W5-001` cannot be closed from this workspace until `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` are available at runtime
-- live validation also requires a real tester account created through Navya auth so the seed and validation SQL can target a real Supabase Auth UUID
+- `W5-001` still cannot be closed from this workspace until real Supabase project values are available at runtime
+- live validation also requires Google provider setup plus a real tester account created through Navya auth so the seed and validation SQL can target a real Supabase Auth UUID
 - weekly summary is still constrained to the current coach-message and feature-flag path; a richer summary contract should stay out of scope until live proof is complete
 
 ## Last Updated

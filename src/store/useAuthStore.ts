@@ -23,6 +23,9 @@ interface AuthState {
   enterDemoMode: (options?: { onboardingComplete?: boolean }) => void;
 }
 
+let authInitPromise: Promise<void> | null = null;
+let hasRegisteredAuthListener = false;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
@@ -75,46 +78,68 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initializeAuth: async () => {
-    try {
-      if (get().isInitialized) return;
-      
-      set({ isLoading: true });
+    if (get().isInitialized) return;
 
-      const visualTestMode = getVisualTestSessionMode();
-
-      if (visualTestMode) {
-        get().enterDemoMode({
-          onboardingComplete: visualTestMode === 'demo-tabs',
-        });
-        return;
-      }
-
-      // Get initial session
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) throw error;
-
-      if (session) {
-        set({ session, isAuthenticated: true });
-        await get().refreshProfile();
-      }
-
-      // Listen for auth state changes
-      supabase.auth.onAuthStateChange(async (_event, newSession) => {
-        set({ session: newSession, isAuthenticated: !!newSession });
-        
-        if (newSession) {
-          set({ isDemoSession: false });
-          await get().refreshProfile();
-        } else {
-          set({ user: null, isDemoSession: false });
-        }
-      });
-    } catch (error) {
-      console.error('Auth initialization error:', error);
-    } finally {
-      set({ isLoading: false, isInitialized: true });
+    if (authInitPromise) {
+      await authInitPromise;
+      return;
     }
+
+    authInitPromise = (async () => {
+      try {
+        set({ isLoading: true });
+
+        const visualTestMode = getVisualTestSessionMode();
+
+        if (visualTestMode) {
+          get().enterDemoMode({
+            onboardingComplete: visualTestMode === 'demo-tabs',
+          });
+          return;
+        }
+
+        if (!hasRegisteredAuthListener) {
+          supabase.auth.onAuthStateChange(async (_event, newSession) => {
+            set({
+              session: newSession,
+              isAuthenticated: !!newSession,
+              isDemoSession: false,
+            });
+
+            if (newSession) {
+              await get().refreshProfile();
+            } else {
+              set({ user: null });
+            }
+          });
+          hasRegisteredAuthListener = true;
+        }
+
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) throw error;
+
+        set({
+          session,
+          isAuthenticated: !!session,
+          isDemoSession: false,
+        });
+
+        if (session) {
+          await get().refreshProfile();
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        set({ isLoading: false, isInitialized: true });
+        authInitPromise = null;
+      }
+    })();
+
+    await authInitPromise;
   },
 
   signOut: async () => {
