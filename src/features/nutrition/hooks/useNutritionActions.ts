@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { FoodLog } from '@/types/app';
+import type { CreateCustomFoodInput, CreateFoodLogInput, FavoriteFoodInput } from '@/types/app';
 import { nutritionService } from '@/features/nutrition/api/nutrition.service';
 
 export function useNutritionActions(userId?: string) {
   const queryClient = useQueryClient();
 
   const addMeal = useMutation({
-    mutationFn: (meal: Omit<FoodLog, 'id' | 'user_id' | 'logged_at'>) =>
+    mutationFn: (meal: CreateFoodLogInput) =>
       nutritionService.addMeal(userId ?? '', meal),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
@@ -15,10 +15,26 @@ export function useNutritionActions(userId?: string) {
   });
 
   const deleteMeal = useMutation({
-    mutationFn: (mealId: string) => nutritionService.deleteMeal(mealId),
+    mutationFn: (mealId: string) => nutritionService.deleteMeal(userId ?? '', mealId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
       await queryClient.invalidateQueries({ queryKey: ['habit-streak', userId] });
+    },
+  });
+
+  const saveCustomFood = useMutation({
+    mutationFn: (input: CreateCustomFoodInput) =>
+      nutritionService.saveCustomFood(userId ?? '', input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
+    },
+  });
+
+  const toggleFavorite = useMutation({
+    mutationFn: (input: FavoriteFoodInput) =>
+      nutritionService.toggleFavorite(userId ?? '', input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['daily-nutrition', userId] });
     },
   });
 
@@ -30,5 +46,5 @@ export function useNutritionActions(userId?: string) {
     },
   });
 
-  return { addMeal, deleteMeal, addWater };
+  return { addMeal, deleteMeal, saveCustomFood, toggleFavorite, addWater };
 }

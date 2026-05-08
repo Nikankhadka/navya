@@ -1,8 +1,10 @@
 import type {
   CoachMessage,
   CompletedSet,
+  CustomFood,
   EquipmentType,
   Exercise,
+  FavoriteFood,
   FeatureFlags,
   FoodLog,
   WeightLog,
@@ -19,7 +21,9 @@ import type { Database, Json } from '@/types/database';
 type Tables = Database['public']['Tables'];
 
 type ExerciseRow = Tables['exercise_library']['Row'];
+type CustomFoodRow = Tables['custom_foods']['Row'];
 type FeatureFlagsRow = Tables['feature_flags']['Row'];
+type FavoriteFoodRow = Tables['favorite_foods']['Row'];
 type FoodLogRow = Tables['food_logs']['Row'];
 type WaterLogRow = Tables['water_logs']['Row'];
 type WeightLogRow = Tables['weight_logs']['Row'];
@@ -180,6 +184,56 @@ export function mapFoodLogRow(row: FoodLogRow): FoodLog {
     meal_time: row.meal_time,
     logged_at: row.logged_at,
     notes: row.notes,
+    source: row.source,
+    source_food_id: row.source_food_id,
+    custom_food_id: row.custom_food_id,
+    quantity: row.quantity,
+    serving_label: row.serving_label,
+    serving_grams: row.serving_grams,
+    is_custom: row.is_custom,
+    updated_at: row.updated_at,
+    deleted_at: row.deleted_at,
+    sync_status: 'synced',
+  };
+}
+
+export function mapCustomFoodRow(row: CustomFoodRow): CustomFood {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    name: row.name,
+    calories: row.calories,
+    protein_g: row.protein_g,
+    carbs_g: row.carbs_g,
+    fat_g: row.fat_g,
+    default_serving_label: row.default_serving_label,
+    default_serving_grams: row.default_serving_grams,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    deleted_at: row.deleted_at,
+    sync_status: 'synced',
+  };
+}
+
+export function mapFavoriteFoodRow(row: FavoriteFoodRow): FavoriteFood {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    source: row.source,
+    source_food_id: row.source_food_id,
+    custom_food_id: row.custom_food_id,
+    food_name: row.food_name,
+    category: row.category,
+    calories: row.calories,
+    protein_g: row.protein_g,
+    carbs_g: row.carbs_g,
+    fat_g: row.fat_g,
+    default_serving_label: row.default_serving_label,
+    default_serving_grams: row.default_serving_grams,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    deleted_at: row.deleted_at,
+    sync_status: 'synced',
   };
 }
 

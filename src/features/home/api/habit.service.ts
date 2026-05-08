@@ -2,8 +2,8 @@ import type { HabitStreakSummary } from '@/types/app';
 import type { Database } from '@/types/database';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { MOCK_DAILY_NUTRITION, MOCK_TODAY_SESSION } from '@/features/demo/mockData';
+import { nutritionService } from '@/features/nutrition/api/nutrition.service';
 
-type FoodLogActivityRow = Pick<Database['public']['Tables']['food_logs']['Row'], 'logged_at'>;
 type WaterLogActivityRow = Pick<Database['public']['Tables']['water_logs']['Row'], 'logged_at'>;
 type WorkoutSessionActivityRow = Pick<
   Database['public']['Tables']['workout_sessions']['Row'],
@@ -75,16 +75,12 @@ export const habitService = {
       return buildHabitSummary(activityKeys);
     }
 
-    const [{ data: meals, error: mealsError }, { data: water, error: waterError }, { data: sessions, error: sessionsError }] =
+    const [mealKeys, { data: water, error: waterError }, { data: sessions, error: sessionsError }] =
       await Promise.all([
-        supabase.from('food_logs').select('logged_at').eq('user_id', userId).order('logged_at', { ascending: false }).limit(60),
+        nutritionService.getLocalFoodActivityKeys(userId),
         supabase.from('water_logs').select('logged_at').eq('user_id', userId).order('logged_at', { ascending: false }).limit(60),
         supabase.from('workout_sessions').select('started_at,status').eq('user_id', userId).order('started_at', { ascending: false }).limit(30),
       ]);
-
-    if (mealsError) {
-      console.error('Error fetching meal activity:', mealsError);
-    }
 
     if (waterError) {
       console.error('Error fetching water activity:', waterError);
@@ -96,8 +92,8 @@ export const habitService = {
 
     const activityKeys = new Set<string>();
 
-    for (const meal of (meals as FoodLogActivityRow[] | null) ?? []) {
-      activityKeys.add(dayKeyFromIso(meal.logged_at));
+    for (const key of mealKeys) {
+      activityKeys.add(key);
     }
 
     for (const entry of (water as WaterLogActivityRow[] | null) ?? []) {
