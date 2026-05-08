@@ -45,6 +45,24 @@ export interface Database {
         Insert: Partial<Database["public"]["Tables"]["exercise_library"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["exercise_library"]["Row"]>;
       };
+      custom_foods: {
+        Row: {
+          calories: number;
+          carbs_g: number | null;
+          created_at: string;
+          default_serving_grams: number | null;
+          default_serving_label: string;
+          deleted_at: string | null;
+          fat_g: number | null;
+          id: string;
+          name: string;
+          protein_g: number | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["custom_foods"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["custom_foods"]["Row"]>;
+      };
       feature_flags: {
         Row: {
           id: string;
@@ -60,17 +78,48 @@ export interface Database {
         Row: {
           calories: number;
           carbs_g: number | null;
+          custom_food_id: string | null;
+          deleted_at: string | null;
           fat_g: number | null;
           id: string;
+          is_custom: boolean;
           logged_at: string;
           meal_name: string;
           meal_time: "breakfast" | "lunch" | "dinner" | "snack";
           notes: string | null;
           protein_g: number | null;
+          quantity: number;
+          serving_grams: number | null;
+          serving_label: string | null;
+          source: "manual" | "usda_foundation" | "usda_sr_legacy";
+          source_food_id: string | null;
+          updated_at: string;
           user_id: string;
         };
         Insert: Partial<Database["public"]["Tables"]["food_logs"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["food_logs"]["Row"]>;
+      };
+      favorite_foods: {
+        Row: {
+          calories: number;
+          carbs_g: number | null;
+          created_at: string;
+          custom_food_id: string | null;
+          default_serving_grams: number | null;
+          default_serving_label: string | null;
+          deleted_at: string | null;
+          fat_g: number | null;
+          food_name: string;
+          category: string | null;
+          id: string;
+          protein_g: number | null;
+          source: "manual" | "usda_foundation" | "usda_sr_legacy";
+          source_food_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["favorite_foods"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["favorite_foods"]["Row"]>;
       };
       water_logs: {
         Row: {

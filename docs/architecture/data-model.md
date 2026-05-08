@@ -10,6 +10,8 @@ Canonical tables for the active MVP:
 - `workout_sessions`
 - `session_exercises`
 - `food_logs`
+- `custom_foods`
+- `favorite_foods`
 - `coach_messages`
 - `ai_usage_logs`
 - `feature_flags`
@@ -21,3 +23,4 @@ Canonical tables for the active MVP:
 - every new table needs RLS
 - every schema update needs regenerated client types
 - `user_profiles` is the canonical profile table
+- the USDA search catalog is a bundled on-device SQLite asset, not a Supabase table
