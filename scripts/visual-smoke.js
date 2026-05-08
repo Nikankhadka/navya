@@ -15,7 +15,7 @@ const scenarios = [
   {
     name: 'login',
     path: '/login',
-    expect: ['Navya', 'Send Magic Link'],
+    expect: ['Navya', 'Log In'],
   },
   {
     name: 'onboarding-welcome',

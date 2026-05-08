@@ -6,7 +6,7 @@
 
 ## Current Step
 
-- Auth and deployment plumbing now target the real hosted-web path: browser auth sessions persist on web, `/auth/callback` owns session completion instead of the gate, demo fallback is disabled for preview/production app envs, and Vercel clean-URL hosting is documented as the first web deployment target. Live Supabase proof still remains blocked in this workspace because no real `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, Google provider config, or tester UUID is loaded here.
+- Auth and deployment plumbing now target the real hosted-web path: browser auth sessions persist on web, `/auth/callback` owns session completion instead of the gate, demo fallback is disabled for preview/production app envs, and Vercel clean-URL hosting is documented as the first web deployment target. The login screen now also exposes Supabase-standard email/password sign-in and sign-up as an MVP fallback when OTP delivery is rate-limited. Live Supabase proof still remains blocked in this workspace because no real `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, Google provider config, or tester UUID is loaded here.
 
 ## Completed In This Session
 
@@ -26,6 +26,8 @@
 - moved auth callback completion into the dedicated callback screen and kept `/auth/callback` public inside routing
 - hardened auth store initialization so Supabase auth subscription registration is idempotent
 - disabled automatic demo fallback for `preview` and `production` app environments
+- added Supabase-standard email/password sign-in and sign-up UI alongside the existing magic-link flow
+- clarified the auth/security contract so password hashing remains Supabase-managed server-side
 - added the first Vercel deployment config and documented preview/production env requirements
 - passed `npm run verify`
 - passed `npm run smoke:web`
@@ -35,14 +37,16 @@
 - hosted Supabase validation for `W5-001`
 - applying the existing migrations to a real Supabase project
 - configuring Supabase Email + Google auth for stable preview and production callback URLs
+- deciding whether Supabase email confirmation stays enabled for password sign-up in MVP
 - verifying hosted web auth and seeded-data reads on Vercel preview
 
 ## Next Recommended Step
 
 - create the new Supabase project and load real preview/production env values into Vercel and local `.env.local`
 - enable Email auth plus Google auth in Supabase and allow-list the local, preview, and production callback URLs
+- if MVP should avoid any signup email dependency, disable Supabase email confirmation before validating password account creation
 - apply all three Navya migrations in the hosted Supabase project
-- create a real tester account through the web magic-link flow and capture the Auth UUID
+- create a real tester account through the web password or magic-link flow and capture the Auth UUID
 - render and run `npm run seed:tester -- <tester-uuid>` and `npm run validate:tester -- <tester-uuid>` in the Supabase SQL editor
 - verify live reads and writes for login, onboarding routing, profile edits, weight check-ins, hydration, workout completion, Home adherence, and coach thread loading on Vercel preview
 

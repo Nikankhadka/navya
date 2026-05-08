@@ -14,7 +14,7 @@ Navya uses Expo Router with the following group structures:
 **Goal:** Verify the login experience and brand impression.
 
 - **Route:** `/(auth)/login`
-- **Expected UI:** Premium dark-mode design, magic-link email entry, and Google/Apple social login buttons.
+- **Expected UI:** Premium dark-mode design, stacked email/password entry, a primary login button, inline auth links, and Google/Apple social login buttons.
 - **Deep Link:** `navya://(auth)/login`
 
 ---

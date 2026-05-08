@@ -18,10 +18,9 @@ import {
   Typography,
   useAppTheme,
   type ThemeColors,
-  type ThemeModePreference,
 } from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Card, Badge, Divider } from '@/components/ui';
+import { Card, Badge, Divider, ThemeModeToggle } from '@/components/ui';
 import { formatDuration, goalLabel } from '@/utils/helpers';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { useWeightActions } from '@/features/profile/hooks/useWeightActions';
@@ -49,38 +48,8 @@ const GOAL_OPTIONS: Array<{ id: GoalType; label: string }> = [
   { id: 'general_fitness', label: 'General Fitness' },
 ];
 
-const APPEARANCE_OPTIONS: Array<{
-  id: ThemeModePreference;
-  label: string;
-  description: string;
-}> = [
-  {
-    id: 'system',
-    label: 'Use Device',
-    description: 'Match the phone or browser appearance automatically.',
-  },
-  {
-    id: 'light',
-    label: 'Light',
-    description: 'Use bright surfaces with darker text and softer borders.',
-  },
-  {
-    id: 'dark',
-    label: 'Dark',
-    description: 'Keep the current darker training-focused look.',
-  },
-];
-
-function themePreferenceLabel(preference: ThemeModePreference) {
-  if (preference === 'system') {
-    return 'Use Device';
-  }
-
-  return preference === 'light' ? 'Light' : 'Dark';
-}
-
 export default function ProfileScreen() {
-  const { colors, preference, setPreference } = useAppTheme();
+  const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -94,7 +63,6 @@ export default function ProfileScreen() {
   const activeUser = profile ?? user;
   const [showEditModal, setShowEditModal] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
-  const [showAppearanceModal, setShowAppearanceModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [checkInWeight, setCheckInWeight] = useState('');
   const [form, setForm] = useState<EditProfileForm>({
@@ -139,11 +107,6 @@ export default function ProfileScreen() {
 
   const showComingSoon = (title: string, message: string) => {
     crossAlert(title, message);
-  };
-
-  const handleThemeSelection = async (nextPreference: ThemeModePreference) => {
-    await setPreference(nextPreference);
-    setShowAppearanceModal(false);
   };
 
   const handleSaveProfile = async () => {
@@ -388,14 +351,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionBtn}
-          onPress={() => setShowAppearanceModal(true)}
-        >
-          <Text style={styles.actionBtnText}>
-            🎨  Appearance · {themePreferenceLabel(preference)}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionBtn}
           onPress={() =>
             showComingSoon(
               'Notification settings are not wired yet',
@@ -423,6 +378,14 @@ export default function ProfileScreen() {
           <Text style={styles.signOutText}>{isDemoSession ? 'Exit Demo' : 'Sign Out'}</Text>
         </TouchableOpacity>
       </View>
+
+      <Card style={styles.appearanceFooterCard}>
+        <Text style={styles.sectionTitleInline}>Appearance</Text>
+        <Text style={styles.appearanceFooterText}>
+          Switch between light and dark mode from the bottom of your profile.
+        </Text>
+        <ThemeModeToggle style={styles.appearanceFooterToggle} testIDPrefix="profile-theme-toggle" />
+      </Card>
 
       <View style={{ height: 40 }} />
 
@@ -523,77 +486,6 @@ export default function ProfileScreen() {
                 {isSaving ? 'Saving...' : isDemoSession ? 'Save Demo Profile' : 'Save Changes'}
               </Text>
             </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      <Modal
-        visible={showAppearanceModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowAppearanceModal(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalScreen}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            style={styles.modalScroll}
-            contentContainerStyle={styles.modalContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Appearance</Text>
-              <TouchableOpacity onPress={() => setShowAppearanceModal(false)}>
-                <Text style={styles.modalClose}>Close</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.appearanceIntro}>
-              Choose whether Navya should follow your device or stay in a fixed theme.
-            </Text>
-
-            <View style={styles.appearanceOptions}>
-              {APPEARANCE_OPTIONS.map((option) => {
-                const selected = preference === option.id;
-
-                return (
-                  <TouchableOpacity
-                    key={option.id}
-                    style={[
-                      styles.appearanceOption,
-                      selected && styles.appearanceOptionSelected,
-                    ]}
-                    onPress={() => {
-                      void handleThemeSelection(option.id);
-                    }}
-                    activeOpacity={0.85}
-                  >
-                    <View style={styles.appearanceOptionText}>
-                      <Text
-                        style={[
-                          styles.appearanceOptionLabel,
-                          selected && styles.appearanceOptionLabelSelected,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                      <Text style={styles.appearanceOptionDescription}>
-                        {option.description}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.appearanceOptionCheck,
-                        selected && styles.appearanceOptionCheckSelected,
-                      ]}
-                    >
-                      {selected ? '✓' : ''}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
@@ -851,6 +743,20 @@ const createStyles = (colors: ThemeColors) =>
     paddingHorizontal: Spacing.xl,
     gap: Spacing.sm,
   },
+  appearanceFooterCard: {
+    marginHorizontal: Spacing.xl,
+    marginTop: Spacing.xxl,
+  },
+  appearanceFooterText: {
+    color: colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+  appearanceFooterToggle: {
+    alignSelf: 'flex-start',
+  },
   actionBtn: {
     backgroundColor: colors.card,
     borderRadius: Radius.lg,
@@ -961,57 +867,6 @@ const createStyles = (colors: ThemeColors) =>
     color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.medium,
-  },
-  appearanceIntro: {
-    color: colors.textSecondary,
-    fontSize: Typography.size.md,
-    lineHeight: 22,
-    marginBottom: Spacing.xl,
-  },
-  appearanceOptions: {
-    gap: Spacing.md,
-  },
-  appearanceOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.md,
-    padding: Spacing.lg,
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-  },
-  appearanceOptionSelected: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentMuted,
-  },
-  appearanceOptionText: {
-    flex: 1,
-    gap: 4,
-  },
-  appearanceOptionLabel: {
-    color: colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  appearanceOptionLabelSelected: {
-    color: colors.accent,
-  },
-  appearanceOptionDescription: {
-    color: colors.muted,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
-  },
-  appearanceOptionCheck: {
-    width: 28,
-    textAlign: 'center',
-    color: 'transparent',
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  appearanceOptionCheckSelected: {
-    color: colors.accent,
   },
   signOutBtn: {
     borderColor: `${colors.red}44`,

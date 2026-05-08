@@ -15,7 +15,7 @@ As a new or returning athlete, I want a clear entry point so I can either sign i
 
 Steps:
 1. Open `/(auth)/login` or `/login` on web.
-2. Confirm the Navya title, supporting copy, email input, and `Send Magic Link` button are visible.
+2. Confirm the Navya title, supporting copy, email input, password input, and `Log In` button are visible.
 3. If Supabase is not configured, confirm the warning banner explains that real auth is unavailable.
 4. If demo mode is available, tap `Explore Demo App`.
 5. Confirm the app enters the main tabs instead of leaving the user on the login screen.
