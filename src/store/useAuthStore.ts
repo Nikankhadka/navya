@@ -99,7 +99,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         if (!hasRegisteredAuthListener) {
-          supabase.auth.onAuthStateChange(async (_event, newSession) => {
+          supabase.auth.onAuthStateChange((_event, newSession) => {
             set({
               session: newSession,
               isAuthenticated: !!newSession,
@@ -107,7 +107,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
 
             if (newSession) {
-              await get().refreshProfile();
+              void get().refreshProfile().catch((error) => {
+                console.error('Profile refresh after auth change failed:', error);
+              });
             } else {
               set({ user: null });
             }
