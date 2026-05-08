@@ -96,3 +96,13 @@ export interface WorkoutSession {
   duration_seconds: number | null;
   session_exercises: SessionExercise[];
 }
+
+export interface WorkoutHistorySummary {
+  recent_sessions: WorkoutSession[];
+  completed_this_week: number;
+  weekly_target: number;
+  adherence_pct: number;
+  last_completed_at: string | null;
+  total_completed_sessions: number;
+  average_duration_seconds: number | null;
+}

@@ -17,6 +17,8 @@ export function useWorkoutActions(userId?: string) {
       workoutService.saveSession(session, elapsedSeconds),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['today-session', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['workout-history', userId] });
+      await queryClient.invalidateQueries({ queryKey: ['habit-streak', userId] });
     },
   });
 

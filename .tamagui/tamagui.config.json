@@ -26005,6 +26005,13 @@
           "val": 12,
           "variable": ""
         },
+        "true": {
+          "isVar": true,
+          "key": "$true",
+          "name": "t-space-true",
+          "val": 12,
+          "variable": ""
+        },
         "lg": {
           "isVar": true,
           "key": "$lg",
@@ -26053,6 +26060,13 @@
           "isVar": true,
           "key": "$md",
           "name": "t-size-md",
+          "val": 44,
+          "variable": ""
+        },
+        "true": {
+          "isVar": true,
+          "key": "$true",
+          "name": "t-size-true",
           "val": 44,
           "variable": ""
         },
@@ -26123,32 +26137,46 @@
         }
       },
       "zIndex": {
-        "0": {
+        "xs": {
           "isVar": true,
-          "key": "$0",
-          "name": "t-zIndex-0",
+          "key": "$xs",
+          "name": "t-zIndex-xs",
           "val": 0,
           "variable": ""
         },
-        "1": {
+        "sm": {
           "isVar": true,
-          "key": "$1",
-          "name": "t-zIndex-1",
+          "key": "$sm",
+          "name": "t-zIndex-sm",
           "val": 1,
           "variable": ""
         },
-        "10": {
+        "md": {
           "isVar": true,
-          "key": "$10",
-          "name": "t-zIndex-10",
+          "key": "$md",
+          "name": "t-zIndex-md",
           "val": 10,
           "variable": ""
         },
-        "100": {
+        "true": {
           "isVar": true,
-          "key": "$100",
-          "name": "t-zIndex-100",
+          "key": "$true",
+          "name": "t-zIndex-true",
+          "val": 10,
+          "variable": ""
+        },
+        "lg": {
+          "isVar": true,
+          "key": "$lg",
+          "name": "t-zIndex-lg",
           "val": 100,
+          "variable": ""
+        },
+        "xl": {
+          "isVar": true,
+          "key": "$xl",
+          "name": "t-zIndex-xl",
+          "val": 1000,
           "variable": ""
         }
       }
@@ -26520,6 +26548,13 @@
         "val": 36,
         "variable": ""
       },
+      "$size.true": {
+        "isVar": true,
+        "key": "$true",
+        "name": "t-size-true",
+        "val": 44,
+        "variable": ""
+      },
       "$size.xl": {
         "isVar": true,
         "key": "$xl",
@@ -26562,6 +26597,13 @@
         "val": 8,
         "variable": ""
       },
+      "$space.true": {
+        "isVar": true,
+        "key": "$true",
+        "name": "t-space-true",
+        "val": 12,
+        "variable": ""
+      },
       "$space.xl": {
         "isVar": true,
         "key": "$xl",
@@ -26590,32 +26632,46 @@
         "val": 32,
         "variable": ""
       },
-      "$zIndex.0": {
+      "$zIndex.lg": {
         "isVar": true,
-        "key": "$0",
-        "name": "t-zIndex-0",
-        "val": 0,
+        "key": "$lg",
+        "name": "t-zIndex-lg",
+        "val": 100,
         "variable": ""
       },
-      "$zIndex.1": {
+      "$zIndex.md": {
         "isVar": true,
-        "key": "$1",
-        "name": "t-zIndex-1",
-        "val": 1,
-        "variable": ""
-      },
-      "$zIndex.10": {
-        "isVar": true,
-        "key": "$10",
-        "name": "t-zIndex-10",
+        "key": "$md",
+        "name": "t-zIndex-md",
         "val": 10,
         "variable": ""
       },
-      "$zIndex.100": {
+      "$zIndex.sm": {
         "isVar": true,
-        "key": "$100",
-        "name": "t-zIndex-100",
-        "val": 100,
+        "key": "$sm",
+        "name": "t-zIndex-sm",
+        "val": 1,
+        "variable": ""
+      },
+      "$zIndex.true": {
+        "isVar": true,
+        "key": "$true",
+        "name": "t-zIndex-true",
+        "val": 10,
+        "variable": ""
+      },
+      "$zIndex.xl": {
+        "isVar": true,
+        "key": "$xl",
+        "name": "t-zIndex-xl",
+        "val": 1000,
+        "variable": ""
+      },
+      "$zIndex.xs": {
+        "isVar": true,
+        "key": "$xs",
+        "name": "t-zIndex-xs",
+        "val": 0,
         "variable": ""
       }
     },

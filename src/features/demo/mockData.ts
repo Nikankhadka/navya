@@ -5,7 +5,9 @@ import type {
   FoodLog,
   CoachMessage,
   DailyNutritionSummary,
+  WeightLog,
   WaterLog,
+  WorkoutHistorySummary,
 } from '@/types/app';
 
 export const MOCK_PROFILE: UserProfile = {
@@ -369,6 +371,56 @@ export const MOCK_COACH_MESSAGES: CoachMessage[] = [
 export const MOCK_WEEKLY_STREAK = [true, true, false, true, true, true, false];
 
 export const MOCK_WATER_LOGS: WaterLog[] = MOCK_DAILY_NUTRITION.water_logs;
+
+export const MOCK_WEIGHT_LOGS: WeightLog[] = [
+  {
+    id: 'weight-1',
+    user_id: 'mock-user-1',
+    weight_kg: 80.1,
+    logged_at: new Date(Date.now() - 14 * 24 * 3600_000).toISOString(),
+  },
+  {
+    id: 'weight-2',
+    user_id: 'mock-user-1',
+    weight_kg: 79.6,
+    logged_at: new Date(Date.now() - 7 * 24 * 3600_000).toISOString(),
+  },
+  {
+    id: 'weight-3',
+    user_id: 'mock-user-1',
+    weight_kg: 79.1,
+    logged_at: new Date(Date.now() - 24 * 3600_000).toISOString(),
+  },
+];
+
+export const MOCK_COMPLETED_WORKOUTS: WorkoutSession[] = [
+  {
+    ...MOCK_TODAY_SESSION,
+    id: 'session-complete-1',
+    status: 'completed',
+    started_at: new Date(Date.now() - (3 * 24 * 3600_000 + 50 * 60_000)).toISOString(),
+    completed_at: new Date(Date.now() - 3 * 24 * 3600_000).toISOString(),
+    duration_seconds: 3000,
+  },
+  {
+    ...MOCK_TODAY_SESSION,
+    id: 'session-complete-2',
+    status: 'completed',
+    started_at: new Date(Date.now() - (8 * 24 * 3600_000 + 45 * 60_000)).toISOString(),
+    completed_at: new Date(Date.now() - 8 * 24 * 3600_000).toISOString(),
+    duration_seconds: 2700,
+  },
+];
+
+export const MOCK_WORKOUT_HISTORY: WorkoutHistorySummary = {
+  recent_sessions: MOCK_COMPLETED_WORKOUTS,
+  completed_this_week: 1,
+  weekly_target: 5,
+  adherence_pct: 20,
+  last_completed_at: MOCK_COMPLETED_WORKOUTS[0].completed_at,
+  total_completed_sessions: MOCK_COMPLETED_WORKOUTS.length,
+  average_duration_seconds: 2850,
+};
 
 export const COACH_QUICK_REPLIES = [
   "Modify today's workout",

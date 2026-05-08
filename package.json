@@ -14,6 +14,7 @@
     "smoke:web": "node scripts/verify-project.js --smoke-web",
     "visual:smoke": "node scripts/visual-smoke.js",
     "seed:tester": "node scripts/prepare-tester-seed.js",
+    "validate:tester": "node scripts/prepare-tester-validation.js",
     "sync:codex-skills": "node scripts/sync-codex-skills.js"
   },
   "engines": {

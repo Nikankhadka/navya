@@ -51,3 +51,18 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
 }
+
+export interface WeightLog {
+  id: string;
+  user_id: string;
+  weight_kg: number;
+  logged_at: string;
+}
+
+export interface WeightProgressSummary {
+  current_weight_kg: number | null;
+  change_kg_14d: number | null;
+  last_logged_at: string | null;
+  recent_logs: WeightLog[];
+  check_ins_this_month: number;
+}

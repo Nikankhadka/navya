@@ -16,9 +16,9 @@ import { COACH_QUICK_REPLIES } from '@/features/demo/mockData';
 import { formatTimeAgo } from '@/utils/helpers';
 import type { CoachMessage } from '@/types/app';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useCoachMessages } from '@/features/coach';
-import { useFeatureFlags } from '@/features/coach';
-import { useCoachActions } from '@/features/coach';
+import { useCoachMessages } from '@/features/coach/hooks/useCoachMessages';
+import { useFeatureFlags } from '@/features/coach/hooks/useFeatureFlags';
+import { useCoachActions } from '@/features/coach/hooks/useCoachActions';
 
 export default function CoachScreen() {
   const insets = useSafeAreaInsets();

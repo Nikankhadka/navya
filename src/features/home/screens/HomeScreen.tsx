@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,10 +14,12 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Card, Badge, SectionHeader } from '@/components/ui';
 import { ProgressBar } from '@/components/shared/MacroRing';
 import { formatWaterAmount, getWeekDayLabels, sessionProgress } from '@/utils/helpers';
-import { useTodaySession } from '@/features/workout';
-import { useDailyNutrition } from '@/features/nutrition';
-import { useCoachMessages } from '@/features/coach';
-import { useHabitStreak } from '@/features/home';
+import { useTodaySession } from '@/features/workout/hooks/useTodaySession';
+import { useWorkoutHistory } from '@/features/workout/hooks/useWorkoutHistory';
+import { useDailyNutrition } from '@/features/nutrition/hooks/useDailyNutrition';
+import { useCoachMessages } from '@/features/coach/hooks/useCoachMessages';
+import { useHabitStreak } from '@/features/home/hooks/useHabitStreak';
+import { useWeightProgress } from '@/features/profile/hooks/useWeightProgress';
 
 const WEEK_LABELS = getWeekDayLabels();
 
@@ -32,6 +33,9 @@ export default function HomeScreen() {
   const { data: dailyNutrition } = useDailyNutrition(userId);
   const { data: coachMessages } = useCoachMessages(userId);
   const { data: habitStreak } = useHabitStreak(userId);
+  const { data: weightProgress } = useWeightProgress(userId);
+  const weeklyTarget = user?.workouts_per_week ?? 3;
+  const { data: workoutHistory } = useWorkoutHistory(userId, weeklyTarget);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -42,7 +46,7 @@ export default function HomeScreen() {
   }, [fadeAnim]);
 
   const doneExercises = todaySession?.session_exercises.filter(
-    (ex) => ex.completed_sets.length >= ex.planned_sets
+    (ex) => ex.completed_sets.length >= ex.planned_sets,
   ).length ?? 0;
   const totalExercises = todaySession?.session_exercises.length ?? 0;
   const workoutPct = todaySession ? sessionProgress(todaySession) : 0;
@@ -50,12 +54,22 @@ export default function HomeScreen() {
     ? dailyNutrition.calorie_goal - dailyNutrition.total_calories
     : 0;
   const waterProgress = dailyNutrition
-    ? Math.min(Math.round((dailyNutrition.water_total_ml / dailyNutrition.water_goal_ml) * 100), 100)
+    ? Math.min(
+        Math.round((dailyNutrition.water_total_ml / dailyNutrition.water_goal_ml) * 100),
+        100,
+      )
     : 0;
   const coachPreview =
-    coachMessages?.[0]?.text ?? 'Your coach will start guiding you once your activity data is available.';
+    coachMessages?.[0]?.text ??
+    'Your coach will start guiding you once your activity data is available.';
   const streakDays = habitStreak?.current_streak_days ?? 0;
-  const weeklyActivity = habitStreak?.weekly_activity ?? Array.from({ length: 7 }, () => false);
+  const weeklyActivity =
+    habitStreak?.weekly_activity ?? Array.from({ length: 7 }, () => false);
+  const weightDelta = weightProgress?.change_kg_14d ?? null;
+  const completedThisWeek = workoutHistory?.completed_this_week ?? 0;
+  const adherencePct = workoutHistory?.adherence_pct ?? 0;
+  const lastWorkout = workoutHistory?.recent_sessions[0] ?? null;
+  const currentWeightKg = weightProgress?.current_weight_kg ?? user?.weight_kg ?? null;
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -70,7 +84,6 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* ── Header ───────────────────────────────────────────────────────── */}
       <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
         <View>
           <Text style={styles.greeting}>{greeting()} 👋</Text>
@@ -85,7 +98,6 @@ export default function HomeScreen() {
         </View>
       </Animated.View>
 
-      {/* ── Week view ────────────────────────────────────────────────────── */}
       <Animated.View style={[styles.weekRow, { opacity: fadeAnim }]}>
         {weeklyActivity.map((done, i) => (
           <View key={i} style={styles.weekDay}>
@@ -102,15 +114,22 @@ export default function HomeScreen() {
         ))}
       </Animated.View>
 
-      {/* ── Today's Workout ──────────────────────────────────────────────── */}
-      <SectionHeader title="Today's Session" action="View Plan" onAction={() => router.push('/(tabs)/workout')} />
+      <SectionHeader
+        title="Today's Session"
+        action="View Plan"
+        onAction={() => router.push('/(tabs)/workout')}
+      />
 
       <Card style={styles.workoutCard}>
         <View style={styles.workoutCardTop}>
           <View>
-            <Text style={styles.workoutTitle}>{todaySession?.day_name ?? 'No session scheduled yet'}</Text>
+            <Text style={styles.workoutTitle}>
+              {todaySession?.day_name ?? 'No session scheduled yet'}
+            </Text>
             <Text style={styles.workoutMeta}>
-              {todaySession ? `${totalExercises} exercises` : 'Create or sync a plan to see today’s session'}
+              {todaySession
+                ? `${totalExercises} exercises`
+                : 'Create or sync a plan to see today’s session'}
             </Text>
           </View>
           <Badge
@@ -134,26 +153,34 @@ export default function HomeScreen() {
           onPress={() => router.push('/(tabs)/workout')}
         >
           <Text style={styles.startBtnText}>
-            {todaySession ? (doneExercises > 0 ? 'Continue Workout →' : 'Start Workout →') : 'Open Workout →'}
+            {todaySession
+              ? doneExercises > 0
+                ? 'Continue Workout →'
+                : 'Start Workout →'
+              : 'Open Workout →'}
           </Text>
         </TouchableOpacity>
       </Card>
 
-      {/* ── Calories ─────────────────────────────────────────────────────── */}
-      <SectionHeader title="Nutrition Today" action="Log Food" onAction={() => router.push('/(tabs)/nutrition')} />
+      <SectionHeader
+        title="Nutrition Today"
+        action="Log Food"
+        onAction={() => router.push('/(tabs)/nutrition')}
+      />
 
       <Card>
         <View style={styles.calRow}>
           <View style={styles.calMain}>
             <Text style={styles.calNumber}>{dailyNutrition?.total_calories ?? 0}</Text>
-            <Text style={styles.calLabel}>
-              of {dailyNutrition?.calorie_goal ?? 0} kcal
-            </Text>
+            <Text style={styles.calLabel}>of {dailyNutrition?.calorie_goal ?? 0} kcal</Text>
           </View>
           <View
             style={[
               styles.calRemaining,
-              { backgroundColor: calorieRemaining > 0 ? Colors.greenMuted : Colors.redMuted },
+              {
+                backgroundColor:
+                  calorieRemaining > 0 ? Colors.greenMuted : Colors.redMuted,
+              },
             ]}
           >
             <Text
@@ -173,9 +200,27 @@ export default function HomeScreen() {
 
         <View style={styles.macrosGrid}>
           {([
-            { label: 'Protein', value: dailyNutrition?.total_protein_g ?? 0, goal: dailyNutrition?.protein_goal_g ?? 140, color: Colors.accent, unit: 'g' },
-            { label: 'Carbs', value: dailyNutrition?.total_carbs_g ?? 0, goal: 240, color: Colors.green, unit: 'g' },
-            { label: 'Fat', value: dailyNutrition?.total_fat_g ?? 0, goal: 70, color: Colors.orange, unit: 'g' },
+            {
+              label: 'Protein',
+              value: dailyNutrition?.total_protein_g ?? 0,
+              goal: dailyNutrition?.protein_goal_g ?? 140,
+              color: Colors.accent,
+              unit: 'g',
+            },
+            {
+              label: 'Carbs',
+              value: dailyNutrition?.total_carbs_g ?? 0,
+              goal: 240,
+              color: Colors.green,
+              unit: 'g',
+            },
+            {
+              label: 'Fat',
+              value: dailyNutrition?.total_fat_g ?? 0,
+              goal: 70,
+              color: Colors.orange,
+              unit: 'g',
+            },
           ] as const).map((macro) => (
             <View key={macro.label} style={styles.macroItem}>
               <ProgressBar
@@ -198,7 +243,8 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.waterLabel}>Hydration</Text>
             <Text style={styles.waterValue}>
-              {formatWaterAmount(dailyNutrition?.water_total_ml ?? 0)} / {formatWaterAmount(dailyNutrition?.water_goal_ml ?? 2500)}
+              {formatWaterAmount(dailyNutrition?.water_total_ml ?? 0)} /{' '}
+              {formatWaterAmount(dailyNutrition?.water_goal_ml ?? 2500)}
             </Text>
           </View>
           <View style={styles.waterProgressWrap}>
@@ -214,13 +260,53 @@ export default function HomeScreen() {
         </View>
       </Card>
 
-      {/* ── AI Coach Tip ─────────────────────────────────────────────────── */}
+      <SectionHeader
+        title="Progress & Adherence"
+        action="View Profile"
+        onAction={() => router.push('/(tabs)/profile')}
+      />
+
+      <Card style={styles.progressCard}>
+        <View style={styles.progressGrid}>
+          <View style={styles.progressMetric}>
+            <Text style={styles.progressMetricLabel}>Current weight</Text>
+            <Text style={styles.progressMetricValue}>
+              {currentWeightKg != null
+                ? `${currentWeightKg.toFixed(1)}kg`
+                : 'No check-ins yet'}
+            </Text>
+            <Text style={styles.progressMetricSub}>
+              {weightDelta == null
+                ? 'Log a few check-ins to unlock your trend.'
+                : `${weightDelta > 0 ? '+' : ''}${weightDelta.toFixed(1)}kg vs recent history`}
+            </Text>
+          </View>
+
+          <View style={styles.progressMetric}>
+            <Text style={styles.progressMetricLabel}>Weekly adherence</Text>
+            <Text style={styles.progressMetricValue}>{adherencePct}%</Text>
+            <Text style={styles.progressMetricSub}>
+              {completedThisWeek}/{weeklyTarget} sessions completed this week
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.progressFooter}>
+          <Text style={styles.progressFooterLabel}>Last completed workout</Text>
+          <Text style={styles.progressFooterValue}>
+            {lastWorkout?.completed_at
+              ? `${lastWorkout.day_name} · ${new Date(lastWorkout.completed_at).toLocaleDateString(
+                  'en-AU',
+                  { day: 'numeric', month: 'short' },
+                )}`
+              : 'Your recent sessions will appear here once you finish a workout.'}
+          </Text>
+        </View>
+      </Card>
+
       <SectionHeader title="AI Coach" />
 
-      <TouchableOpacity
-        activeOpacity={0.88}
-        onPress={() => router.push('/(tabs)/coach')}
-      >
+      <TouchableOpacity activeOpacity={0.88} onPress={() => router.push('/(tabs)/coach')}>
         <View style={styles.coachCard}>
           <View style={styles.coachAvatar}>
             <Text style={styles.coachAvatarEmoji}>🤖</Text>
@@ -427,6 +513,54 @@ const styles = StyleSheet.create({
     color: Colors.dim,
     fontSize: Typography.size.xs,
     textAlign: 'right',
+  },
+  progressCard: {
+    marginBottom: Spacing.xxl,
+    gap: Spacing.lg,
+  },
+  progressGrid: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  progressMetric: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 4,
+  },
+  progressMetricLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  progressMetricValue: {
+    color: Colors.text,
+    fontSize: Typography.size.xl,
+    fontWeight: Typography.weight.extrabold,
+  },
+  progressMetricSub: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: 18,
+  },
+  progressFooter: {
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    gap: 4,
+  },
+  progressFooterLabel: {
+    color: Colors.muted,
+    fontSize: Typography.size.xs,
+  },
+  progressFooterValue: {
+    color: Colors.text,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
   },
   coachCard: {
     flexDirection: 'row',

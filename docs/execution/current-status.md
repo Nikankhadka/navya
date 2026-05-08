@@ -2,67 +2,49 @@
 
 ## Current Phase
 
-- Week 3: daily diary parity upgrade
+- Week 4: progress and adherence upgrade
 
 ## Current Step
 
-- The first Phase 1 diary upgrade slice is implemented locally: grouped meal diary, quick-add and reusable meals, hydration logging, and a real activity-derived streak are now wired into the existing Home and Nutrition surfaces while live Supabase validation remains the next backend dependency.
+- Progress and adherence are now implemented locally: `weight_logs` exists as a first-class contract, Profile supports logged weight check-ins and recent history, Home shows a compact progress/adherence card, Workout shows recent completed-session history, and the tester seed plus validation SQL now cover those flows. Live Supabase proof for `W5-001` remains blocked because this workspace does not currently have runtime `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, or a real magic-link tester UUID loaded.
 
 ## Completed In This Session
 
-- standardized package scripts and app identity
-- added Navya repo plugin and role skills
-- added BMAD customization for routing and review prompts
-- created canonical docs for architecture, onboarding, standards, MVP, sprint tracking, ADR, and execution status
-- installed Navya skills into the global Codex skill directory
-- switched the main tabs to hook and service boundaries instead of direct raw mock imports
-- moved auth toward OTP-first deep-link handling
-- removed the extra `pnpm` lockfile
-- added a canonical MVP schema migration for profiles, plans, sessions, nutrition, coach, flags, and push tokens
-- added mutation hooks and service write paths for workout sessions, nutrition logging, and coach requests
-- replaced loose Supabase casts with typed service mappers for plans, sessions, meals, coach messages, and feature flags
-- fixed local workout session creation so child exercise rows keep the same generated parent session id
-- persisted coach quick-reply responses back into `coach_messages` after the Edge Function returns
-- added a beginner tester guide for local setup, auth prerequisites, and manual user-flow verification
-- added a repeatable tester seed flow for workout, nutrition, and coach starter data tied to a real tester account
-- added a UI stack decision doc and ADR recommending Tamagui as the long-term shared component foundation
-- added a local demo session path so testers can enter the app and exercise mock workout, nutrition, coach, and profile flows without Supabase credentials
-- turned the Profile tab `Edit Profile` action into a working modal flow that saves core profile fields in both demo and real sessions
-- turned Workout plan-day cards into a working detail flow with exercise, rest, equipment, focus area, and coach-note visibility
-- passed `npm run verify`
-- passed `npm run smoke:web`
-- hardened auth callback handling for web and native with clearer expired-link errors and documented localhost redirect requirements
-- added a concrete `/auth/callback` route so local web magic-link redirects no longer hit Expo Router's unmatched route page
-- researched current MyFitnessPal fitness-tracking primitives from official sources and reframed the Navya MVP around 70% parity with the core daily habit loop
-- upgraded the MVP and sprint plan to extend existing Home, Nutrition, Workout, Profile, and Coach surfaces instead of proposing a rebuild
-- added typed hydration and reusable-meal contracts plus a Phase 1 `water_logs` Supabase migration
-- upgraded the Nutrition tab into a grouped daily diary with hydration logging, recent meal re-log, and quick-add calories
-- replaced the Home tab's mock streak with a real streak derived from logged meals, hydration, and completed workouts
+- verified that no live Supabase env values are loaded in the current workspace shell, so the latest release-risk issue cannot be closed from this environment alone
+- reconciled repo truth by confirming the core schema never added `weight_logs` even though QA expected it
+- added the Phase 2 `weight_logs` Supabase migration with RLS coverage
+- aligned `src/types/database.ts` with the new `weight_logs` contract
+- added typed weight-log mapping plus a progress service for weight history and check-ins
+- added Profile weight check-ins, recent weight history, and replaced placeholder profile stats with real derived adherence/session data
+- added a Home progress and adherence card backed by live/demo weight and workout summary reads
+- added Workout recent-session history and adherence summary backed by completed `workout_sessions`
+- updated the workout today-session read path to prefer active in-progress sessions and fall back to the current plan preview
+- expanded the tester seed to cover profile completeness, water, weight history, completed workouts, session exercises, and weekly-summary feature-flag readiness
+- added a tester validation SQL template and renderer script for repeatable hosted-Supabase checks
+- refreshed the tester seed README to document both seed and validation flows
 - passed `npm run verify`
 - passed `npm run smoke:web`
 
 ## In Progress
 
-- validating typed relational reads and write paths against a real Supabase project
-- finalizing schema and RLS to match the hardened typed contracts
-- replacing remaining demo fallbacks with live seeded records once the hosted schema exists
-- connecting the new hydration persistence path to a live Supabase project
-- deciding whether the next diary slice should prioritize meal templates polish or profile-driven weight check-ins
+- hosted Supabase validation for `W5-001`
+- applying the new progress migration and regenerated contracts to a real Supabase project
+- confirming how weekly-summary behavior should evolve beyond the current coach-message plus feature-flag path
 
 ## Next Recommended Step
 
-- connect a real Supabase project and regenerate final `src/types/database.ts`
-- validate the new read and write paths against the live schema and fix any relation mismatches, including `water_logs`
-- extend the Profile and Home surfaces with weight check-ins and simple progress history
-- add workout history summaries so the diary streak and adherence loop are fully visible
-- decide whether barcode-assisted food capture should be in beta behind a feature flag or deferred until food data quality is proven
-- verify OTP email and social auth end to end on device builds
+- load real `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` values into the runtime environment
+- create a real tester account through the magic-link flow and capture the Auth UUID
+- apply `supabase/migrations/20260508_mvp_phase2_progress_logs.sql` in the hosted Supabase project
+- render and run `npm run seed:tester -- <tester-uuid>` and `npm run validate:tester -- <tester-uuid>` in the Supabase SQL editor
+- verify live reads and writes for profile edits, weight check-ins, hydration, workout completion, Home adherence, and coach thread loading
 
 ## Blockers
 
-- real Supabase project values are still required for end-to-end auth and production data verification
-- barcode-assisted logging should not be committed to beta scope unless a reliable food data source is approved
+- `W5-001` cannot be closed from this workspace until `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` are available at runtime
+- live validation also requires a real tester account created through Navya auth so the seed and validation SQL can target a real Supabase Auth UUID
+- weekly summary is still constrained to the current coach-message and feature-flag path; a richer summary contract should stay out of scope until live proof is complete
 
 ## Last Updated
 
-- 2026-04-11
+- 2026-05-08

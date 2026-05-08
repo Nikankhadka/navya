@@ -25,16 +25,20 @@
 | Profile | Edit profile fields and save | `user_profiles` updates and survives sign-out/sign-in |
 | Nutrition | Load seeded diary | Today shows meals, calories, macros, water, and recent meals |
 | Nutrition | Add and delete a meal | Food log mutates in Supabase and UI refreshes |
-| Progress | Log weight check-in | `weight_logs` row is created and profile weight updates |
+| Progress | Log weight check-in | `weight_logs` row is created and `user_profiles.weight_kg` updates |
+| Progress | Load Profile history | Recent weight check-ins render with current weight and trend |
 | Workout | Load active plan | Plan days and nested exercises render |
 | Workout | Start and finish session | `workout_sessions` and `session_exercises` persist |
+| Workout | Load recent history | Completed sessions render with adherence summary and recent-set counts |
 | Habits | Load Home streak | Streak reflects live food, water, and completed workout activity |
-| Coach | Load weekly summary | Summary reflects live workout, nutrition, hydration, streak, and weight signals |
+| Coach | Load seeded coach insight | Seeded coach messages load and the feature-flag read path remains stable |
 
 ## Regression Checklist
 
 - Demo mode still opens when allowed.
 - Incomplete real profile still routes to onboarding.
 - Seeded complete real profile routes to tabs.
+- Home renders today-session preview plus the new progress/adherence card without crashing.
+- Profile and Workout render progress/history sections in demo and live modes.
 - RLS prevents cross-user data from appearing in app flows.
 - No Critical or High issues remain before moving to the next weekly milestone.

@@ -17,8 +17,8 @@ import { MacroRing, ProgressBar } from '@/components/shared/MacroRing';
 import { formatTime, formatWaterAmount, mealTimeLabel } from '@/utils/helpers';
 import type { FoodLog, RecentMealTemplate } from '@/types/app';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useDailyNutrition } from '@/features/nutrition';
-import { useNutritionActions } from '@/features/nutrition';
+import { useDailyNutrition } from '@/features/nutrition/hooks/useDailyNutrition';
+import { useNutritionActions } from '@/features/nutrition/hooks/useNutritionActions';
 
 type MealTime = FoodLog['meal_time'];
 

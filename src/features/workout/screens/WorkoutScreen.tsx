@@ -15,9 +15,10 @@ import { ExerciseRow, PlanDayCard } from '@/features/workout/components';
 import { formatDuration, sessionProgress } from '@/utils/helpers';
 import { crossAlert } from '@/utils/crossAlert';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useActivePlan } from '@/features/workout';
-import { useTodaySession } from '@/features/workout';
-import { useWorkoutActions } from '@/features/workout';
+import { useActivePlan } from '@/features/workout/hooks/useActivePlan';
+import { useTodaySession } from '@/features/workout/hooks/useTodaySession';
+import { useWorkoutHistory } from '@/features/workout/hooks/useWorkoutHistory';
+import { useWorkoutActions } from '@/features/workout/hooks/useWorkoutActions';
 import type { WorkoutPlanDay } from '@/types/app';
 import { isVisualTestScenario } from '@/utils/visualTest';
 import { MOCK_PLAN } from '@/features/demo/mockData';
@@ -28,6 +29,8 @@ export default function WorkoutScreen() {
   const userId = user?.id;
   const { data: activePlan } = useActivePlan(userId);
   const { data: todaySessionData } = useTodaySession(userId);
+  const weeklyTarget = user?.workouts_per_week ?? 3;
+  const { data: workoutHistory } = useWorkoutHistory(userId, weeklyTarget);
   const { startSession: startSessionMutation, saveSession } = useWorkoutActions(userId);
   const { activeSession, elapsedSeconds, timerActive, startSession, endSession, skipExercise, markExerciseDone, tickTimer } = useWorkoutStore();
   const [tab, setTab] = useState<'today' | 'plan'>('today');
@@ -269,6 +272,61 @@ export default function WorkoutScreen() {
             )}
           </>
         )}
+        <Card style={styles.historySummaryCard}>
+          <View style={styles.historySummaryHeader}>
+            <View>
+              <Text style={styles.historySummaryTitle}>Recent Training History</Text>
+              <Text style={styles.historySummarySub}>
+                {workoutHistory?.completed_this_week ?? 0}/
+                {workoutHistory?.weekly_target ?? weeklyTarget} sessions completed this week
+              </Text>
+            </View>
+            <View style={styles.historySummaryBadge}>
+              <Text style={styles.historySummaryBadgeValue}>
+                {workoutHistory?.adherence_pct ?? 0}%
+              </Text>
+              <Text style={styles.historySummaryBadgeLabel}>adherence</Text>
+            </View>
+          </View>
+
+          {workoutHistory?.recent_sessions.length ? (
+            <View style={styles.historyList}>
+              {workoutHistory.recent_sessions.slice(0, 3).map((session) => (
+                <View key={session.id} style={styles.historyRow}>
+                  <View style={styles.historyRowText}>
+                    <Text style={styles.historyDay}>{session.day_name}</Text>
+                    <Text style={styles.historyMeta}>
+                      {session.completed_at
+                        ? new Date(session.completed_at).toLocaleDateString('en-AU', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                          })
+                        : 'Completed session'}
+                    </Text>
+                  </View>
+                  <View style={styles.historyRowStats}>
+                    <Text style={styles.historyStatPrimary}>
+                      {session.session_exercises.reduce(
+                        (sum, exercise) => sum + exercise.completed_sets.length,
+                        0,
+                      )} sets
+                    </Text>
+                    <Text style={styles.historyStatSecondary}>
+                      {session.duration_seconds != null
+                        ? formatDuration(session.duration_seconds)
+                        : 'Tracked'}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.historyEmptyText}>
+              Completed sessions will appear here once you finish your first workout.
+            </Text>
+          )}
+        </Card>
         <View style={{ height: 40 }} />
       </ScrollView>
 
@@ -729,4 +787,85 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   planMeta: { color: Colors.muted, fontSize: Typography.size.sm },
+  historySummaryCard: {
+    marginTop: Spacing.lg,
+    gap: Spacing.lg,
+  },
+  historySummaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    alignItems: 'flex-start',
+  },
+  historySummaryTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+  },
+  historySummarySub: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    marginTop: 4,
+  },
+  historySummaryBadge: {
+    backgroundColor: Colors.accentMuted,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.accent + '55',
+  },
+  historySummaryBadgeValue: {
+    color: Colors.accent,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.extrabold,
+  },
+  historySummaryBadgeLabel: {
+    color: Colors.accent,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.semibold,
+  },
+  historyList: {
+    gap: Spacing.sm,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: Spacing.sm,
+  },
+  historyRowText: {
+    flex: 1,
+  },
+  historyDay: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+  },
+  historyMeta: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    marginTop: 2,
+  },
+  historyRowStats: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  historyStatPrimary: {
+    color: Colors.text,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.bold,
+  },
+  historyStatSecondary: {
+    color: Colors.dim,
+    fontSize: Typography.size.xs,
+  },
+  historyEmptyText: {
+    color: Colors.muted,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+  },
 });
