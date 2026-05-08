@@ -11,7 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '@/theme';
+import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { Card, SectionHeader } from '@/components/ui';
 import { MacroRing, ProgressBar } from '@/components/shared/MacroRing';
 import { formatTime, formatWaterAmount, mealTimeLabel } from '@/utils/helpers';
@@ -49,6 +49,8 @@ const QUICK_ADD_OPTIONS = [
 const MEAL_SECTION_ORDER: MealTime[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 export default function NutritionScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const { data: nutritionSummary } = useDailyNutrition(user?.id);
@@ -155,7 +157,7 @@ export default function NutritionScreen() {
                 value={totalCal}
                 max={calorieGoal}
                 size={85}
-                color={Colors.orange}
+                color={colors.orange}
                 label="Calories"
                 unit=" kcal"
               />
@@ -163,7 +165,7 @@ export default function NutritionScreen() {
                 value={totalProtein}
                 max={proteinGoal}
                 size={85}
-                color={Colors.accent}
+                color={colors.accent}
                 label="Protein"
                 unit="g"
               />
@@ -171,7 +173,7 @@ export default function NutritionScreen() {
                 value={totalCarbs}
                 max={carbGoal}
                 size={85}
-                color={Colors.green}
+                color={colors.green}
                 label="Carbs"
                 unit="g"
               />
@@ -179,7 +181,7 @@ export default function NutritionScreen() {
                 value={totalFat}
                 max={fatGoal}
                 size={85}
-                color={Colors.blue}
+                color={colors.blue}
                 label="Fat"
                 unit="g"
               />
@@ -190,14 +192,14 @@ export default function NutritionScreen() {
                 styles.remainingBanner,
                 {
                   backgroundColor:
-                    remaining >= 0 ? Colors.greenMuted : Colors.redMuted,
+                    remaining >= 0 ? colors.greenMuted : colors.redMuted,
                 },
               ]}
             >
               <Text
                 style={[
                   styles.remainingText,
-                  { color: remaining >= 0 ? Colors.green : Colors.red },
+                  { color: remaining >= 0 ? colors.green : colors.red },
                 ]}
               >
                 {remaining >= 0 ? '+' : ''}
@@ -222,7 +224,7 @@ export default function NutritionScreen() {
             <ProgressBar
               value={waterTotal}
               max={waterGoal}
-              color={Colors.blue}
+              color={colors.blue}
               height={6}
               showLabel={false}
             />
@@ -346,7 +348,7 @@ export default function NutritionScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Chicken Rice Bowl"
-                placeholderTextColor={Colors.dim}
+                placeholderTextColor={colors.inputPlaceholder}
                 value={form.meal_name}
                 onChangeText={(v: string) => setForm((f) => ({ ...f, meal_name: v }))}
                 testID="nutrition-meal-name-input"
@@ -356,7 +358,7 @@ export default function NutritionScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. 450"
-                placeholderTextColor={Colors.dim}
+                placeholderTextColor={colors.inputPlaceholder}
                 keyboardType="numeric"
                 value={form.calories}
                 onChangeText={(v: string) => setForm((f) => ({ ...f, calories: v }))}
@@ -368,7 +370,7 @@ export default function NutritionScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder="0"
-                    placeholderTextColor={Colors.dim}
+                    placeholderTextColor={colors.inputPlaceholder}
                     keyboardType="numeric"
                     value={form.protein_g}
                     onChangeText={(v: string) => setForm((f) => ({ ...f, protein_g: v }))}
@@ -379,7 +381,7 @@ export default function NutritionScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder="0"
-                    placeholderTextColor={Colors.dim}
+                    placeholderTextColor={colors.inputPlaceholder}
                     keyboardType="numeric"
                     value={form.carbs_g}
                     onChangeText={(v: string) => setForm((f) => ({ ...f, carbs_g: v }))}
@@ -390,7 +392,7 @@ export default function NutritionScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder="0"
-                    placeholderTextColor={Colors.dim}
+                    placeholderTextColor={colors.inputPlaceholder}
                     keyboardType="numeric"
                     value={form.fat_g}
                     onChangeText={(v: string) => setForm((f) => ({ ...f, fat_g: v }))}
@@ -443,8 +445,9 @@ export default function NutritionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.bg },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -453,12 +456,12 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   screenTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
   },
   dateLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     marginTop: 2,
   },
@@ -466,7 +469,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
   },
   addBtnText: {
     color: '#fff',
@@ -500,12 +503,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   waterValue: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
   },
   waterMeta: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     marginTop: 4,
   },
@@ -513,12 +516,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: Radius.full,
-    backgroundColor: Colors.blue + '22',
+    backgroundColor: `${colors.blue}22`,
     borderWidth: 1,
-    borderColor: Colors.blue + '44',
+    borderColor: `${colors.blue}44`,
   },
   waterBadgeText: {
-    color: Colors.blue,
+    color: colors.blue,
     fontWeight: Typography.weight.bold,
     fontSize: Typography.size.xs,
   },
@@ -531,12 +534,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.bg,
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   waterActionText: {
-    color: Colors.text,
+    color: colors.text,
     fontWeight: Typography.weight.semibold,
     fontSize: Typography.size.sm,
   },
@@ -550,26 +553,26 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   emptyRecentText: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },
   recentMealChip: {
     flex: 1,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: Radius.xl,
     padding: Spacing.lg,
   },
   recentMealName: {
-    color: Colors.text,
+    color: colors.text,
     fontWeight: Typography.weight.semibold,
     fontSize: Typography.size.sm,
     marginBottom: 6,
   },
   recentMealMeta: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.xs,
   },
   mealSection: {
@@ -582,31 +585,31 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   mealSectionTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
   },
   mealSectionMeta: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
   },
   emptyMealSection: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Spacing.lg,
   },
   emptyMealSectionText: {
-    color: Colors.dim,
+    color: colors.dim,
     fontSize: Typography.size.sm,
   },
   mealList: {
     borderRadius: Radius.xl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
   },
   mealRow: {
     flexDirection: 'row',
@@ -614,52 +617,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: colors.border,
   },
   mealLeft: { flex: 1, gap: 2 },
   mealName: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
   },
-  mealTimestamp: { color: Colors.dim, fontSize: Typography.size.xs },
+  mealTimestamp: { color: colors.dim, fontSize: Typography.size.xs },
   mealRight: { alignItems: 'flex-end', gap: 4 },
   mealCal: {
-    color: Colors.orange,
+    color: colors.orange,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
   },
-  mealCalLabel: { color: Colors.muted, fontSize: Typography.size.xs },
-  mealMacroLine: { color: Colors.accent, fontSize: Typography.size.xs },
-  modal: { flex: 1, backgroundColor: Colors.bg },
+  mealCalLabel: { color: colors.muted, fontSize: Typography.size.xs },
+  mealMacroLine: { color: colors.accent, fontSize: Typography.size.xs },
+  modal: { flex: 1, backgroundColor: colors.background },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: Spacing.xl,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: colors.border,
   },
   modalTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
   },
-  modalClose: { color: Colors.muted, fontSize: Typography.size.xl, padding: 4 },
+  modalClose: { color: colors.muted, fontSize: Typography.size.xl, padding: 4 },
   modalScroll: { padding: Spacing.xl },
   fieldLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
     marginBottom: Spacing.xs,
     marginTop: Spacing.md,
   },
   input: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: colors.border,
+    color: colors.text,
     fontSize: Typography.size.md,
     paddingHorizontal: Spacing.lg,
     paddingVertical: 13,
@@ -672,15 +675,15 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
   },
   mealTimePillActive: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   mealTimePillText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
@@ -689,7 +692,7 @@ const styles = StyleSheet.create({
   },
   logBtn: {
     marginTop: Spacing.xl,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     paddingVertical: 15,
     borderRadius: Radius.xl,
     alignItems: 'center',

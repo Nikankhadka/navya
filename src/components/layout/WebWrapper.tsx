@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Platform, type ViewStyle } from 'react-native';
-import { Colors } from '@/theme';
+import { Platform, StyleSheet, View, type ViewStyle } from 'react-native';
+import { useAppTheme } from '@/theme';
 
 interface WebWrapperProps {
   children: React.ReactNode;
@@ -12,13 +12,26 @@ interface WebWrapperProps {
  * On native: renders children transparently
  */
 export function WebWrapper({ children, style }: WebWrapperProps) {
+  const { colors } = useAppTheme();
+
   if (Platform.OS !== 'web') {
     return <>{children}</>;
   }
 
   return (
-    <View style={styles.webRoot}>
-      <View style={[styles.webContent, style]}>{children}</View>
+    <View style={[styles.webRoot, { backgroundColor: colors.webBackdrop }]}>
+      <View
+        style={[
+          styles.webContent,
+          {
+            backgroundColor: colors.background,
+            boxShadow: `0 0 60px ${colors.webShadow}`,
+          } as ViewStyle,
+          style,
+        ]}
+      >
+        {children}
+      </View>
     </View>
   );
 }
@@ -26,19 +39,11 @@ export function WebWrapper({ children, style }: WebWrapperProps) {
 const styles = StyleSheet.create({
   webRoot: {
     flex: 1,
-    backgroundColor: '#06060B', // slightly darker than card bg, looks like a browser bg
     alignItems: 'center',
   },
   webContent: {
     flex: 1,
     width: '100%',
     maxWidth: 430,
-    backgroundColor: Colors.bg,
-    // Subtle shadow to lift the phone frame off the web bg
-    ...(Platform.OS === 'web'
-      ? ({
-          boxShadow: '0 0 60px rgba(0,0,0,0.8)',
-        } as ViewStyle)
-      : {}),
   },
 });

@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Typography } from '@/theme';
+import { Typography, useAppTheme } from '@/theme';
 
 interface TabIconProps {
   emoji: string;
@@ -10,16 +10,34 @@ interface TabIconProps {
 }
 
 function TabIcon({ emoji, label, focused }: TabIconProps) {
+  const { colors } = useAppTheme();
+
   return (
     <View style={styles.tabIcon}>
-      <View style={[styles.tabIndicator, focused && styles.tabIndicatorActive]} />
+      <View
+        style={[
+          styles.tabIndicator,
+          { backgroundColor: colors.accent },
+          focused && styles.tabIndicatorActive,
+        ]}
+      />
       <Text style={styles.tabEmoji}>{emoji}</Text>
-      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
+      <Text
+        style={[
+          styles.tabLabel,
+          { color: colors.dim },
+          focused && styles.tabLabelActive,
+          focused && { color: colors.accent },
+        ]}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
 
 export default function TabsLayout() {
+  const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
 
   return (
@@ -27,16 +45,16 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: 64 + insets.bottom,
           paddingBottom: insets.bottom,
           paddingTop: 8,
         },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: Colors.accent,
-        tabBarInactiveTintColor: Colors.dim,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.dim,
       }}
     >
       <Tabs.Screen
@@ -83,7 +101,6 @@ const styles = StyleSheet.create({
     width: 0,
     height: 3,
     borderRadius: 2,
-    backgroundColor: Colors.accent,
     marginBottom: 2,
   },
   tabIndicatorActive: {
@@ -94,11 +111,9 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    color: Colors.dim,
     fontWeight: Typography.weight.medium,
   },
   tabLabelActive: {
-    color: Colors.accent,
     fontWeight: Typography.weight.bold,
   },
   platformPad: {

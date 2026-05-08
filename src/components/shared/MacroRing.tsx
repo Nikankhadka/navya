@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Typography } from '@/theme';
+import { StyleSheet, Text, View } from 'react-native';
+import { Typography, useAppTheme } from '@/theme';
 
 interface MacroRingProps {
   value: number;
@@ -21,18 +21,12 @@ export function MacroRing({
   label,
   unit = '',
 }: MacroRingProps) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
+  const { colors } = useAppTheme();
   const pct = Math.min(value / Math.max(max, 1), 1);
-  const strokeDashoffset = circumference * (1 - pct);
-  const cx = size / 2;
-  const cy = size / 2;
 
   return (
     <View style={styles.container}>
-      {/* SVG-like ring using absolute positioned views */}
       <View style={[styles.ringOuter, { width: size, height: size }]}>
-        {/* Background ring */}
         <View
           style={[
             styles.ringBg,
@@ -41,11 +35,10 @@ export function MacroRing({
               height: size,
               borderRadius: size / 2,
               borderWidth: strokeWidth,
-              borderColor: Colors.border,
+              borderColor: colors.border,
             },
           ]}
         />
-        {/* Progress arc - using border trick for approximation */}
         <View
           style={[
             styles.ringProgress,
@@ -63,7 +56,6 @@ export function MacroRing({
             },
           ]}
         />
-        {/* Center text */}
         <View style={styles.centerContent}>
           <Text style={[styles.centerValue, { color }]}>
             {Math.round(pct * 100)}
@@ -71,8 +63,8 @@ export function MacroRing({
           </Text>
         </View>
       </View>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.sublabel}>
+      <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
+      <Text style={[styles.sublabel, { color: colors.dim }]}>
         {value}
         {unit} / {max}
         {unit}
@@ -80,8 +72,6 @@ export function MacroRing({
     </View>
   );
 }
-
-// ─── Linear progress bar ──────────────────────────────────────────────────────
 
 interface ProgressBarProps {
   value: number;
@@ -100,19 +90,20 @@ export function ProgressBar({
   showLabel = false,
   label,
 }: ProgressBarProps) {
+  const { colors } = useAppTheme();
   const pct = Math.min((value / Math.max(max, 1)) * 100, 100);
 
   return (
     <View>
-      {showLabel && label && (
+      {showLabel && label ? (
         <View style={styles.barLabelRow}>
-          <Text style={styles.barLabel}>{label}</Text>
-          <Text style={styles.barValue}>
+          <Text style={[styles.barLabel, { color: colors.muted }]}>{label}</Text>
+          <Text style={[styles.barValue, { color: colors.text }]}>
             {value} / {max}
           </Text>
         </View>
-      )}
-      <View style={[styles.barBg, { height }]}>
+      ) : null}
+      <View style={[styles.barBg, { height, backgroundColor: colors.border }]}>
         <View
           style={[
             styles.barFill,
@@ -159,12 +150,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: Typography.size.sm,
-    color: Colors.muted,
     fontWeight: Typography.weight.medium,
   },
   sublabel: {
     fontSize: 10,
-    color: Colors.dim,
   },
   barLabelRow: {
     flexDirection: 'row',
@@ -173,16 +162,13 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     fontSize: Typography.size.sm,
-    color: Colors.muted,
     textTransform: 'capitalize',
   },
   barValue: {
     fontSize: Typography.size.sm,
-    color: Colors.text,
     fontWeight: Typography.weight.semibold,
   },
   barBg: {
-    backgroundColor: Colors.border,
     borderRadius: 4,
     overflow: 'hidden',
   },

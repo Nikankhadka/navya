@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { Stack } from 'expo-router';
 import { Button, Input } from '@/components/ui';
-import { Colors, Spacing, Typography } from '@/theme';
+import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import {
   createSessionFromUrl,
   getAuthRedirectUrl,
@@ -17,8 +17,6 @@ import {
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuthStore } from '@/store/useAuthStore';
-
-WebBrowser.maybeCompleteAuthSession();
 
 function getOAuthErrorMessage(provider: 'google' | 'apple', error: unknown, redirectUrl: string): string {
   const fallbackMessage = `Unable to start ${provider} sign-in.`;
@@ -37,10 +35,18 @@ function getOAuthErrorMessage(provider: 'google' | 'apple', error: unknown, redi
 }
 
 export default function LoginScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const enterDemoMode = useAuthStore((state) => state.enterDemoMode);
   const hasSocialLoginOptions = Platform.OS === 'ios' || isGoogleLoginAvailable;
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      WebBrowser.maybeCompleteAuthSession();
+    }
+  }, []);
 
   async function handleEmailAuth() {
     if (!email) {
@@ -239,10 +245,11 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -258,14 +265,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 42,
     fontWeight: Typography.weight.extrabold,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: Spacing.sm,
     textAlign: 'center',
     letterSpacing: 1,
   },
   subtitle: {
     fontSize: Typography.size.md,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: Spacing.lg,
@@ -274,21 +281,21 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xxl,
   },
   infoBanner: {
-    backgroundColor: Colors.orangeMuted,
-    borderColor: Colors.orange,
+    backgroundColor: colors.orangeMuted,
+    borderColor: colors.orange,
     borderWidth: 1,
     borderRadius: 16,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
   },
   infoBannerTitle: {
-    color: Colors.orange,
+    color: colors.orange,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
     marginBottom: 4,
   },
   infoBannerText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },
@@ -300,10 +307,10 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
   },
   dividerText: {
-    color: Colors.muted,
+    color: colors.muted,
     paddingHorizontal: Spacing.md,
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,

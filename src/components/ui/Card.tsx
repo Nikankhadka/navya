@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ViewStyle } from 'react-native';
 import { TouchableOpacity, View } from 'react-native';
-import { Colors, Radius, Shadow, Spacing } from '@/theme';
+import { Radius, Shadow, Spacing, useAppTheme } from '@/theme';
 
 interface CardProps {
   children: ReactNode;
@@ -11,13 +11,15 @@ interface CardProps {
 }
 
 export function Card({ children, style, glow, onPress }: CardProps) {
+  const { colors } = useAppTheme();
+
   const cardStyle = [
     {
-      backgroundColor: Colors.card,
+      backgroundColor: colors.card,
       borderRadius: Radius.xl,
       padding: Spacing.xl,
       borderWidth: 1,
-      borderColor: Colors.border,
+      borderColor: colors.border,
     },
     glow ? Shadow.md : null,
     style,

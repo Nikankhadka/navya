@@ -12,7 +12,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
-import { Colors, Spacing, Radius, Typography } from '@/theme';
+import {
+  Spacing,
+  Radius,
+  Typography,
+  useAppTheme,
+  type ThemeColors,
+  type ThemeModePreference,
+} from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Card, Badge, Divider } from '@/components/ui';
 import { formatDuration, goalLabel } from '@/utils/helpers';
@@ -42,7 +49,39 @@ const GOAL_OPTIONS: Array<{ id: GoalType; label: string }> = [
   { id: 'general_fitness', label: 'General Fitness' },
 ];
 
+const APPEARANCE_OPTIONS: Array<{
+  id: ThemeModePreference;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: 'system',
+    label: 'Use Device',
+    description: 'Match the phone or browser appearance automatically.',
+  },
+  {
+    id: 'light',
+    label: 'Light',
+    description: 'Use bright surfaces with darker text and softer borders.',
+  },
+  {
+    id: 'dark',
+    label: 'Dark',
+    description: 'Keep the current darker training-focused look.',
+  },
+];
+
+function themePreferenceLabel(preference: ThemeModePreference) {
+  if (preference === 'system') {
+    return 'Use Device';
+  }
+
+  return preference === 'light' ? 'Light' : 'Dark';
+}
+
 export default function ProfileScreen() {
+  const { colors, preference, setPreference } = useAppTheme();
+  const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { user, signOut, isDemoSession, setProfile } = useAuthStore();
@@ -55,6 +94,7 @@ export default function ProfileScreen() {
   const activeUser = profile ?? user;
   const [showEditModal, setShowEditModal] = useState(false);
   const [showWeightModal, setShowWeightModal] = useState(false);
+  const [showAppearanceModal, setShowAppearanceModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [checkInWeight, setCheckInWeight] = useState('');
   const [form, setForm] = useState<EditProfileForm>({
@@ -99,6 +139,11 @@ export default function ProfileScreen() {
 
   const showComingSoon = (title: string, message: string) => {
     crossAlert(title, message);
+  };
+
+  const handleThemeSelection = async (nextPreference: ThemeModePreference) => {
+    await setPreference(nextPreference);
+    setShowAppearanceModal(false);
   };
 
   const handleSaveProfile = async () => {
@@ -192,9 +237,9 @@ export default function ProfileScreen() {
         <Text style={styles.fullName}>{activeUser.full_name ?? 'Navya User'}</Text>
         <Text style={styles.email}>{activeUser.email}</Text>
         <View style={styles.badgeRow}>
-          {isDemoSession && <Badge label="Demo Session" color={Colors.orange} />}
-          {activeUser.goal && <Badge label={goalLabel(activeUser.goal)} color={Colors.accent} />}
-          {activeUser.experience_level && <Badge label={activeUser.experience_level} color={Colors.green} />}
+          {isDemoSession && <Badge label="Demo Session" color={colors.orange} />}
+          {activeUser.goal && <Badge label={goalLabel(activeUser.goal)} color={colors.accent} />}
+          {activeUser.experience_level && <Badge label={activeUser.experience_level} color={colors.green} />}
         </View>
       </View>
 
@@ -343,6 +388,14 @@ export default function ProfileScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionBtn}
+          onPress={() => setShowAppearanceModal(true)}
+        >
+          <Text style={styles.actionBtnText}>
+            🎨  Appearance · {themePreferenceLabel(preference)}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionBtn}
           onPress={() =>
             showComingSoon(
               'Notification settings are not wired yet',
@@ -401,7 +454,7 @@ export default function ProfileScreen() {
               value={form.full_name}
               onChangeText={(value) => setForm((current) => ({ ...current, full_name: value }))}
               placeholder="Your name"
-              placeholderTextColor={Colors.dim}
+              placeholderTextColor={colors.inputPlaceholder}
               testID="profile-full-name-input"
             />
 
@@ -431,7 +484,7 @@ export default function ProfileScreen() {
                   value={form.weight_kg}
                   onChangeText={(value) => setForm((current) => ({ ...current, weight_kg: value }))}
                   placeholder="78"
-                  placeholderTextColor={Colors.dim}
+                  placeholderTextColor={colors.inputPlaceholder}
                   keyboardType="numeric"
                 />
               </View>
@@ -442,7 +495,7 @@ export default function ProfileScreen() {
                   value={form.height_cm}
                   onChangeText={(value) => setForm((current) => ({ ...current, height_cm: value }))}
                   placeholder="178"
-                  placeholderTextColor={Colors.dim}
+                  placeholderTextColor={colors.inputPlaceholder}
                   keyboardType="numeric"
                 />
               </View>
@@ -456,7 +509,7 @@ export default function ProfileScreen() {
                 setForm((current) => ({ ...current, workouts_per_week: value }))
               }
               placeholder="3"
-              placeholderTextColor={Colors.dim}
+              placeholderTextColor={colors.inputPlaceholder}
               keyboardType="numeric"
             />
 
@@ -470,6 +523,77 @@ export default function ProfileScreen() {
                 {isSaving ? 'Saving...' : isDemoSession ? 'Save Demo Profile' : 'Save Changes'}
               </Text>
             </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={showAppearanceModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowAppearanceModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalScreen}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Appearance</Text>
+              <TouchableOpacity onPress={() => setShowAppearanceModal(false)}>
+                <Text style={styles.modalClose}>Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.appearanceIntro}>
+              Choose whether Navya should follow your device or stay in a fixed theme.
+            </Text>
+
+            <View style={styles.appearanceOptions}>
+              {APPEARANCE_OPTIONS.map((option) => {
+                const selected = preference === option.id;
+
+                return (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[
+                      styles.appearanceOption,
+                      selected && styles.appearanceOptionSelected,
+                    ]}
+                    onPress={() => {
+                      void handleThemeSelection(option.id);
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.appearanceOptionText}>
+                      <Text
+                        style={[
+                          styles.appearanceOptionLabel,
+                          selected && styles.appearanceOptionLabelSelected,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                      <Text style={styles.appearanceOptionDescription}>
+                        {option.description}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.appearanceOptionCheck,
+                        selected && styles.appearanceOptionCheckSelected,
+                      ]}
+                    >
+                      {selected ? '✓' : ''}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
@@ -502,7 +626,7 @@ export default function ProfileScreen() {
               value={checkInWeight}
               onChangeText={setCheckInWeight}
               placeholder="79.4"
-              placeholderTextColor={Colors.dim}
+              placeholderTextColor={colors.inputPlaceholder}
               keyboardType="numeric"
             />
 
@@ -526,8 +650,9 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.bg },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 40 },
 
   hero: {
@@ -540,23 +665,23 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 24,
-    backgroundColor: Colors.accentSoft,
+    backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
     borderWidth: 2,
-    borderColor: Colors.accent + '55',
+    borderColor: `${colors.accent}55`,
   },
   avatarEmoji: { fontSize: 40 },
   fullName: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -0.5,
     marginBottom: 4,
   },
   email: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     marginBottom: Spacing.md,
   },
@@ -572,42 +697,42 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.xl,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   statValue: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -0.5,
   },
-  statLabel: { color: Colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
-  statSuffix: { color: Colors.dim, fontSize: Typography.size.xs },
+  statLabel: { color: colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
+  statSuffix: { color: colors.dim, fontSize: Typography.size.xs },
 
   metricsCard: { marginHorizontal: Spacing.xl, marginBottom: Spacing.xxl },
   metricsRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: Spacing.md },
   metric: { alignItems: 'center' },
   metricVal: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
   },
-  metricUnit: { color: Colors.muted, fontSize: Typography.size.sm },
-  metricLabel: { color: Colors.muted, fontSize: Typography.size.sm, marginTop: 2 },
-  metricDivider: { width: 1, backgroundColor: Colors.border },
+  metricUnit: { color: colors.muted, fontSize: Typography.size.sm },
+  metricLabel: { color: colors.muted, fontSize: Typography.size.sm, marginTop: 2 },
+  metricDivider: { width: 1, backgroundColor: colors.border },
 
   sectionTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.md,
   },
   sectionTitleInline: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
   },
@@ -619,7 +744,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   progressSubtext: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     marginTop: 4,
   },
@@ -627,12 +752,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
-    backgroundColor: Colors.accentMuted,
+    backgroundColor: colors.accentMuted,
     borderWidth: 1,
-    borderColor: Colors.accent + '55',
+    borderColor: `${colors.accent}55`,
   },
   inlineActionText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
@@ -643,24 +768,24 @@ const styles = StyleSheet.create({
   },
   progressHighlight: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   progressHighlightLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.xs,
     marginBottom: 4,
   },
   progressHighlightValue: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
   },
   progressHighlightValueSmall: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
@@ -671,37 +796,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
   },
   progressHistoryWeight: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
   },
   progressHistoryDate: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     marginTop: 2,
   },
   progressHistoryTag: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   progressEmptyText: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },
 
   setupList: {
     marginHorizontal: Spacing.xl,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.xxl,
   },
@@ -713,9 +838,9 @@ const styles = StyleSheet.create({
   },
   setupLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   setupIcon: { fontSize: 18 },
-  setupLabel: { color: Colors.muted, fontSize: Typography.size.md },
+  setupLabel: { color: colors.muted, fontSize: Typography.size.md },
   setupValue: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
     textTransform: 'capitalize',
@@ -727,16 +852,16 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   actionBtn: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.lg,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   modalScreen: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: colors.background,
   },
   modalScroll: {
     flex: 1,
@@ -753,28 +878,28 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   modalTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
   },
   modalClose: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
   },
   fieldLabel: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
     marginBottom: Spacing.sm,
     marginTop: Spacing.md,
   },
   input: {
-    backgroundColor: Colors.card,
-    borderColor: Colors.border,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: Radius.lg,
-    color: Colors.text,
+    color: colors.text,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     fontSize: Typography.size.md,
@@ -792,28 +917,28 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   goalChip: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
   goalChipActive: {
-    backgroundColor: Colors.accentMuted,
-    borderColor: Colors.accent,
+    backgroundColor: colors.accentMuted,
+    borderColor: colors.accent,
   },
   goalChipText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
   goalChipTextActive: {
-    color: Colors.accent,
+    color: colors.accent,
   },
   saveBtn: {
     marginTop: Spacing.xxl,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: Radius.lg,
     paddingVertical: Spacing.lg,
     alignItems: 'center',
@@ -827,23 +952,74 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   progressModalHint: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     lineHeight: 20,
     marginTop: Spacing.md,
   },
   actionBtnText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.medium,
   },
+  appearanceIntro: {
+    color: colors.textSecondary,
+    fontSize: Typography.size.md,
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  appearanceOptions: {
+    gap: Spacing.md,
+  },
+  appearanceOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+    padding: Spacing.lg,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  appearanceOptionSelected: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentMuted,
+  },
+  appearanceOptionText: {
+    flex: 1,
+    gap: 4,
+  },
+  appearanceOptionLabel: {
+    color: colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+  },
+  appearanceOptionLabelSelected: {
+    color: colors.accent,
+  },
+  appearanceOptionDescription: {
+    color: colors.muted,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+  },
+  appearanceOptionCheck: {
+    width: 28,
+    textAlign: 'center',
+    color: 'transparent',
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+  },
+  appearanceOptionCheckSelected: {
+    color: colors.accent,
+  },
   signOutBtn: {
-    borderColor: Colors.red + '44',
-    backgroundColor: Colors.redMuted,
+    borderColor: `${colors.red}44`,
+    backgroundColor: colors.redMuted,
     marginTop: Spacing.sm,
   },
   signOutText: {
-    color: Colors.red,
+    color: colors.red,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
     textAlign: 'center',

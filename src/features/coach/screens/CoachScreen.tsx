@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '@/theme';
+import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { COACH_QUICK_REPLIES } from '@/features/demo/mockData';
 import { formatTimeAgo } from '@/utils/helpers';
 import type { CoachMessage } from '@/types/app';
@@ -21,6 +21,8 @@ import { useFeatureFlags } from '@/features/coach/hooks/useFeatureFlags';
 import { useCoachActions } from '@/features/coach/hooks/useCoachActions';
 
 export default function CoachScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const { data: initialMessages } = useCoachMessages(user?.id);
@@ -158,7 +160,7 @@ export default function CoachScreen() {
                 <Text style={{ fontSize: 14 }}>🤖</Text>
               </View>
               <View style={[styles.bubble, styles.bubbleCoach, styles.typingBubble]}>
-                <ActivityIndicator size="small" color={Colors.accent} />
+                <ActivityIndicator size="small" color={colors.accent} />
               </View>
             </View>
           )}
@@ -194,7 +196,7 @@ export default function CoachScreen() {
           <TextInput
             style={styles.input}
             placeholder="Ask your coach anything..."
-            placeholderTextColor={Colors.dim}
+            placeholderTextColor={colors.inputPlaceholder}
             value={inputText}
             onChangeText={setInputText}
             multiline
@@ -220,8 +222,9 @@ export default function CoachScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.bg },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -229,45 +232,45 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.bg,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.background,
   },
   coachInfo: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
   avatar: {
     width: 44,
     height: 44,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarEmoji: { fontSize: 22 },
   coachName: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
   },
   onlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   onlineDot: {
-    width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.green,
+    width: 7, height: 7, borderRadius: 4, backgroundColor: colors.green,
   },
-  onlineText: { color: Colors.green, fontSize: Typography.size.xs },
+  onlineText: { color: colors.green, fontSize: Typography.size.xs },
   limitBadge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: Radius.full,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
-  limitText: { color: Colors.dim, fontSize: Typography.size.xs },
+  limitText: { color: colors.dim, fontSize: Typography.size.xs },
 
   messageList: { flex: 1 },
   messageContent: { padding: Spacing.xl, paddingBottom: Spacing.md, gap: Spacing.md },
 
   timeLabel: {
     textAlign: 'center',
-    color: Colors.dim,
+    color: colors.dim,
     fontSize: Typography.size.xs,
     marginVertical: Spacing.sm,
   },
@@ -277,7 +280,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: Radius.sm,
-    backgroundColor: Colors.accentMuted,
+    backgroundColor: colors.accentMuted,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -288,18 +291,18 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
   },
   bubbleCoach: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderBottomLeftRadius: Radius.sm,
   },
   bubbleUser: {
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderBottomRightRadius: Radius.sm,
   },
   typingBubble: { paddingHorizontal: Spacing.xl },
   bubbleText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },
@@ -316,10 +319,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
   },
-  quickReplyText: { color: Colors.muted, fontSize: Typography.size.sm },
+  quickReplyText: { color: colors.muted, fontSize: Typography.size.sm },
 
   inputBar: {
     flexDirection: 'row',
@@ -328,16 +331,16 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     gap: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.bg,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
   },
   input: {
     flex: 1,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.text,
+    borderColor: colors.border,
+    color: colors.text,
     fontSize: Typography.size.sm,
     paddingHorizontal: Spacing.lg,
     paddingVertical: 12,
@@ -351,7 +354,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  sendBtnActive: { backgroundColor: Colors.accent },
-  sendBtnInactive: { backgroundColor: Colors.border },
+  sendBtnActive: { backgroundColor: colors.accent },
+  sendBtnInactive: { backgroundColor: colors.border },
   sendBtnText: { color: '#fff', fontSize: Typography.size.lg, fontWeight: Typography.weight.bold },
 });
