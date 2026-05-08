@@ -5,3 +5,4 @@ export { Divider } from './Divider';
 export { EmptyState } from './EmptyState';
 export { Input } from './Input';
 export { SectionHeader } from './SectionHeader';
+export { ThemeModeToggle } from './ThemeModeToggle';

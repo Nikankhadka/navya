@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import { Stack } from 'expo-router';
-import { Button, Input } from '@/components/ui';
-import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, Input, ThemeModeToggle } from '@/components/ui';
+import { Radius, Shadow, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import {
   createSessionFromUrl,
   getAuthRedirectUrl,
@@ -17,6 +27,8 @@ import {
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuthStore } from '@/store/useAuthStore';
+
+type AuthMode = 'password-sign-in' | 'password-sign-up' | 'magic-link';
 
 function getOAuthErrorMessage(provider: 'google' | 'apple', error: unknown, redirectUrl: string): string {
   const fallbackMessage = `Unable to start ${provider} sign-in.`;
@@ -34,13 +46,56 @@ function getOAuthErrorMessage(provider: 'google' | 'apple', error: unknown, redi
   return rawMessage;
 }
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function isEmailConfirmationRequiredError(error: unknown): boolean {
+  const rawMessage = error instanceof Error ? error.message : '';
+  return /email not confirmed/i.test(rawMessage);
+}
+
+function getPasswordAuthErrorMessage(error: unknown, mode: AuthMode): string {
+  const fallbackMessage =
+    mode === 'password-sign-up' ? 'Unable to create your account.' : 'Unable to sign in with email and password.';
+  const rawMessage = error instanceof Error ? error.message : fallbackMessage;
+
+  if (isEmailConfirmationRequiredError(error)) {
+    return 'This account still needs email confirmation in Supabase before password sign-in can be used.';
+  }
+
+  if (/invalid login credentials/i.test(rawMessage)) {
+    return 'That email and password combination does not match an existing account.';
+  }
+
+  if (/user already registered/i.test(rawMessage)) {
+    return 'An account with this email already exists. Switch to Sign In instead.';
+  }
+
+  if (/password should be at least/i.test(rawMessage)) {
+    return 'Use a password with at least 6 characters.';
+  }
+
+  if (/signup is disabled/i.test(rawMessage)) {
+    return 'Email/password sign-up is disabled in Supabase Authentication settings.';
+  }
+
+  return rawMessage;
+}
+
 export default function LoginScreen() {
   const { colors } = useAppTheme();
-  const styles = createStyles(colors);
+  const insets = useSafeAreaInsets();
+  const styles = createStyles(colors, insets.top, insets.bottom);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authMode, setAuthMode] = useState<AuthMode>('password-sign-in');
+  const [pendingConfirmationEmail, setPendingConfirmationEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const enterDemoMode = useAuthStore((state) => state.enterDemoMode);
   const hasSocialLoginOptions = Platform.OS === 'ios' || isGoogleLoginAvailable;
+  const isMagicLinkMode = authMode === 'magic-link';
+  const isSignUpMode = authMode === 'password-sign-up';
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -48,8 +103,10 @@ export default function LoginScreen() {
     }
   }, []);
 
-  async function handleEmailAuth() {
-    if (!email) {
+  async function handleMagicLinkAuth() {
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail) {
       Alert.alert('Error', 'Please enter your email address.');
       return;
     }
@@ -57,7 +114,7 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOtp({
-        email,
+        email: normalizedEmail,
         options: {
           emailRedirectTo: getAuthRedirectUrl(),
           shouldCreateUser: true,
@@ -75,6 +132,115 @@ export default function LoginScreen() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to send sign-in link.';
       Alert.alert('Authentication Error', message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResendConfirmation() {
+    const normalizedEmail = pendingConfirmationEmail ?? normalizeEmail(email);
+
+    if (!normalizedEmail) {
+      Alert.alert('Error', 'Enter your email address first so we know where to resend the confirmation email.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: normalizedEmail,
+        options: {
+          emailRedirectTo: getAuthRedirectUrl(),
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setPendingConfirmationEmail(normalizedEmail);
+      Alert.alert(
+        'Confirmation email sent',
+        `We sent a fresh confirmation email to ${normalizedEmail}. Confirm it before logging in with your password.`,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to resend the confirmation email.';
+      Alert.alert('Authentication Error', message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handlePasswordAuth() {
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail) {
+      Alert.alert('Error', 'Please enter your email address.');
+      return;
+    }
+
+    if (!password) {
+      Alert.alert('Error', 'Please enter your password.');
+      return;
+    }
+
+    if (authMode === 'password-sign-up') {
+      if (password.length < 6) {
+        Alert.alert('Error', 'Use a password with at least 6 characters.');
+        return;
+      }
+    }
+
+    try {
+      setLoading(true);
+
+      if (authMode === 'password-sign-up') {
+        const { data, error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: {
+            emailRedirectTo: getAuthRedirectUrl(),
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.session) {
+          setPendingConfirmationEmail(null);
+          Alert.alert('Account created', 'Your account is ready and you are now signed in.');
+          return;
+        }
+
+        setPendingConfirmationEmail(normalizedEmail);
+        Alert.alert(
+          'Account created',
+          'Your account was created. If Supabase email confirmation is enabled, confirm the email before signing in with your password. You can resend the confirmation email from this screen.',
+        );
+        setAuthMode('password-sign-in');
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setPendingConfirmationEmail(null);
+      Alert.alert('Signed in', 'You are now signed in.');
+    } catch (error) {
+      if (isEmailConfirmationRequiredError(error)) {
+        setPendingConfirmationEmail(normalizedEmail);
+      }
+
+      Alert.alert('Authentication Error', getPasswordAuthErrorMessage(error, authMode));
     } finally {
       setLoading(false);
     }
@@ -156,12 +322,17 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen options={{ headerShown: false }} />
+      <ThemeModeToggle compact style={styles.themeToggle} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
         <View style={styles.header}>
           <Text style={styles.title}>Navya</Text>
           <Text style={styles.subtitle}>
-            Sign in with a secure magic link to continue your training journey.
+            {isMagicLinkMode
+              ? 'Use a one-time email link to get back into your account.'
+              : isSignUpMode
+                ? 'Create your account with email and password.'
+                : 'Sign in with your email and password.'}
           </Text>
         </View>
 
@@ -175,25 +346,136 @@ export default function LoginScreen() {
             </View>
           )}
 
+          {pendingConfirmationEmail && !isMagicLinkMode && (
+            <View style={styles.confirmationBanner}>
+              <Text style={styles.confirmationBannerTitle}>Confirm your email before password login</Text>
+              <Text style={styles.confirmationBannerText}>
+                Password login for {pendingConfirmationEmail} will keep failing until the Supabase confirmation email
+                is opened. If you did not receive it, resend it here.
+              </Text>
+              <Button
+                label="Resend Confirmation Email"
+                variant="secondary"
+                fullWidth
+                onPress={handleResendConfirmation}
+                disabled={loading || !isSupabaseConfigured}
+                style={[{ marginTop: Spacing.sm }]}
+                testID="login-resend-confirmation"
+              />
+            </View>
+          )}
+
           <Input 
-            label="Email Address" 
-            placeholder="your@email.com" 
+            label="Email" 
+            placeholder="you@example.com" 
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
             testID="login-email-input"
           />
 
-          <Button 
-            label="Send Magic Link" 
-            fullWidth 
-            loading={loading}
-            onPress={handleEmailAuth}
-            style={[{ marginTop: Spacing.sm }]}
-            disabled={!isSupabaseConfigured}
-            testID="login-send-magic-link"
-          />
+          {isMagicLinkMode ? (
+            <>
+              <Button 
+                label="Send Email Link" 
+                fullWidth 
+                loading={loading}
+                onPress={handleMagicLinkAuth}
+                style={[{ marginTop: Spacing.sm }]}
+                disabled={!isSupabaseConfigured}
+                testID="login-send-magic-link"
+              />
+            </>
+          ) : (
+            <>
+              <Input
+                label="Password"
+                placeholder={isSignUpMode ? 'Create a password' : 'Enter your password'}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete={isSignUpMode ? 'new-password' : 'current-password'}
+                textContentType={isSignUpMode ? 'newPassword' : 'password'}
+                testID="login-password-input"
+              />
+
+              <Button
+                label={isSignUpMode ? 'Create Account' : 'Log In'}
+                fullWidth
+                loading={loading}
+                onPress={handlePasswordAuth}
+                style={[{ marginTop: Spacing.sm }]}
+                disabled={!isSupabaseConfigured}
+                testID={isSignUpMode ? 'login-create-account' : 'login-password-auth'}
+              />
+            </>
+          )}
+
+          <View style={styles.bottomActions}>
+            {isMagicLinkMode ? (
+              <>
+                <Text style={styles.bottomActionsText}>Prefer a password?</Text>
+                <TouchableOpacity
+                  disabled={loading}
+                  onPress={() => setAuthMode('password-sign-in')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.bottomActionsLink}>Sign in</Text>
+                </TouchableOpacity>
+                <Text style={styles.bottomActionsText}>or</Text>
+                <TouchableOpacity
+                  disabled={loading}
+                  onPress={() => setAuthMode('password-sign-up')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.bottomActionsLink}>Sign up</Text>
+                </TouchableOpacity>
+              </>
+            ) : isSignUpMode ? (
+              <>
+                <Text style={styles.bottomActionsText}>Have an account?</Text>
+                <TouchableOpacity
+                  disabled={loading}
+                  onPress={() => setAuthMode('password-sign-in')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.bottomActionsLink}>Sign in</Text>
+                </TouchableOpacity>
+                <Text style={styles.bottomActionsText}>or</Text>
+                <TouchableOpacity
+                  disabled={loading}
+                  onPress={() => setAuthMode('magic-link')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.bottomActionsLink}>Email link</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.bottomActionsText}>Need an account?</Text>
+                <TouchableOpacity
+                  disabled={loading}
+                  onPress={() => setAuthMode('password-sign-up')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.bottomActionsLink}>Sign up</Text>
+                </TouchableOpacity>
+                <Text style={styles.bottomActionsText}>or</Text>
+                <TouchableOpacity
+                  disabled={loading}
+                  onPress={() => setAuthMode('magic-link')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.bottomActionsLink}>Email link</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
 
           {isDemoModeAvailable && (
             <Button
@@ -211,7 +493,7 @@ export default function LoginScreen() {
           <>
             <View style={styles.dividerContainer}>
               <View style={styles.line} />
-              <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
+              <Text style={styles.dividerText}>OR CONTINUE WITH GOOGLE</Text>
               <View style={styles.line} />
             </View>
 
@@ -241,21 +523,38 @@ export default function LoginScreen() {
         )}
 
       </ScrollView>
+
+      <TouchableOpacity
+        accessibilityRole="button"
+        disabled={loading}
+        onPress={() => enterDemoMode()}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        style={styles.demoShortcut}
+        testID="login-demo-shortcut"
+      >
+        <Text style={styles.demoShortcutText}>Demo mode</Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
 
-const createStyles = (colors: ThemeColors) =>
+const createStyles = (colors: ThemeColors, topInset: number, bottomInset: number) =>
   StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
+  themeToggle: {
+    position: 'absolute',
+    top: Math.max(topInset, Spacing.lg),
+    right: Spacing.lg,
+    zIndex: 20,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: Spacing.xl,
-    paddingTop: 80,
-    paddingBottom: 40,
+    paddingTop: 112,
+    paddingBottom: Math.max(bottomInset, Spacing.xl) + 72,
     justifyContent: 'center',
   },
   header: {
@@ -299,6 +598,25 @@ const createStyles = (colors: ThemeColors) =>
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },
+  confirmationBanner: {
+    backgroundColor: colors.card,
+    borderColor: colors.orange,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  confirmationBannerTitle: {
+    color: colors.text,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.bold,
+    marginBottom: 4,
+  },
+  confirmationBannerText: {
+    color: colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: 20,
+  },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -316,7 +634,43 @@ const createStyles = (colors: ThemeColors) =>
     fontWeight: Typography.weight.bold,
     letterSpacing: 1.5,
   },
+  bottomActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'center',
+    columnGap: Spacing.xs,
+    rowGap: Spacing.xs,
+    marginTop: Spacing.lg,
+  },
+  bottomActionsText: {
+    color: colors.muted,
+    fontSize: Typography.size.sm,
+  },
+  bottomActionsLink: {
+    color: colors.accent,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
   socialContainer: {
     marginBottom: Spacing.xl,
+  },
+  demoShortcut: {
+    position: 'absolute',
+    left: Spacing.lg,
+    bottom: Math.max(bottomInset, Spacing.lg),
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.full,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    zIndex: 10,
+    ...Shadow.sm,
+  },
+  demoShortcutText: {
+    color: colors.accent,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
   },
 });
