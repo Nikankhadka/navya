@@ -20,9 +20,15 @@ export const themes = {
     blue: Colors.blue,
     blueMuted: Colors.blueMuted,
     text: Colors.text,
+    textStrong: Colors.white,
     textSecondary: Colors.textSecondary,
+    textSubtle: Colors.dim,
     muted: Colors.muted,
     dim: Colors.dim,
+    inputPlaceholder: Colors.dim,
+    overlay: 'rgba(4, 4, 10, 0.72)',
+    webBackdrop: '#06060B',
+    webShadow: 'rgba(0,0,0,0.8)',
   },
   light: {
     background: '#FFFFFF',
@@ -43,8 +49,18 @@ export const themes = {
     blue: '#2B79D6',
     blueMuted: 'rgba(43, 121, 214, 0.1)',
     text: '#171925',
+    textStrong: '#0F1320',
     textSecondary: '#414760',
+    textSubtle: '#7C849A',
     muted: '#6B728A',
     dim: '#8B90A6',
+    inputPlaceholder: '#98A0B3',
+    overlay: 'rgba(15, 23, 42, 0.16)',
+    webBackdrop: '#EDF1F7',
+    webShadow: 'rgba(15,23,42,0.14)',
   },
 } as const;
+
+export type ThemeName = keyof typeof themes;
+export type ThemeColors = (typeof themes)[ThemeName];
+export type ThemeModePreference = 'system' | ThemeName;

@@ -1,6 +1,6 @@
 import type { ViewStyle } from 'react-native';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { Colors, Spacing, Typography } from '@/theme';
+import { Spacing, Typography, useAppTheme } from '@/theme';
 
 interface SectionHeaderProps {
   title: string;
@@ -10,6 +10,8 @@ interface SectionHeaderProps {
 }
 
 export function SectionHeader({ title, action, onAction, style }: SectionHeaderProps) {
+  const { colors } = useAppTheme();
+
   return (
     <View
       style={[
@@ -24,7 +26,7 @@ export function SectionHeader({ title, action, onAction, style }: SectionHeaderP
     >
       <Text
         style={{
-          color: Colors.text,
+          color: colors.text,
           fontSize: Typography.size.xl,
           fontWeight: Typography.weight.bold,
         }}
@@ -35,7 +37,7 @@ export function SectionHeader({ title, action, onAction, style }: SectionHeaderP
         <TouchableOpacity onPress={onAction}>
           <Text
             style={{
-              color: Colors.accent,
+              color: colors.accent,
               fontSize: Typography.size.sm,
               fontWeight: Typography.weight.semibold,
             }}

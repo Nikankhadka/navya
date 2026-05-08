@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { TouchableOpacityProps, ViewStyle } from 'react-native';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import { Colors, Radius, Shadow, Typography } from '@/theme';
+import { Radius, Shadow, Typography, useAppTheme } from '@/theme';
 
 interface ButtonProps extends TouchableOpacityProps {
   label: string;
@@ -23,18 +23,20 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const { colors } = useAppTheme();
+
   const backgroundColor = {
-    primary: Colors.accent,
-    secondary: Colors.card,
+    primary: colors.accent,
+    secondary: colors.card,
     ghost: 'transparent',
-    danger: Colors.red,
+    danger: colors.red,
   }[variant];
 
   const textColor = {
-    primary: Colors.white,
-    secondary: Colors.text,
-    ghost: Colors.accent,
-    danger: Colors.white,
+    primary: '#FFFFFF',
+    secondary: colors.text,
+    ghost: colors.accent,
+    danger: '#FFFFFF',
   }[variant];
 
   const padding = {
@@ -58,7 +60,7 @@ export function Button({
           opacity: disabled ? 0.5 : 1,
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
           borderWidth: variant === 'secondary' ? 1 : variant === 'ghost' ? 1 : 0,
-          borderColor: variant === 'secondary' ? Colors.border : Colors.accent,
+          borderColor: variant === 'secondary' ? colors.border : colors.accent,
           ...padding,
         },
         variant === 'primary' && !disabled ? Shadow.md : null,

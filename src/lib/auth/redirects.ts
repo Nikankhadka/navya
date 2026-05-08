@@ -1,6 +1,7 @@
 import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
 import { Platform } from 'react-native';
+import { supabaseUrl } from '@/config/env';
 import { supabase } from '@/lib/supabase/client';
 
 export function getAuthRedirectUrl(): string {
@@ -15,6 +16,10 @@ export function getAuthRedirectUrl(): string {
   });
 }
 
+export function getSupabaseProviderCallbackUrl(): string {
+  return `${supabaseUrl.replace(/\/$/, '')}/auth/v1/callback`;
+}
+
 type AuthCallbackParams = {
   accessToken?: string;
   refreshToken?: string;
@@ -22,6 +27,13 @@ type AuthCallbackParams = {
   errorCode?: string;
   errorDescription?: string;
 };
+
+export type CreateSessionFromUrlResult =
+  | { success: true }
+  | {
+      success: false;
+      message: string;
+    };
 
 function readUrlParams(url: string): URLSearchParams {
   const parsed = Linking.parse(url);
@@ -79,26 +91,48 @@ export function getAuthCallbackError(url: string): string | null {
   return 'Authentication could not be completed. Please try again.';
 }
 
-export async function createSessionFromUrl(url: string): Promise<boolean> {
+function getCodeExchangeErrorMessage(message: string): string {
+  if (/code verifier|flow state|invalid flow/i.test(message)) {
+    return 'Navya could not verify that sign-in on this browser. Request a new link and open the newest email in the same browser that asked for it.';
+  }
+
+  if (/already|used/i.test(message)) {
+    return 'That sign-in link has already been used. If you are not signed in yet, request a fresh magic link.';
+  }
+
+  return message;
+}
+
+export async function createSessionFromUrl(url: string): Promise<CreateSessionFromUrlResult> {
   const { accessToken, refreshToken, code, errorCode } = extractSessionParams(url);
 
   if (errorCode) {
-    return false;
+    return {
+      success: false,
+      message: getAuthCallbackError(url) ?? 'Authentication could not be completed. Please try again.',
+    };
   }
 
   if (!accessToken || !refreshToken) {
     if (!code) {
-      return false;
+      return {
+        success: false,
+        message:
+          'The sign-in link did not include a valid auth code. Confirm your exact `/auth/callback` URL is allow-listed in Supabase and try the newest email link.',
+      };
     }
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
       console.error('Code exchange failed:', error.message);
-      return false;
+      return {
+        success: false,
+        message: getCodeExchangeErrorMessage(error.message),
+      };
     }
 
-    return true;
+    return { success: true };
   }
 
   const { error } = await supabase.auth.setSession({
@@ -108,8 +142,11 @@ export async function createSessionFromUrl(url: string): Promise<boolean> {
 
   if (error) {
     console.error('Session creation failed:', error.message);
-    return false;
+    return {
+      success: false,
+      message: error.message,
+    };
   }
 
-  return true;
+  return { success: true };
 }

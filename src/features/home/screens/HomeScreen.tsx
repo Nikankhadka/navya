@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '@/theme';
+import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Card, Badge, SectionHeader } from '@/components/ui';
 import { ProgressBar } from '@/components/shared/MacroRing';
@@ -24,6 +24,8 @@ import { useWeightProgress } from '@/features/profile/hooks/useWeightProgress';
 const WEEK_LABELS = getWeekDayLabels();
 
 export default function HomeScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
@@ -134,14 +136,14 @@ export default function HomeScreen() {
           </View>
           <Badge
             label={`${doneExercises}/${totalExercises} done`}
-            color={doneExercises > 0 ? Colors.green : Colors.muted}
+            color={doneExercises > 0 ? colors.green : colors.muted}
           />
         </View>
 
         <ProgressBar
           value={workoutPct}
           max={100}
-          color={Colors.accent}
+          color={colors.accent}
           height={6}
           showLabel={false}
         />
@@ -179,14 +181,14 @@ export default function HomeScreen() {
               styles.calRemaining,
               {
                 backgroundColor:
-                  calorieRemaining > 0 ? Colors.greenMuted : Colors.redMuted,
+                  calorieRemaining > 0 ? colors.greenMuted : colors.redMuted,
               },
             ]}
           >
             <Text
               style={[
                 styles.calRemainingText,
-                { color: calorieRemaining > 0 ? Colors.green : Colors.red },
+                { color: calorieRemaining > 0 ? colors.green : colors.red },
               ]}
             >
               {calorieRemaining > 0 ? '+' : ''}
@@ -204,21 +206,21 @@ export default function HomeScreen() {
               label: 'Protein',
               value: dailyNutrition?.total_protein_g ?? 0,
               goal: dailyNutrition?.protein_goal_g ?? 140,
-              color: Colors.accent,
+              color: colors.accent,
               unit: 'g',
             },
             {
               label: 'Carbs',
               value: dailyNutrition?.total_carbs_g ?? 0,
               goal: 240,
-              color: Colors.green,
+              color: colors.green,
               unit: 'g',
             },
             {
               label: 'Fat',
               value: dailyNutrition?.total_fat_g ?? 0,
               goal: 70,
-              color: Colors.orange,
+              color: colors.orange,
               unit: 'g',
             },
           ] as const).map((macro) => (
@@ -251,7 +253,7 @@ export default function HomeScreen() {
             <ProgressBar
               value={waterProgress}
               max={100}
-              color={Colors.blue}
+              color={colors.blue}
               height={6}
               showLabel={false}
             />
@@ -326,10 +328,11 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: colors.background,
   },
   content: {
     padding: Spacing.xl,
@@ -342,11 +345,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   greeting: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
   },
   userName: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -0.5,
@@ -356,21 +359,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.lg,
     paddingHorizontal: 14,
     paddingVertical: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   streakFire: { fontSize: 18 },
   streakCount: {
-    color: Colors.orange,
+    color: colors.orange,
     fontWeight: Typography.weight.extrabold,
     fontSize: Typography.size.lg,
   },
   streakLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.xs,
   },
   weekRow: {
@@ -392,17 +395,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   weekDotDone: {
-    backgroundColor: Colors.greenMuted,
-    borderColor: Colors.green,
+    backgroundColor: colors.greenMuted,
+    borderColor: colors.green,
   },
   weekDotEmpty: {
-    backgroundColor: Colors.card,
-    borderColor: Colors.border,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
   },
-  weekCheck: { fontSize: 12, color: Colors.green },
+  weekCheck: { fontSize: 12, color: colors.green },
   weekLabel: {
     fontSize: 10,
-    color: Colors.dim,
+    color: colors.dim,
   },
   workoutCard: {
     marginBottom: Spacing.xxl,
@@ -414,23 +417,23 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   workoutTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
     marginBottom: 3,
   },
   workoutMeta: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
   },
   progressLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.xs,
     marginTop: Spacing.xs,
     marginBottom: Spacing.md,
   },
   startBtn: {
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: Radius.lg,
     paddingVertical: 13,
     alignItems: 'center',
@@ -450,13 +453,13 @@ const styles = StyleSheet.create({
   },
   calMain: {},
   calNumber: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxxl,
     fontWeight: Typography.weight.extrabold,
     letterSpacing: -1,
   },
   calLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
   },
   calRemaining: {
@@ -471,7 +474,7 @@ const styles = StyleSheet.create({
   },
   calRemainingLabel: {
     fontSize: Typography.size.xs,
-    color: Colors.muted,
+    color: colors.muted,
     marginTop: 1,
   },
   macrosGrid: {
@@ -489,19 +492,19 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: Spacing.md,
   },
   waterLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.xs,
     marginBottom: 4,
   },
   waterValue: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
@@ -510,7 +513,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   waterProgressText: {
-    color: Colors.dim,
+    color: colors.dim,
     fontSize: Typography.size.xs,
     textAlign: 'right',
   },
@@ -524,52 +527,52 @@ const styles = StyleSheet.create({
   },
   progressMetric: {
     flex: 1,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     gap: 4,
   },
   progressMetricLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.xs,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   progressMetricValue: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.extrabold,
   },
   progressMetricSub: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     lineHeight: 18,
   },
   progressFooter: {
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     gap: 4,
   },
   progressFooterLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.xs,
   },
   progressFooterValue: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
   coachCard: {
     flexDirection: 'row',
     gap: Spacing.md,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.xl,
     padding: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.accent + '44',
+    borderColor: `${colors.accent}44`,
     marginBottom: Spacing.xxl,
     overflow: 'hidden',
   },
@@ -577,7 +580,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
@@ -585,20 +588,20 @@ const styles = StyleSheet.create({
   coachAvatarEmoji: { fontSize: 22 },
   coachContent: { flex: 1 },
   coachBadge: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
     letterSpacing: 0.5,
     marginBottom: 5,
   },
   coachText: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.sm,
     lineHeight: 20,
     marginBottom: Spacing.sm,
   },
   coachCta: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },

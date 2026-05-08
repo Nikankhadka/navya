@@ -26206,6 +26206,12 @@
         "dim": "#555570",
         "white": "#FFFFFF",
         "black": "#000000",
+        "textStrong": "#FFFFFF",
+        "textSubtle": "#555570",
+        "inputPlaceholder": "#555570",
+        "overlay": "rgba(4, 4, 10, 0.72)",
+        "webBackdrop": "#06060B",
+        "webShadow": "rgba(0,0,0,0.8)",
         "id": "dark"
       },
       "light": {
@@ -26232,6 +26238,12 @@
         "dim": "#8B90A6",
         "white": "#FFFFFF",
         "black": "#000000",
+        "textStrong": "#0F1320",
+        "textSubtle": "#7C849A",
+        "inputPlaceholder": "#98A0B3",
+        "overlay": "rgba(15, 23, 42, 0.16)",
+        "webBackdrop": "#EDF1F7",
+        "webShadow": "rgba(15,23,42,0.14)",
         "id": "light"
       }
     },

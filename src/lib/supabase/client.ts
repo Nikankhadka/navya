@@ -1,10 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { isDemoModeAvailable, isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from '@/config/env';
+import {
+  isDemoModeAvailable,
+  isGoogleLoginAvailable,
+  isSupabaseConfigured,
+  supabaseAnonKey,
+  supabaseUrl,
+} from '@/config/env';
 import type { Database } from '@/types/database';
 
 const inMemoryStorage: Record<string, string> = {};
+const isBrowserWeb = Platform.OS === 'web' && typeof window !== 'undefined';
+const shouldAutoRefreshToken = Platform.OS !== 'web' || isBrowserWeb;
 
 function getWebStorage(): Storage | null {
   if (Platform.OS !== 'web' || typeof window === 'undefined') {
@@ -67,13 +75,13 @@ const SecureStoreAdapter = {
   },
 };
 
-export { isDemoModeAvailable, isSupabaseConfigured };
+export { isDemoModeAvailable, isGoogleLoginAvailable, isSupabaseConfigured };
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: SecureStoreAdapter,
-    autoRefreshToken: true,
+    autoRefreshToken: shouldAutoRefreshToken,
     persistSession: true,
-    detectSessionInUrl: Platform.OS === 'web',
+    detectSessionInUrl: false,
   },
 });

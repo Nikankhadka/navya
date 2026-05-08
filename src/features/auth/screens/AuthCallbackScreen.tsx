@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
-import { useRouter } from 'expo-router';
+import type { Session } from '@supabase/supabase-js';
 import { Button } from '@/components/ui';
-import { Colors, Spacing, Typography } from '@/theme';
+import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { createSessionFromUrl, getAuthCallbackError } from '@/lib/auth/redirects';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -12,12 +12,34 @@ import { useAuthStore } from '@/store/useAuthStore';
 type CallbackState = 'loading' | 'success' | 'error';
 
 export default function AuthCallbackScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const router = useRouter();
   const incomingUrl = Linking.useURL();
   const refreshProfile = useAuthStore((state) => state.refreshProfile);
   const hasHandledUrlRef = useRef<string | null>(null);
   const [status, setStatus] = useState<CallbackState>('loading');
   const [message, setMessage] = useState('Navya is verifying your secure sign-in.');
+
+  async function getSessionWithRetry(): Promise<Session | null> {
+    const waitDurationsMs = [0, 150, 300, 600];
+
+    for (const waitMs of waitDurationsMs) {
+      if (waitMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user.id) {
+        return session;
+      }
+    }
+
+    return null;
+  }
 
   useEffect(() => {
     const currentUrl =
@@ -44,24 +66,17 @@ export default function AuthCallbackScreen() {
         return;
       }
 
-      const sessionCreated = await createSessionFromUrl(callbackUrl);
-
-      if (!sessionCreated) {
-        if (!isCancelled) {
-          setStatus('error');
-          setMessage('Navya could not complete sign-in from that link. Request a new one and try again.');
-        }
-        return;
-      }
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const sessionResult = await createSessionFromUrl(callbackUrl);
+      const session = await getSessionWithRetry();
 
       if (!session?.user.id) {
         if (!isCancelled) {
           setStatus('error');
-          setMessage('The sign-in session was not available after callback completion. Please try again.');
+          setMessage(
+            sessionResult.success
+              ? 'The sign-in session was not available after callback completion. Please try again.'
+              : sessionResult.message,
+          );
         }
         return;
       }
@@ -112,7 +127,7 @@ export default function AuthCallbackScreen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      {status === 'loading' ? <ActivityIndicator size="large" color={Colors.text} /> : null}
+      {status === 'loading' ? <ActivityIndicator size="large" color={colors.text} /> : null}
       <Text style={styles.title}>
         {status === 'success' ? 'Sign-in complete' : status === 'error' ? 'Sign-in issue' : 'Completing sign-in'}
       </Text>
@@ -129,28 +144,29 @@ export default function AuthCallbackScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    backgroundColor: Colors.bg,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: 24,
-    fontWeight: Typography.weight.bold,
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  button: {
-    marginTop: Spacing.sm,
-    width: '100%',
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.md,
+      paddingHorizontal: Spacing.xl,
+      backgroundColor: colors.background,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 24,
+      fontWeight: Typography.weight.bold,
+      textAlign: 'center',
+    },
+    subtitle: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    button: {
+      marginTop: Spacing.sm,
+      width: '100%',
+    },
+  });

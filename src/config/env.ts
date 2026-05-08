@@ -17,6 +17,11 @@ export const demoModeFlag =
   process.env.EXPO_PUBLIC_ENABLE_DEMO_MODE ??
   'false';
 
+export const googleLoginFlag =
+  Constants.expoConfig?.extra?.enableGoogleLogin ??
+  process.env.EXPO_PUBLIC_ENABLE_GOOGLE_LOGIN ??
+  'false';
+
 export const isSupabaseConfigured =
   !supabaseUrl.includes('placeholder') && supabaseAnonKey !== 'placeholder-anon-key';
 
@@ -24,3 +29,5 @@ export const isHostedAppEnv = appEnv === 'preview' || appEnv === 'production';
 
 export const isDemoModeAvailable =
   demoModeFlag === 'true' || (!isHostedAppEnv && !isSupabaseConfigured);
+
+export const isGoogleLoginAvailable = googleLoginFlag === 'true';

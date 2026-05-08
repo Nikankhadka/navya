@@ -2,9 +2,10 @@ import { useEffect } from 'react';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Colors } from '@/theme';
+import { useAppTheme } from '@/theme';
 
 export function AuthGate() {
+  const { colors } = useAppTheme();
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
   const isInitialized = useAuthStore((state) => state.isInitialized);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -59,8 +60,15 @@ export function AuthGate() {
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.bg }}>
-      <ActivityIndicator size="large" color={Colors.text} />
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: colors.background,
+      }}
+    >
+      <ActivityIndicator size="large" color={colors.text} />
     </View>
   );
 }

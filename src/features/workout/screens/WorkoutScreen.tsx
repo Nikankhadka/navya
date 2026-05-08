@@ -8,7 +8,7 @@ import {
   Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Radius, Typography } from '@/theme';
+import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useWorkoutStore } from '@/store/useWorkoutStore';
 import { Card, EmptyState } from '@/components/ui';
 import { ExerciseRow, PlanDayCard } from '@/features/workout/components';
@@ -24,6 +24,8 @@ import { isVisualTestScenario } from '@/utils/visualTest';
 import { MOCK_PLAN } from '@/features/demo/mockData';
 
 export default function WorkoutScreen() {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const userId = user?.id;
@@ -438,8 +440,9 @@ export default function WorkoutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.bg },
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -449,12 +452,12 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
   },
   screenTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
   },
   timerText: {
-    color: Colors.green,
+    color: colors.green,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
     marginTop: 2,
@@ -464,10 +467,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: Colors.green,
+    borderColor: colors.green,
   },
   finishBtnText: {
-    color: Colors.green,
+    color: colors.green,
     fontWeight: Typography.weight.bold,
     fontSize: Typography.size.sm,
   },
@@ -482,14 +485,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   tabActive: {
-    backgroundColor: Colors.accent,
-    borderColor: Colors.accent,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   tabText: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.medium,
   },
@@ -507,17 +510,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: Spacing.sm,
   },
-  progressLabel: { color: Colors.muted, fontSize: Typography.size.sm },
-  progressPct: { color: Colors.accent, fontWeight: Typography.weight.bold, fontSize: Typography.size.sm },
+  progressLabel: { color: colors.muted, fontSize: Typography.size.sm },
+  progressPct: { color: colors.accent, fontWeight: Typography.weight.bold, fontSize: Typography.size.sm },
   progressBar: {
     height: 8,
-    backgroundColor: Colors.border,
+    backgroundColor: colors.border,
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: 4,
   },
 
@@ -531,24 +534,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: Radius.full,
-    backgroundColor: Colors.accentMuted,
+    backgroundColor: colors.accentMuted,
     borderWidth: 1,
-    borderColor: Colors.accent + '55',
+    borderColor: `${colors.accent}55`,
     marginBottom: Spacing.sm,
   },
   todayBadgeText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: 10,
     fontWeight: Typography.weight.bold,
     letterSpacing: 1,
   },
   todayTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
     marginBottom: 4,
   },
-  todayMeta: { color: Colors.muted, fontSize: Typography.size.sm },
+  todayMeta: { color: colors.muted, fontSize: Typography.size.sm },
   exercisePreview: { gap: Spacing.sm, marginBottom: Spacing.lg },
   previewRow: {
     flexDirection: 'row',
@@ -556,17 +559,17 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   previewDot: {
-    width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.dim,
+    width: 6, height: 6, borderRadius: 3, backgroundColor: colors.dim,
   },
   previewName: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     flex: 1,
   },
-  previewMeta: { color: Colors.dim, fontSize: Typography.size.xs },
-  moreExercises: { color: Colors.dim, fontSize: Typography.size.xs, marginLeft: 14 },
+  previewMeta: { color: colors.dim, fontSize: Typography.size.xs },
+  moreExercises: { color: colors.dim, fontSize: Typography.size.xs, marginLeft: 14 },
   startBtn: {
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     borderRadius: Radius.lg,
     paddingVertical: 14,
     alignItems: 'center',
@@ -579,7 +582,7 @@ const styles = StyleSheet.create({
   },
   modalScreen: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: colors.background,
   },
   modalScroll: {
     flex: 1,
@@ -598,19 +601,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   modalDayLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
     letterSpacing: 1.4,
     marginBottom: 4,
   },
   modalTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
   },
   modalSubtitle: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     marginTop: 4,
   },
@@ -619,10 +622,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   modalCloseText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
@@ -630,7 +633,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   summaryTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
     marginBottom: Spacing.md,
@@ -644,18 +647,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
-    backgroundColor: Colors.accentMuted,
+    backgroundColor: colors.accentMuted,
     borderWidth: 1,
-    borderColor: Colors.accent + '55',
+    borderColor: `${colors.accent}55`,
   },
   summaryTagText: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
     textTransform: 'capitalize',
   },
   planSectionTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
     marginBottom: Spacing.md,
@@ -664,10 +667,10 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   planExerciseCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.xl,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     padding: Spacing.lg,
   },
   planExerciseTop: {
@@ -682,7 +685,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
   },
   exerciseOrderText: {
     color: '#fff',
@@ -693,12 +696,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   planExerciseName: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
   },
   planExerciseMeta: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     marginTop: 4,
   },
@@ -709,11 +712,11 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   exerciseInfoLabel: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
   },
   exerciseInfoValue: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     textTransform: 'capitalize',
     flex: 1,
@@ -723,12 +726,12 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     padding: Spacing.md,
     borderRadius: Radius.lg,
-    backgroundColor: Colors.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   exerciseNotesLabel: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
     letterSpacing: 1,
@@ -736,12 +739,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   exerciseNotesText: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },
   exerciseInstructions: {
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: Typography.size.sm,
     lineHeight: 20,
     marginTop: Spacing.md,
@@ -751,20 +754,20 @@ const styles = StyleSheet.create({
   completeCard: {
     alignItems: 'center',
     paddingVertical: 48,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: Radius.xxl,
     borderWidth: 1,
-    borderColor: Colors.green + '44',
+    borderColor: `${colors.green}44`,
   },
   completeEmoji: { fontSize: 52 },
   completeTitle: {
-    color: Colors.green,
+    color: colors.green,
     fontSize: Typography.size.xxl,
     fontWeight: Typography.weight.extrabold,
     marginTop: Spacing.md,
   },
   completeSub: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.md,
     marginTop: Spacing.xs,
     marginBottom: Spacing.xxl,
@@ -772,21 +775,21 @@ const styles = StyleSheet.create({
   completeStats: { flexDirection: 'row', gap: 48 },
   completeStat: { alignItems: 'center' },
   completeStatVal: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.xxxl,
     fontWeight: Typography.weight.extrabold,
   },
-  completeStatLabel: { color: Colors.muted, fontSize: Typography.size.sm },
+  completeStatLabel: { color: colors.muted, fontSize: Typography.size.sm },
 
   // Plan
   planHeaderCard: { marginBottom: Spacing.lg },
   planName: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
     marginBottom: 4,
   },
-  planMeta: { color: Colors.muted, fontSize: Typography.size.sm },
+  planMeta: { color: colors.muted, fontSize: Typography.size.sm },
   historySummaryCard: {
     marginTop: Spacing.lg,
     gap: Spacing.lg,
@@ -798,31 +801,31 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   historySummaryTitle: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
   },
   historySummarySub: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     marginTop: 4,
   },
   historySummaryBadge: {
-    backgroundColor: Colors.accentMuted,
+    backgroundColor: colors.accentMuted,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.accent + '55',
+    borderColor: `${colors.accent}55`,
   },
   historySummaryBadgeValue: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.extrabold,
   },
   historySummaryBadgeLabel: {
-    color: Colors.accent,
+    color: colors.accent,
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.semibold,
   },
@@ -834,19 +837,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: colors.border,
     paddingTop: Spacing.sm,
   },
   historyRowText: {
     flex: 1,
   },
   historyDay: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
   },
   historyMeta: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     marginTop: 2,
   },
@@ -855,16 +858,16 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   historyStatPrimary: {
-    color: Colors.text,
+    color: colors.text,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
   },
   historyStatSecondary: {
-    color: Colors.dim,
+    color: colors.dim,
     fontSize: Typography.size.xs,
   },
   historyEmptyText: {
-    color: Colors.muted,
+    color: colors.muted,
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },

@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import { Button } from './Button';
-import { Colors, Spacing, Typography } from '@/theme';
+import { Spacing, Typography, useAppTheme } from '@/theme';
 
 interface EmptyStateProps {
   emoji: string;
@@ -11,12 +11,14 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ emoji, title, subtitle, action, onAction }: EmptyStateProps) {
+  const { colors } = useAppTheme();
+
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 48 }}>
       <Text style={{ fontSize: 36, marginBottom: Spacing.md }}>{emoji}</Text>
       <Text
         style={{
-          color: Colors.text,
+          color: colors.text,
           fontSize: Typography.size.xl,
           fontWeight: Typography.weight.bold,
           textAlign: 'center',
@@ -27,7 +29,7 @@ export function EmptyState({ emoji, title, subtitle, action, onAction }: EmptySt
       {subtitle ? (
         <Text
           style={{
-            color: Colors.muted,
+            color: colors.muted,
             fontSize: Typography.size.md,
             marginTop: Spacing.sm,
             textAlign: 'center',

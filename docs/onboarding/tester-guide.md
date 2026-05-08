@@ -90,6 +90,34 @@ Optional:
 
 - Configure Apple if you want to test Apple sign-in on iOS.
 
+### Google Auth Details
+
+If Supabase shows `Unsupported provider: provider is not enabled`, the Google provider itself is still off or missing credentials.
+
+Use this split:
+
+- In Google Cloud Console:
+  - Create an OAuth client of type `Web application`
+  - Add your web origin such as `http://localhost:8081`
+  - Add this Authorized redirect URI:
+    - `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
+- In Supabase Dashboard:
+  - Open `Authentication` -> `Providers` -> `Google`
+  - Enable Google
+  - Paste the Google OAuth `Client ID`
+  - Paste the Google OAuth `Client Secret`
+- In Supabase `Authentication` -> `URL Configuration`:
+  - Keep Navya app callback URLs allow-listed:
+    - `navya://auth/callback`
+    - `http://localhost:8081/auth/callback`
+    - your preview `/auth/callback` URL
+    - your production `/auth/callback` URL
+
+Important:
+
+- Google redirects back to the Supabase callback URL.
+- Supabase then redirects back to Navya's `/auth/callback` URL.
+
 ## Step 3: Apply The Navya Schema
 
 Run these migrations against your Supabase project:

@@ -82,7 +82,7 @@ function main() {
   run("npm run typecheck");
 
   if (args.has("--smoke-web")) {
-    run("npx expo export --platform web --output-dir dist/web-smoke");
+    run("node scripts/export-web.js dist/web-smoke");
   } else {
     console.log("Project verification passed.");
   }

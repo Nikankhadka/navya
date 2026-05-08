@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors, Radius, Spacing, Typography } from '@/theme';
+import { Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import type { WorkoutPlanDay } from '@/features/workout/types';
 
 interface PlanDayCardProps {
@@ -9,6 +9,8 @@ interface PlanDayCardProps {
 }
 
 export function PlanDayCard({ day, onPress, isToday }: PlanDayCardProps) {
+  const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const muscleGroups = [...new Set(day.plan_exercises.flatMap((pe) => pe.exercise.muscle_groups))].slice(0, 3);
 
   return (
@@ -46,72 +48,73 @@ export function PlanDayCard({ day, onPress, isToday }: PlanDayCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  planCard: {
-    backgroundColor: Colors.card,
-    borderRadius: Radius.xl,
-    padding: Spacing.xl,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.md,
-  },
-  planCardToday: {
-    borderColor: Colors.accent,
-  },
-  planCardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.sm,
-  },
-  planDayLabel: {
-    color: Colors.muted,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 1.5,
-    marginBottom: 2,
-  },
-  planDayName: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  todayBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.accent + '22',
-    borderWidth: 1,
-    borderColor: Colors.accent + '55',
-  },
-  todayBadgeText: {
-    color: Colors.accent,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.bold,
-  },
-  planCardMeta: {
-    marginBottom: Spacing.md,
-  },
-  planMeta: {
-    color: Colors.muted,
-    fontSize: Typography.size.sm,
-  },
-  muscleTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  muscleTag: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-  },
-  muscleTagText: {
-    color: Colors.dim,
-    fontSize: Typography.size.xs,
-    textTransform: 'capitalize',
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    planCard: {
+      backgroundColor: colors.card,
+      borderRadius: Radius.xl,
+      padding: Spacing.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginBottom: Spacing.md,
+    },
+    planCardToday: {
+      borderColor: colors.accent,
+    },
+    planCardTop: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: Spacing.sm,
+    },
+    planDayLabel: {
+      color: colors.muted,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: 1.5,
+      marginBottom: 2,
+    },
+    planDayName: {
+      color: colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    todayBadge: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 3,
+      borderRadius: Radius.full,
+      backgroundColor: `${colors.accent}22`,
+      borderWidth: 1,
+      borderColor: `${colors.accent}55`,
+    },
+    todayBadgeText: {
+      color: colors.accent,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.bold,
+    },
+    planCardMeta: {
+      marginBottom: Spacing.md,
+    },
+    planMeta: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+    },
+    muscleTags: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
+    },
+    muscleTag: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      borderRadius: Radius.full,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+    },
+    muscleTagText: {
+      color: colors.dim,
+      fontSize: Typography.size.xs,
+      textTransform: 'capitalize',
+    },
+  });

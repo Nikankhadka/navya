@@ -5,19 +5,30 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TamaguiProvider, Theme } from 'tamagui';
 import { queryClient } from '@/config/queryClient';
 import { WebWrapper } from '@/components/layout/WebWrapper';
+import { AppThemeProvider, useAppTheme } from '@/theme';
 import { tamaguiConfig } from '../../tamagui.config';
 
 export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
-      <TamaguiProvider config={tamaguiConfig} defaultTheme="dark">
-        <Theme name="dark">
-          <SafeAreaProvider>
-            <StatusBar style="light" />
-            <WebWrapper>{children}</WebWrapper>
-          </SafeAreaProvider>
-        </Theme>
-      </TamaguiProvider>
+      <AppThemeProvider>
+        <ThemedAppProviders>{children}</ThemedAppProviders>
+      </AppThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+function ThemedAppProviders({ children }: PropsWithChildren) {
+  const { isDark, resolvedTheme } = useAppTheme();
+
+  return (
+    <TamaguiProvider config={tamaguiConfig} defaultTheme={resolvedTheme}>
+      <Theme name={resolvedTheme}>
+        <SafeAreaProvider>
+          <StatusBar style={isDark ? 'light' : 'dark'} />
+          <WebWrapper>{children}</WebWrapper>
+        </SafeAreaProvider>
+      </Theme>
+    </TamaguiProvider>
   );
 }
