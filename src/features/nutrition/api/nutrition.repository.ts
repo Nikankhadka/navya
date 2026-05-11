@@ -22,7 +22,11 @@ import type {
   RecentFood,
   WaterLog,
 } from '@/types/app';
-import { MOCK_DAILY_NUTRITION, MOCK_PROFILE } from '@/features/demo/mockData';
+import {
+  MOCK_DAILY_NUTRITION,
+  MOCK_FOOD_SEARCH_RESULTS,
+  MOCK_PROFILE,
+} from '@/features/demo/mockData';
 import {
   getNutritionDatabaseAsync,
   isNutritionLocalDatabaseSupported,
@@ -1125,6 +1129,12 @@ export const nutritionRepository = {
 
     if (!trimmedQuery) {
       return [];
+    }
+
+    if (shouldUseDemoNutrition(userId)) {
+      return MOCK_FOOD_SEARCH_RESULTS.filter((f) =>
+        f.name.toLowerCase().includes(trimmedQuery.toLowerCase()),
+      );
     }
 
     const db = await getNutritionDatabaseAsync();
