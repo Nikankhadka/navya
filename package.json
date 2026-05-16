@@ -12,12 +12,14 @@
     "typecheck": "tsc --noEmit",
     "lint": "npm run typecheck",
     "verify": "node scripts/verify-project.js",
+    "test": "jest --passWithNoTests",
+    "test:coverage": "jest --coverage --coverageThreshold='{\"global\":{\"lines\":50}}'",
+    "ci:local": "npm run typecheck && npm run test -- --passWithNoTests",
     "build:nutrition-catalog": "node scripts/build-nutrition-catalog.js",
     "smoke:web": "node scripts/verify-project.js --smoke-web",
     "visual:smoke": "node scripts/visual-smoke.js",
     "seed:tester": "node scripts/prepare-tester-seed.js",
-    "validate:tester": "node scripts/prepare-tester-validation.js",
-    "sync:codex-skills": "node scripts/sync-codex-skills.js"
+    "validate:tester": "node scripts/prepare-tester-validation.js"
   },
   "engines": {
     "node": ">=20.10.0",

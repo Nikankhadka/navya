@@ -8,3 +8,20 @@ expo-env.d.ts
 .env.local
 .expo
 dist/web-smoke
+
+# Coverage outputs
+/coverage
+/coverage-final.json
+
+# Secret scanning
+.gitleaks.toml
+gitleaks-report.json
+
+# Agent local overrides
+.agent/local.md
+
+# OS files
+.DS_Store
+*.swp
+*.swo
+*~

@@ -1,0 +1,23 @@
+---
+description: General coding rules for all files
+globs: ["**/*.ts", "**/*.tsx", "**/*.js"]
+alwaysApply: true
+---
+
+DO NOT GIVE ME HIGH LEVEL EXPLANATIONS. If I ask for a fix,
+give me the actual code change. If I ask for an explanation,
+give me the actual explanation with examples.
+
+Never rewrite an entire file when a targeted change is possible.
+Always show me a diff, not a replacement.
+Ask before adding new dependencies.
+Prefer existing patterns in the codebase over introducing new ones.
+
+DO NOT make changes to files in these directories without explicit permission:
+- `src/config/`
+- `supabase/migrations/`
+- `tsconfig.json`, `app.json`, `eas.json`
+- `.env` files
+- `metro.config.js`
+
+Always check CLAUDE.md first for project-specific rules before starting work.

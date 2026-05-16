@@ -2,81 +2,57 @@
 
 This document describes how a task moves through roles in the Navya AI team — from intake to completion. Think of it as the routing protocol for all substantial work.
 
+## The Core Workflow: Spec → Plan → Build → Ship
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                       1. INTAKE                             │
-│   User provides a task description                          │
-│   ↓                                                         │
-│   Work Router classifies:                                   │
-│   ├─ Is the role obvious? → Route directly                  │
-│   └─ Ambiguous / multi-role? → Escalate to CTO Expert       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     2. ROUTING PREAMBLE                      │
-│   Selected role states:                                     │
-│   1. "Role selected: [role name]"                           │
-│   2. "Constraints applied: [guardrails/docs in play]"       │
-│   3. "Artifacts to update: [files that will change]"        │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   3. EXECUTION (per role)                    │
-│                                                                                             │
-│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│   │  PO           │  │ Sr Eng App   │  │ Sr Eng Plat  │     │
-│   │  Stories,     │  │ Screens,     │  │ Schema,      │     │
-│   │  acceptance,  │  │ hooks, nav,  │  │ RLS, auth,   │     │
-│   │  backlog      │  │ state        │  │ migrations   │     │
-│   └──────┬───────┘  └──────┬───────┘  └──────┬───────┘     │
-│          │                │                │              │
-│   ┌──────┴───────┐  ┌──────┴───────┐                       │
-│   │ PRD (Design) │  │ CTO Expert   │                       │
-│   │ UX, copy,    │  │ Architecture,│                       │
-│   │ flow review  │  │ standards,   │                       │
-│   │              │  │ escalation   │                       │
-│   └──────────────┘  └──────────────┘                       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  4. HANDOFF TRIGGERS                        │
-│                                                                                             │
-│   During execution, a role may need to hand off:            │
-│   ├─ Cross-domain dependency (e.g., app needs new API)      │
-│   │   → Coordinate laterally: App ↔ Platform               │
-│   ├─ Scope or priority question                             │
-│   │   → Coordinate with PO                                  │
-│   ├─ UX concern                                             │
-│   │   → Coordinate with PRD                                 │
-│   ├─ Architecture risk / ambiguity                          │
-│   │   → Escalate to CTO Expert                              │
-│   └─ Blocked by external factor                             │
-│       → Escalate to CTO Expert for resolution               │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│               5. COMPLETION & TRAIL UPDATE                   │
-│                                                                                             │
-│   Definition of Done checklist:                             │
-│   ├─ Implementation is complete                             │
-│   ├─ npm run typecheck passes                               │
-│   ├─ Relevant smoke checks pass                             │
-│   ├─ Docs are updated (see Artifacts to update)   
-if possible do browser testing with playwright the for the feature u built           │
-│   └─ docs/execution/current-status.md records:              │
-│       • What changed                                        │
-│       • What comes next                                     │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    THE AI DEV PIPELINE                           │
+│                                                                  │
+│  SPEC → PLAN → CHUNK → BUILD → VERIFY → COMMIT → REVIEW → SHIP │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### Phase 0: REFINE (Prompt Master — Always First)
+Before any agent touches code, run your prompt through the Prompt Master.
+
+The Prompt Master applies the **PROMPT framework** (Purpose, Role, Objective, Materials, Process, Testing) to:
+1. Detect ambiguity, missing context, and scope creep in your raw prompt
+2. Fill in project context from CLAUDE.md, TASKS.md, and existing files
+3. Structure the prompt using templates from `.agent/skills/prompt-master.md`
+4. Route to the appropriate agent or command
+5. Present a Refinement Report for your approval
+
+This single step dramatically improves AI output quality — use `/refine` or route through the `prompt-master` agent.
+
+### Phase 1: SPEC (You, AI-Assisted)
+Before any agent writes code, you need a spec. Every substantial task starts with acceptance criteria in a user story or SPEC.md.
+
+### Phase 2: PLAN (AI-Generated, You-Approved)
+This step alone improves AI success rates from ~33% to ~66% on complex tasks. Before any code:
+1. List every file you will create or modify
+2. List every function/component/hook you'll add or change
+3. Identify any ambiguities or missing info
+4. Propose the implementation order
+5. Flag any risks or edge cases
+Wait for approval before proceeding.
+
+### Phase 3: CHUNK (Break Into Atomic Tasks)
+Never give an agent a task larger than ~200 lines of net new code at a time. Break the plan into TASK-001, TASK-002, etc.
+
+### Phase 4: BUILD (Agent Executes, You Verify)
+For each task: start from clean git state → give agent one task with full context → agent executes → review the diff → run quality gates → commit.
+
+### Phase 5: VERIFY
+Run: `npm run ci:local` (lint + types + tests). Manually check edge cases, error handling, hardcoded values.
+
+### Phase 6: COMMIT → REVIEW → SHIP
+Use the commit message format. Update TASKS.md and PROJECT_JOURNAL.md.
+
+---
 
 ## Default Intake Preamble
 
-When a task enters via the Work Router, the selected role must state:
-
+When a task enters, the selected agent must state:
 ```
 Role selected: [role name]
 Constraints applied: [list of relevant guardrails or doc boundaries]
@@ -107,15 +83,60 @@ Coordinate directly (without CTO) when:
 | PO ↔ PRD | Flow definition, user research, competitive positioning |
 | PO ↔ App/Platform | Technical feasibility during story refinement |
 
-## Role-to-Skill Map
+## Context Management Rules
 
-Each role corresponds to a BMAD skill in `plugins/navya-ai-team/skills/`:
+| Context Level | Action |
+|---|---|
+| 0–50% | Work freely |
+| 50–70% | Stay aware, avoid big tangents |
+| 70–85% | Run `/compact` |
+| 85%+ | End session. Update PROJECT_JOURNAL.md. Use `/clear` |
 
-| Role | BMAD Skill |
-|------|-----------|
-| CTO Expert | `navya-cto-expert` |
-| Senior Engineer App | `navya-senior-engineer-app` |
-| Senior Engineer Platform | `navya-senior-engineer-platform` |
-| Product Owner | `navya-product-owner` |
-| Product Research Designer | `navya-product-research-designer` |
-| Work Router | `navya-work-router` |
+## Session Template
+
+### Session Start
+```
+Read CLAUDE.md, TASKS.md, PROJECT_JOURNAL.md.
+Tell me the current state in 3 sentences.
+```
+
+### Task Start
+```
+I'm working on TASK-XXX: [description].
+First: list what files you'll change.
+Wait for my approval before writing any code.
+```
+
+### Session End
+```
+Update PROJECT_JOURNAL.md: what we built, current state, known issues, what's next.
+```
+
+## Anti-Patterns (What NOT to Do)
+
+| Anti-Pattern | Why It Fails | Fix |
+|---|---|---|
+| Paste entire files into context | Context bloat → degraded output | Use @file syntax |
+| Give AI a vague task | Low success rate on complex work | Write a spec first |
+| Let AI pick dependencies | Supply chain risk, bloat | You choose deps, AI implements |
+| Code review the whole file | Misses subtle AI errors | Review the diff only |
+| Let AI rewrite configs | Breaks team standards | Lock tsconfig, eslint in CLAUDE.md |
+| Long, chained sessions | Context degrades after ~70% | Fresh session per task |
+| No tests on AI output | Logic errors ship silently | Tests are non-negotiable |
+| `any` types everywhere | Type safety erodes | Strict TypeScript in CLAUDE.md |
+| No secret scanning | Credentials leak in commits | gitleaks pre-commit hook |
+| One big PR | Hard to review, hard to revert | One task = one PR |
+
+## Agent-Agnostic Equivalents
+| Role | Agent File/Command |
+|------|--------------------|
+| Prompt Master | `.agent/agents/prompt-master.md` |
+| Technical Designer | `.agent/agents/technical-designer.md` |
+| Task Executor | `.agent/agents/task-executor.md` |
+| Code Reviewer | `.agent/agents/code-reviewer.md` |
+| Refine Prompt | `.agent/commands/refine.md` |
+| Implement Feature | `.agent/commands/implement.md` |
+| Diagnose Bug | `.agent/commands/diagnose.md` |
+| Review Diff | `.agent/commands/review.md` |
+
+See `AGENTS.md` for the full multi-agent configuration.

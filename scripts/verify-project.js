@@ -29,11 +29,8 @@ function verifyFiles() {
     ".env.example",
     ".nvmrc",
     "eas.json",
-    ".agents/plugins/marketplace.json",
-    "plugins/navya-ai-team/.codex-plugin/plugin.json",
     "docs/ai-team/README.md",
     "docs/execution/current-status.md",
-    "scripts/sync-codex-skills.js",
     "src/types/database.ts",
   ];
 
@@ -69,7 +66,7 @@ function verifyPackageJson() {
   );
   const scripts = packageJson.scripts ?? {};
 
-  ["typecheck", "verify", "smoke:web", "sync:codex-skills"].forEach((name) => {
+  ["typecheck", "verify", "smoke:web"].forEach((name) => {
     assert(Boolean(scripts[name]), `Missing package.json script: ${name}`);
   });
 }
