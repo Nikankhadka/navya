@@ -7,3 +7,4 @@ A substantial task is done when:
 - relevant smoke checks pass
 - docs are updated
 - `docs/execution/current-status.md` records what changed and what comes next
+-use playwright to test the feature 

@@ -15,13 +15,18 @@ For substantial work, the default behavior is:
 4. Perform the work
 5. Update the execution and documentation trail
 
+See [coding-flow.md](coding-flow.md) for the full task lifecycle, handoff triggers, and escalation criteria.
+
 ## Roles
 
-- `CTO Expert`: architecture, standards, cross-cutting decisions, escalation, release risk
-- `Senior Engineer App`: Expo UI, hooks, screens, navigation, client state
-- `Senior Engineer Platform`: schema, RLS, auth, Edge Functions, release plumbing
-- `Product Research Designer`: UX friction, copy, user-flow critique, product clarity
-- `Product Owner`: stories, sprint slicing, acceptance criteria, backlog and app flow definition
+| Role | File | Summary |
+|------|------|---------|
+| Work Router | [roles/work-router.md](roles/work-router.md) | Default intake routing, role selection, task classification |
+| CTO Expert | [roles/cto-expert.md](roles/cto-expert.md) | Architecture, standards, cross-cutting decisions, escalation, release risk |
+| Senior Engineer App | [roles/senior-engineer-app.md](roles/senior-engineer-app.md) | Expo UI, hooks, screens, navigation, client state |
+| Senior Engineer Platform | [roles/senior-engineer-platform.md](roles/senior-engineer-platform.md) | Schema, RLS, auth, Edge Functions, release plumbing |
+| Product Owner | [roles/product-owner.md](roles/product-owner.md) | Stories, sprint slicing, acceptance criteria, backlog and app flow definition |
+| Product Research Designer | [roles/product-research-designer.md](roles/product-research-designer.md) | UX friction, copy, user-flow critique, product clarity |
 
 ## Canonical Constraints
 
@@ -33,6 +38,17 @@ For substantial work, the default behavior is:
 - No direct AI calls from the client
 - Every substantial task updates the repo trail
 
+See [constraints/global-guardrails.md](constraints/global-guardrails.md) for the full constraint set.
+
+## Handoff Rules
+
+- [handoffs/definition-of-ready.md](handoffs/definition-of-ready.md) — when a task is ready to start
+- [handoffs/definition-of-done.md](handoffs/definition-of-done.md) — when a task is complete
+
+## Role Boundaries
+
+For concerns that could be claimed by multiple roles, see [role-boundary-matrix.md](role-boundary-matrix.md).
+
 ## Required Repo Updates
 
 Substantial work should update at least one of:
@@ -43,9 +59,3 @@ Substantial work should update at least one of:
 - `docs/architecture/*`
 - `docs/onboarding/*`
 - `docs/standards/*`
-
-## Supporting Files
-
-- Global guardrails: [constraints/global-guardrails.md](/home/nikan/projects/navya/docs/ai-team/constraints/global-guardrails.md)
-- Role definitions: [roles/cto-expert.md](/home/nikan/projects/navya/docs/ai-team/roles/cto-expert.md)
-- Handoff rules: [handoffs/definition-of-ready.md](/home/nikan/projects/navya/docs/ai-team/handoffs/definition-of-ready.md)
