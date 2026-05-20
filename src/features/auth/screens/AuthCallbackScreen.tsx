@@ -9,10 +9,50 @@ import { createSessionFromUrl, getAuthCallbackError } from "@/lib/auth/redirects
 import { supabase } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/useAuthStore";
 
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    buttonContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      gap: Spacing.md,
+      paddingHorizontal: Spacing.xl,
+      paddingBottom: Spacing.xxl,
+    },
+    continueTitle: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: Typography.weight.bold,
+      textAlign: "center",
+      marginBottom: Spacing.md,
+    },
+    button: {
+      width: "100%",
+    },
+    redirectNotice: {
+      color: colors.muted,
+      fontSize: 12,
+      textAlign: "center",
+    },
+    redirectComplete: {
+      position: "absolute",
+      top: Spacing.md,
+      left: 0,
+      right: 0,
+      color: colors.textSecondary,
+      fontSize: 12,
+      textAlign: "center",
+    },
+  });
+
 type CallbackState = "loading" | "success" | "error";
 
 export default function AuthCallbackScreen() {
   const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const router = useRouter();
   const incomingUrl = Linking.useURL();
   const refreshProfile = useAuthStore((state) => state.refreshProfile);
@@ -331,42 +371,3 @@ export default function AuthCallbackScreen() {
     </View>
   );
 }
-
-const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    buttonContainer: {
-      alignItems: "center",
-      justifyContent: "center",
-      gap: Spacing.md,
-      paddingHorizontal: Spacing.xl,
-      paddingBottom: Spacing.xxl,
-    },
-    continueTitle: {
-      color: colors.text,
-      fontSize: 20,
-      fontWeight: Typography.weight.bold,
-      textAlign: "center",
-      marginBottom: Spacing.md,
-    },
-    button: {
-      width: "100%",
-    },
-    redirectNotice: {
-      color: colors.muted,
-      fontSize: 12,
-      textAlign: "center",
-    },
-    redirectComplete: {
-      position: "absolute",
-      top: Spacing.md,
-      left: 0,
-      right: 0,
-      color: colors.textSecondary,
-      fontSize: 12,
-      textAlign: "center",
-    },
-  });

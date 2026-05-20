@@ -117,7 +117,7 @@ export default function LoginScreen() {
         open: true,
         title: "Check your inbox",
         message:
-          "We sent a sign-in link to your email. Open it on this device to continue.",
+          "Check mail and click to continue.",
         variant: "default",
       });
     } catch (error) {
