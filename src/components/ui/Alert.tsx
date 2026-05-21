@@ -1,6 +1,5 @@
-import { Button, YStack } from "tamagui";
-import { View, StyleSheet, Text } from "react-native";
-import { useAppTheme } from "@/theme";
+import { useEffect } from "react";
+import { useToastController } from "tamagui";
 
 interface AlertProps {
   title: string;
@@ -16,6 +15,7 @@ interface AlertProps {
     label: string;
     onPress: () => void;
   };
+  duration?: number;
 }
 
 export function Alert({
@@ -26,89 +26,49 @@ export function Alert({
   variant = "default",
   action,
   cancel,
+  duration = 4000,
 }: AlertProps) {
-  const { colors } = useAppTheme();
+  const toast = useToastController();
 
-  const backgroundColor = variant === "destructive" ? colors.red : colors.card;
-  const titleColor = variant === "destructive" ? colors.red : colors.text;
-  const messageColor =
-    variant === "destructive" ? colors.red : colors.textSecondary;
+  useEffect(() => {
+    if (open) {
+      toast.show(title, {
+        message,
+        duration,
+        native: false,
+        ...(variant === "destructive"
+          ? {
+              preset: "error",
+            }
+          : {
+              preset: "ok",
+            }),
+        action: action
+          ? {
+              label: action.label,
+              onPress: () => {
+                action.onPress();
+                toast.hide();
+              },
+            }
+          : cancel
+            ? {
+                label: cancel.label,
+                onPress: () => {
+                  cancel.onPress();
+                  toast.hide();
+                },
+              }
+            : undefined,
+      });
+    } else {
+      toast.hide();
+    }
 
-  return (
-    <View
-      style={[
-        styles.alert,
-        {
-          backgroundColor,
-          borderColor: variant === "destructive" ? colors.red : colors.border,
-        },
-      ]}
-    >
-      <YStack style={styles.content}>
-        <Text style={[styles.title, { color: titleColor }]}>{title}</Text>
-        {message && (
-          <Text style={[styles.message, { color: messageColor }]}>
-            {message}
-          </Text>
-        )}
-        {(action || cancel) && (
-          <View style={styles.actions}>
-            {cancel && (
-              <Button
-                variant="outlined"
-                size="sm"
-                onPress={cancel.onPress}
-                style={styles.actionButton}
-              >
-                {cancel.label}
-              </Button>
-            )}
-            {action && (
-              <Button
-                size="sm"
-                onPress={action.onPress}
-                style={[styles.actionButton, cancel && { marginLeft: "$2" }]}
-                backgroundColor={
-                  variant === "destructive" ? colors.red : colors.accent
-                }
-              >
-                {action.label}
-              </Button>
-            )}
-          </View>
-        )}
-      </YStack>
-    </View>
-  );
+    return () => {
+      toast.hide();
+    };
+  }, [open, title, message, variant, action, cancel, duration, toast]);
+
+  return null;
 }
-
-const styles = StyleSheet.create({
-  alert: {
-    maxWidth: 400,
-    alignSelf: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    padding: 16,
-  },
-  content: {
-    gap: 12,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  message: {
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingTop: 8,
-  },
-  actionButton: {
-    minWidth: 80,
-  },
-});

@@ -1,19 +1,26 @@
-import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import type { Session } from "@supabase/supabase-js";
-import { Alert as TamaguiAlert, Button } from "@/components/ui";
+import { Alert, Button } from "@/components/ui";
 import { Spacing, Typography, useAppTheme, type ThemeColors } from "@/theme";
 import { createSessionFromUrl, getAuthCallbackError } from "@/lib/auth/redirects";
 import { supabase } from "@/lib/supabase/client";
+import { logger } from "@/lib/logger";
 import { useAuthStore } from "@/store/useAuthStore";
+import { Text, YStack } from "tamagui";
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
     },
     buttonContainer: {
       alignItems: "center",
@@ -37,18 +44,16 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: 12,
       textAlign: "center",
     },
-    redirectComplete: {
-      position: "absolute",
-      top: Spacing.md,
-      left: 0,
-      right: 0,
-      color: colors.textSecondary,
-      fontSize: 12,
-      textAlign: "center",
-    },
   });
 
-type CallbackState = "loading" | "success" | "error";
+interface AlertData {
+  open: boolean;
+  title: string;
+  message: string;
+  variant: "default" | "destructive";
+  action?: { label: string; onPress: () => void };
+  cancel?: { label: string; onPress: () => void };
+}
 
 export default function AuthCallbackScreen() {
   const { colors } = useAppTheme();
@@ -57,182 +62,100 @@ export default function AuthCallbackScreen() {
   const incomingUrl = Linking.useURL();
   const refreshProfile = useAuthStore((state) => state.refreshProfile);
   const hasHandledUrlRef = useRef<string | null>(null);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Callback states managed via Tamagui Alert pattern
   const [loading, setLoading] = useState(true);
-  const [alertState, setAlertState] = useState<AlertData | null>({
-    open: false,
-    title: "",
-    message: "",
-    variant: "default",
-  });
+  const [alertState, setAlertState] = useState<AlertData | null>(null);
+  const [countdown, setCountdown] = useState(4);
 
-  interface AlertData {
-    open: boolean;
-    title: string;
-    message: string;
-    variant: "default" | "destructive";
-    onOpenChange?: (open: boolean) => void;
-  }
-
-  // Auto-redirect timer reference for cleanup
-  const redirectTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    const currentUrl = incomingUrl ?? 
-      (typeof window !== "undefined" ? window.location.href : null);
-
-    if (!currentUrl || hasHandledUrlRef.current === currentUrl) {
-      return () => {
-        if (redirectTimerRef.current) {
-          clearTimeout(redirectTimerRef.current);
-        }
-      };
+  const cleanup = useCallback(() => {
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
     }
+  }, []);
 
-    const callbackUrl = currentUrl;
-    hasHandledUrlRef.current = callbackUrl;
+  const scheduleRedirect = useCallback(
+    (destination: "/(tabs)" | "/(onboarding)/welcome", seconds: number) => {
+      cleanup();
+      setCountdown(seconds);
+      redirectTimerRef.current = setTimeout(() => {
+        router.replace(destination);
+      }, seconds * 1000);
+    },
+    [cleanup, router],
+  );
 
-    function cleanup() {
-      if (redirectTimerRef.current) {
-        clearTimeout(redirectTimerRef.current);
-      }
-      setLoading(true);
-    }
+  const handleCallback = useCallback(async () => {
+    const url = incomingUrl;
+    if (!url) return;
+    if (hasHandledUrlRef.current === url) return;
+    hasHandledUrlRef.current = url;
 
-    return cleanup;
-  }, [incomingUrl]);
+    cleanup();
+    setLoading(true);
 
-  useEffect(() => {
-    const currentUrl = incomingUrl ?? 
-      (typeof window !== "undefined" ? window.location.href : null);
-
-    if (!currentUrl || hasHandledUrlRef.current === currentUrl) {
-      return () => {
-        if (redirectTimerRef.current) {
-          clearTimeout(redirectTimerRef.current);
-        }
-      };
-    }
-
-    const callbackUrl = currentUrl;
-    hasHandledUrlRef.current = callbackUrl;
-
-    function cleanup() {
-      if (redirectTimerRef.current) {
-        clearTimeout(redirectTimerRef.current);
-      }
-      setLoading(true);
-    }
-
-    return cleanup;
-  }, [incomingUrl]);
-
-  // Handle incoming callback URL - verify auth session and show appropriate alert
-  async function handleCallback() {
-    const authCallbackError = getAuthCallbackError(incomingUrl ?? "");
-
+    const authCallbackError = getAuthCallbackError(url);
     if (authCallbackError) {
       setAlertState({
         open: true,
         title: "Authentication Error",
         message: authCallbackError,
         variant: "destructive",
-        onOpenChange: async (open) => {
-          // When user dismisses error alert, reset to loading state for retry
-          if (!open && !incomingUrl?.includes("error")) {
-            setLoading(true);
-          }
+        cancel: {
+          label: "Back to Login",
+          onPress: () => router.replace("/(auth)/login"),
         },
       });
-
-      redirectTimerRef.current = setTimeout(() => {
-        handleCallback();
-      }, 3000); // Auto-retry error handling after 3 seconds
-
+      setLoading(false);
       return;
     }
 
     try {
       let session: Session | null = null;
 
-      // First, check if Supabase has already created a session (user clicked login link)
       const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (sessionData?.session?.user.id) {
+
+      if (sessionData?.session?.user?.id) {
         session = sessionData.session;
-      } else if (incomingUrl && incomingUrl.includes("token")) {
-        // Create session from callback URL if no existing session
-        const sessionResult = await createSessionFromUrl(incomingUrl);
-        
+      } else if (url.includes("token") || url.includes("code")) {
+        const sessionResult = await createSessionFromUrl(url);
+
         if (!sessionResult.success) {
           setAlertState({
             open: true,
             title: "Authentication Error",
-            message: sessionResult.message || "Unable to complete sign-in. Please try again.",
+            message: sessionResult.message,
             variant: "destructive",
-            onOpenChange: async (open) => {
-              if (!open) {
-                setLoading(true); // Reset for retry
-              }
+            cancel: {
+              label: "Back to Login",
+              onPress: () => router.replace("/(auth)/login"),
             },
           });
-
-          redirectTimerRef.current = setTimeout(() => {
-            handleCallback();
-          }, 3000);
-
+          setLoading(false);
           return;
-        } else {
-          session = await supabase.auth.getSession().then(r => r.data?.session ?? null);
         }
+
+        const { data: refreshed } = await supabase.auth.getSession();
+        session = refreshed?.session ?? null;
       }
 
-      // If we have a valid session, complete the authentication flow
-      if (session && !session.user.id) {
-        const newSessionResult = await createSessionFromUrl(incomingUrl ?? "");
-        
-        if (!newSessionResult.success) {
-          setAlertState({
-            open: true,
-            title: "Authentication Error", 
-            message: newSessionResult.message || "Unable to complete sign-in.",
-            variant: "destructive",
-            onOpenChange: async (open) => {
-              if (!open) setLoading(true);
-            },
-          });
-
-          redirectTimerRef.current = setTimeout(() => handleCallback(), 3000);
-          return;
-        } else {
-          const { data: newSessionData } = await supabase.auth.getSession();
-          session = newSessionData?.session ?? null;
-        }
-      }
-
-      // Verify we have a valid authenticated user
-      if (!session) {
+      if (!session?.user?.id) {
         setAlertState({
           open: true,
           title: "Authentication Error",
-          message: 
-            incomingUrl && incomingUrl.includes("error")
-              ? getAuthCallbackError(incomingUrl ?? "") || "Sign-in failed."
-              : "The sign-in session was not available. Please check your email and try again.",
+          message:
+            "The sign-in session was not available. Please check your email and try again.",
           variant: "destructive",
-          onOpenChange: async (open) => {
-            if (!open && !incomingUrl?.includes("error")) {
-              setLoading(true);
-            }
+          cancel: {
+            label: "Back to Login",
+            onPress: () => router.replace("/(auth)/login"),
           },
         });
-
-        redirectTimerRef.current = setTimeout(() => handleCallback(), 3000);
+        setLoading(false);
         return;
       }
 
-      // Auth successful - update auth store and refresh profile data
       useAuthStore.setState({
         session,
         isAuthenticated: true,
@@ -241,128 +164,144 @@ export default function AuthCallbackScreen() {
 
       await refreshProfile();
 
-      const onboardingComplete = 
+      const onboardingComplete =
         useAuthStore.getState().user?.onboarding_complete;
 
-      // Show success alert with "Continue to Profile" button
       setAlertState({
         open: true,
-        title: "Sign-in complete",
-        message: 
-          onboardingComplete 
-            ? "You are signed in. Redirecting to your profile." 
-            : "Your account is ready. Continue to setup or profile.",
-        variant: "default" as const,
-      });
-
-      // Auto-redirect after alert dismissal (4 seconds for user confirmation)
-      redirectTimerRef.current = setTimeout(() => {
-        router.replace(
-          onboardingComplete ? "/(tabs)" : "/(onboarding)/welcome",
-        );
-      }, 4000);
-
-      setLoading(false);
-
-    } catch (error) {
-      console.error("Auth callback error:", error);
-
-      setAlertState({
-        open: true,
-        title: "Authentication Error",
-        message: 
-          "Navya hit an unexpected error while finishing sign-in. Please try again.",
-        variant: "destructive",
-        onOpenChange: async (open) => {
-          if (!open && !incomingUrl?.includes("error")) {
-            setLoading(true);
-          }
+        title: "Signed in successfully",
+        message: onboardingComplete
+          ? "Redirecting to your dashboard..."
+          : "Account ready. Setting up your profile...",
+        variant: "default",
+        action: {
+          label: "Continue",
+          onPress: () => {
+            cleanup();
+            router.replace(onboardingComplete ? "/(tabs)" : "/(onboarding)/welcome");
+          },
         },
       });
 
-      redirectTimerRef.current = setTimeout(() => handleCallback(), 3000);
+      setLoading(false);
+
+      scheduleRedirect(
+        onboardingComplete ? "/(tabs)" : "/(onboarding)/welcome",
+        4,
+      );
+    } catch (error) {
+      logger.error("Auth callback error", error);
+      setAlertState({
+        open: true,
+        title: "Authentication Error",
+        message:
+          "An unexpected error occurred while finishing sign-in. Please try again.",
+        variant: "destructive",
+        cancel: {
+          label: "Back to Login",
+          onPress: () => router.replace("/(auth)/login"),
+        },
+      });
+      setLoading(false);
+    }
+  }, [incomingUrl, cleanup, refreshProfile, scheduleRedirect, router]);
+
+  useEffect(() => {
+    if (incomingUrl) {
+      handleCallback();
+    }
+  }, [incomingUrl, handleCallback]);
+
+  useEffect(() => {
+    if (!incomingUrl && loading) {
+      const timeout = setTimeout(() => {
+        if (!hasHandledUrlRef.current) {
+          setAlertState({
+            open: true,
+            title: "No sign-in link detected",
+            message:
+              "If you opened an email link, make sure it opened in the Navya app. You can request a new link from the login screen.",
+            variant: "destructive",
+            cancel: {
+              label: "Back to Login",
+              onPress: () => router.replace("/(auth)/login"),
+            },
+          });
+          setLoading(false);
+        }
+      }, 10000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [incomingUrl, loading, router]);
+
+  useEffect(() => {
+    return cleanup;
+  }, [cleanup]);
+
+  function handleAlertOpenChange(open: boolean) {
+    if (!open && alertState) {
+      cleanup();
+      if (alertState.variant === "destructive") {
+        router.replace("/(auth)/login");
+      } else {
+        const isAuthenticated = useAuthStore.getState().isAuthenticated;
+        router.replace(isAuthenticated ? "/(tabs)/profile" : "/(auth)/login");
+      }
     }
   }
 
-  // Handle user clicking "Continue" button - navigate to profile or login based on auth state
   function handleContinue() {
-    const shouldGoToProfile = useAuthStore.getState().isAuthenticated;
-    
-    router.replace(shouldGoToProfile ? "/(tabs)/profile" : "/(auth)/login");
+    cleanup();
+    const isAuthenticated = useAuthStore.getState().isAuthenticated;
+    router.replace(isAuthenticated ? "/(tabs)/profile" : "/(auth)/login");
   }
-
-  // Initial mount - check if URL needs handling
-  useEffect(() => {
-    handleCallback();
-  }, []);
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      
-      <ActivityIndicator 
-        size="large" 
-        color={colors.text}
-        style={loading ? { justifyContent: "center", alignItems: "center" } : undefined}
-      />
 
-      {!loading && (
-        <>
-          {/* Default alert state - shows success message when open */}
-          {alertState?.open && alertState.variant === "default" && (
-            <TamaguiAlert
-              open={alertState.open}
-              onOpenChange={(isOpen) => {
-                if (!isOpen) {
-                  // When dismissed, check if we should redirect or go to continue button
-                  const shouldGoToProfile = useAuthStore.getState().isAuthenticated;
-                  
-                  if (redirectTimerRef.current) {
-                    clearTimeout(redirectTimerRef.current);
-                  }
-
-                  router.replace(shouldGoToProfile ? "/(tabs)/profile" : "/(auth)/login");
-                }
-              }}
-              title={alertState.title}
-              message={alertState.message}
-            />
-          )}
-
-          {/* Error alert state - shows error and continues to login/profile */}
-          {alertState?.open && alertState.variant === "destructive" && (
-            <TamaguiAlert
-              open={alertState.open}
-              onOpenChange={(isOpen) => {
-                if (!isOpen) {
-                  setLoading(true); // Reset for retry
-                }
-              }}
-              title={alertState.title}
-              message={alertState.message}
-            />
-          )}
-
-          {/* Continue button shown after successful auth */}
-          {!loading && !alertState?.open && (
-            <View style={styles.buttonContainer}>
-              <Text style={styles.continueTitle}>Sign-in complete</Text>
-              <Button
-                label="Continue to Profile"
-                onPress={handleContinue}
-                fullWidth
-                style={styles.button}
-              />
-              {redirectTimerRef.current && (
-                <Text style={styles.redirectNotice}>Redirecting in 4 seconds...</Text>
-              )}
-            </View>
-          )}
-        </>
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.text} />
+          <Text
+            style={{
+              color: colors.muted,
+              fontSize: 14,
+              marginTop: Spacing.md,
+              textAlign: "center",
+            }}
+          >
+            Completing sign-in...
+          </Text>
+        </View>
       )}
 
-      {!loading && !alertState?.open && redirectTimerRef.current && (
-        <Text style={styles.redirectComplete}>Redirected</Text>
+      {alertState && (
+        <Alert
+          open={alertState.open}
+          onOpenChange={handleAlertOpenChange}
+          title={alertState.title}
+          message={alertState.message}
+          variant={alertState.variant}
+          action={alertState.action}
+          cancel={alertState.cancel}
+        />
+      )}
+
+      {!loading && alertState?.variant === "default" && !alertState.open && (
+        <View style={styles.buttonContainer}>
+          <Text style={styles.continueTitle}>Sign-in complete</Text>
+          <Button
+            label="Continue to Profile"
+            onPress={handleContinue}
+            fullWidth
+            style={styles.button}
+          />
+          <Text style={styles.redirectNotice}>
+            Redirecting in {countdown}s...
+          </Text>
+        </View>
       )}
     </View>
   );
