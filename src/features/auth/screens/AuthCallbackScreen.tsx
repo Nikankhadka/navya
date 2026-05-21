@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import type { Session } from "@supabase/supabase-js";
-import { Alert as TamaguiAlert } from "@/components/ui";
+import { Alert as TamaguiAlert, Button } from "@/components/ui";
 import { Spacing, Typography, useAppTheme, type ThemeColors } from "@/theme";
 import { createSessionFromUrl, getAuthCallbackError } from "@/lib/auth/redirects";
 import { supabase } from "@/lib/supabase/client";
@@ -83,7 +83,6 @@ export default function AuthCallbackScreen() {
       (typeof window !== "undefined" ? window.location.href : null);
 
     if (!currentUrl || hasHandledUrlRef.current === currentUrl) {
-      // Cleanup on unmount or duplicate URL check
       return () => {
         if (redirectTimerRef.current) {
           clearTimeout(redirectTimerRef.current);
@@ -94,15 +93,14 @@ export default function AuthCallbackScreen() {
     const callbackUrl = currentUrl;
     hasHandledUrlRef.current = callbackUrl;
 
-    // Cleanup function to cancel redirect on unmount or route change
-    async function cleanup() {
+    function cleanup() {
       if (redirectTimerRef.current) {
         clearTimeout(redirectTimerRef.current);
       }
       setLoading(true);
     }
 
-    return cleanup();
+    return cleanup;
   }, [incomingUrl]);
 
   useEffect(() => {
@@ -110,7 +108,6 @@ export default function AuthCallbackScreen() {
       (typeof window !== "undefined" ? window.location.href : null);
 
     if (!currentUrl || hasHandledUrlRef.current === currentUrl) {
-      // Cleanup handler for unmount or route change
       return () => {
         if (redirectTimerRef.current) {
           clearTimeout(redirectTimerRef.current);
@@ -121,15 +118,14 @@ export default function AuthCallbackScreen() {
     const callbackUrl = currentUrl;
     hasHandledUrlRef.current = callbackUrl;
 
-    // Cleanup handler to cancel redirect on unmount or route change
-    async function cleanup() {
+    function cleanup() {
       if (redirectTimerRef.current) {
         clearTimeout(redirectTimerRef.current);
       }
       setLoading(true);
     }
 
-    return cleanup();
+    return cleanup;
   }, [incomingUrl]);
 
   // Handle incoming callback URL - verify auth session and show appropriate alert
@@ -194,7 +190,7 @@ export default function AuthCallbackScreen() {
 
       // If we have a valid session, complete the authentication flow
       if (session && !session.user.id) {
-        const newSessionResult = await createSessionFromUrl(incomingUrl);
+        const newSessionResult = await createSessionFromUrl(incomingUrl ?? "");
         
         if (!newSessionResult.success) {
           setAlertState({

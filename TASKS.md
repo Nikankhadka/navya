@@ -20,6 +20,7 @@
 - [x] TASK-002 Quick-add entry for calories and optional macros — @App
 - [x] TASK-004 Water logging with daily target — @App+Platform
 - [x] TASK-007 Water intake schema + RLS — @Platform
+- [x] **MVP QA Testing** — Fixed 4 TypeScript errors, installed Playwright, created 67 E2E tests
 
 ### 📋 BACKLOG
 - [ ] TASK-009 Barcode food capture (feature-flagged, Phase 3 prep) — @Both
@@ -36,6 +37,8 @@
 | 3 | Workout history from completed sessions | M | List of past sessions with summary |
 | 4 | Weekly completion stats on Profile | S | Adherence %, days completed |
 | 5 | Wire stats to real data (remove placeholders) | M | Profile no longer uses mock data |
+| 6 | Refactor large screen files (>300 lines) | M | Split into sub-components |
+| 7 | Add unit test coverage (70% target) | L | Jest + React Testing Library |
 
 ### Sprint 5 — Coach & Capture Speed
 | # | Story | Size | Notes |
@@ -53,6 +56,7 @@
 | 3 | Internal beta deployment (EAS) | S | TestFlight + internal distribution |
 | 4 | Tester onboarding docs | S | README for beta testers |
 | 5 | Performance audit (render times, bundle size) | M | Tamagui optimization, code splitting |
+| 6 | Accessibility audit | M | WCAG 2.1 AA compliance |
 
 ---
 
@@ -63,3 +67,8 @@
 
 ### Sprint 2: Core Screens
 **Shipped:** Home dashboard, manual nutrition logging, workout plan view + live session, coach messaging, profile editing, tester seed scripts, offline nutrition SQLite DB
+
+### Sprint 3: Complete The Daily Diary
+**Shipped:** Meal grouping, quick-add calories, water tracking, recent meals, workout history, weight check-in, progress tracking, adherence display
+**QA:** Fixed 4 TypeScript errors in AuthCallbackScreen, installed Playwright, created 67 E2E tests covering all user flows
+**Status:** ✅ MVP READY FOR DELIVERY

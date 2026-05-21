@@ -31,3 +31,5 @@ export const isDemoModeAvailable =
   demoModeFlag === 'true' || (!isHostedAppEnv && !isSupabaseConfigured);
 
 export const isGoogleLoginAvailable = googleLoginFlag === 'true';
+
+export const isLocalDev = supabaseUrl.includes('localhost') || supabaseUrl.includes('127.0.0.1');
