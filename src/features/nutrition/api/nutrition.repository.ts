@@ -15,7 +15,6 @@ import type {
   FavoriteFood,
   FavoriteFoodInput,
   FoodLog,
-  FoodNutrients,
   FoodPortion,
   FoodSearchResult,
   NutritionSyncRecord,
@@ -32,6 +31,7 @@ import {
   isNutritionLocalDatabaseSupported,
   type SQLiteDatabase,
 } from '@/features/nutrition/db/nutritionDatabase';
+import { fromDateKey, getTodayDateString } from '@/utils/date';
 
 type FoodLogRow = Database['public']['Tables']['food_logs']['Row'];
 type CustomFoodRow = Database['public']['Tables']['custom_foods']['Row'];
@@ -139,8 +139,8 @@ function shouldUseDemoNutrition(userId: string): boolean {
   return userId === MOCK_PROFILE.id;
 }
 
-function isTodayIso(isoString: string): boolean {
-  return isoString.startsWith(new Date().toISOString().slice(0, 10));
+function isDateIso(isoString: string, dateKey: string): boolean {
+  return isoString.startsWith(dateKey);
 }
 
 function nullIfBlank(value: string | null | undefined): string | null {
@@ -148,7 +148,11 @@ function nullIfBlank(value: string | null | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
-function foodIdentityKey(source: string, sourceFoodId: string | null, customFoodId: string | null): string {
+function foodIdentityKey(
+  source: string,
+  sourceFoodId: string | null,
+  customFoodId: string | null,
+): string {
   return [source, sourceFoodId ?? '', customFoodId ?? ''].join(':');
 }
 
@@ -263,12 +267,15 @@ function buildDailySummary(
   meals: FoodLog[],
   waterLogs: WaterLog[],
   favorites: FavoriteFood[],
+  dateKey: string,
 ): DailyNutritionSummary {
-  const todaysMeals = meals.filter((meal) => isTodayIso(meal.logged_at) && !meal.deleted_at);
-  const todaysWaterLogs = waterLogs.filter((entry) => isTodayIso(entry.logged_at));
+  const todaysMeals = meals.filter(
+    (meal) => isDateIso(meal.logged_at, dateKey) && !meal.deleted_at,
+  );
+  const todaysWaterLogs = waterLogs.filter((entry) => isDateIso(entry.logged_at, dateKey));
 
   return {
-    date: new Date().toISOString(),
+    date: fromDateKey(dateKey).toISOString(),
     total_calories: todaysMeals.reduce((sum, meal) => sum + meal.calories, 0),
     total_protein_g: todaysMeals.reduce((sum, meal) => sum + (meal.protein_g ?? 0), 0),
     total_carbs_g: todaysMeals.reduce((sum, meal) => sum + (meal.carbs_g ?? 0), 0),
@@ -334,7 +341,10 @@ async function getLocalMealsAsync(db: SQLiteDatabase, userId: string): Promise<F
   return rows.map(toFoodLog).filter((row) => !row.deleted_at);
 }
 
-async function getLocalFoodActivityKeysAsync(db: SQLiteDatabase, userId: string): Promise<string[]> {
+async function getLocalFoodActivityKeysAsync(
+  db: SQLiteDatabase,
+  userId: string,
+): Promise<string[]> {
   const rows = await db.getAllAsync<Pick<LocalFoodLogRow, 'logged_at' | 'deleted_at'>>(
     `SELECT logged_at, deleted_at
       FROM food_logs_local
@@ -409,11 +419,15 @@ async function buildCatalogSearchResultAsync(
     default_serving_label: row.default_serving_label,
     default_serving_grams: row.default_serving_grams,
     default_nutrients: {
-      calories: Math.round((row.calories_per_100g ?? 0) * ((row.default_serving_grams ?? 100) / 100)),
+      calories: Math.round(
+        (row.calories_per_100g ?? 0) * ((row.default_serving_grams ?? 100) / 100),
+      ),
       protein_g:
         row.protein_g_per_100g == null
           ? null
-          : Number(((row.protein_g_per_100g * (row.default_serving_grams ?? 100)) / 100).toFixed(1)),
+          : Number(
+              ((row.protein_g_per_100g * (row.default_serving_grams ?? 100)) / 100).toFixed(1),
+            ),
       carbs_g:
         row.carbs_g_per_100g == null
           ? null
@@ -443,10 +457,14 @@ async function buildCatalogSearchResultAsync(
   };
 }
 
-function buildCustomFoodSearchResult(customFood: CustomFood, favoriteKeys: Set<string>): FoodSearchResult {
+function buildCustomFoodSearchResult(
+  customFood: CustomFood,
+  favoriteKeys: Set<string>,
+): FoodSearchResult {
   const defaultServingLabel = customFood.default_serving_label;
   const defaultServingGrams = customFood.default_serving_grams;
-  const perHundredMultiplier = defaultServingGrams && defaultServingGrams > 0 ? 100 / defaultServingGrams : null;
+  const perHundredMultiplier =
+    defaultServingGrams && defaultServingGrams > 0 ? 100 / defaultServingGrams : null;
 
   return {
     id: `manual:${customFood.id}`,
@@ -456,7 +474,9 @@ function buildCustomFoodSearchResult(customFood: CustomFood, favoriteKeys: Set<s
     name: customFood.name,
     category: 'Custom food',
     data_version: DEFAULT_USDA_DATA_VERSION,
-    calories_per_100g: perHundredMultiplier ? Math.round(customFood.calories * perHundredMultiplier) : null,
+    calories_per_100g: perHundredMultiplier
+      ? Math.round(customFood.calories * perHundredMultiplier)
+      : null,
     protein_g_per_100g:
       perHundredMultiplier && customFood.protein_g != null
         ? Number((customFood.protein_g * perHundredMultiplier).toFixed(1))
@@ -529,7 +549,9 @@ async function getRemoteFavoriteFoodsAsync(userId: string): Promise<FavoriteFood
     return [];
   }
 
-  return ((data ?? []) as FavoriteFoodRow[]).map(mapFavoriteFoodRow).filter((row) => !row.deleted_at);
+  return ((data ?? []) as FavoriteFoodRow[])
+    .map(mapFavoriteFoodRow)
+    .filter((row) => !row.deleted_at);
 }
 
 async function addRemoteMealAsync(userId: string, meal: CreateFoodLogInput): Promise<FoodLog> {
@@ -589,7 +611,10 @@ async function addRemoteMealAsync(userId: string, meal: CreateFoodLogInput): Pro
   return mapFoodLogRow(data);
 }
 
-async function saveRemoteCustomFoodAsync(userId: string, input: CreateCustomFoodInput): Promise<CustomFood> {
+async function saveRemoteCustomFoodAsync(
+  userId: string,
+  input: CreateCustomFoodInput,
+): Promise<CustomFood> {
   const timestamp = nowIso();
   const payload: Database['public']['Tables']['custom_foods']['Insert'] = {
     user_id: userId,
@@ -985,9 +1010,21 @@ async function pullRemoteChangesAsync(db: SQLiteDatabase, userId: string): Promi
     { data: customFoods, error: customError },
     { data: favoriteFoods, error: favoriteError },
   ] = await Promise.all([
-    supabase.from('food_logs').select('*').eq('user_id', userId).order('updated_at', { ascending: false }),
-    supabase.from('custom_foods').select('*').eq('user_id', userId).order('updated_at', { ascending: false }),
-    supabase.from('favorite_foods').select('*').eq('user_id', userId).order('updated_at', { ascending: false }),
+    supabase
+      .from('food_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false }),
+    supabase
+      .from('custom_foods')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false }),
+    supabase
+      .from('favorite_foods')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false }),
   ]);
 
   if (foodError) {
@@ -1003,8 +1040,14 @@ async function pullRemoteChangesAsync(db: SQLiteDatabase, userId: string): Promi
   }
 
   await upsertPulledFoodLogsAsync(db, ((foodLogs ?? []) as FoodLogRow[]).map(mapFoodLogRow));
-  await upsertPulledCustomFoodsAsync(db, ((customFoods ?? []) as CustomFoodRow[]).map(mapCustomFoodRow));
-  await upsertPulledFavoritesAsync(db, ((favoriteFoods ?? []) as FavoriteFoodRow[]).map(mapFavoriteFoodRow));
+  await upsertPulledCustomFoodsAsync(
+    db,
+    ((customFoods ?? []) as CustomFoodRow[]).map(mapCustomFoodRow),
+  );
+  await upsertPulledFavoritesAsync(
+    db,
+    ((favoriteFoods ?? []) as FavoriteFoodRow[]).map(mapFavoriteFoodRow),
+  );
 }
 
 async function bootstrapRemoteIntoLocalIfNeededAsync(
@@ -1051,14 +1094,16 @@ async function syncNutritionInternalAsync(userId: string): Promise<void> {
 }
 
 export const nutritionRepository = {
-  async getDailySummary(userId: string): Promise<DailyNutritionSummary> {
+  async getDailySummary(userId: string, dateKey?: string): Promise<DailyNutritionSummary> {
+    const targetDate = dateKey ?? getTodayDateString();
+
     if (shouldUseDemoNutrition(userId)) {
       return MOCK_DAILY_NUTRITION;
     }
 
     if (!userId) {
       return {
-        date: nowIso(),
+        date: new Date().toISOString(),
         total_calories: 0,
         total_protein_g: 0,
         total_carbs_g: 0,
@@ -1080,7 +1125,11 @@ export const nutritionRepository = {
       }
 
       const [{ data: foodData, error: foodError }, waterLogs, favoriteFoods] = await Promise.all([
-        supabase.from('food_logs').select('*').eq('user_id', userId).order('logged_at', { ascending: false }),
+        supabase
+          .from('food_logs')
+          .select('*')
+          .eq('user_id', userId)
+          .order('logged_at', { ascending: false }),
         getRemoteWaterLogsAsync(userId),
         getRemoteFavoriteFoodsAsync(userId),
       ]);
@@ -1100,6 +1149,7 @@ export const nutritionRepository = {
         ((foodData ?? []) as FoodLogRow[]).map(mapFoodLogRow).filter((row) => !row.deleted_at),
         waterLogs,
         favoriteFoods,
+        targetDate,
       );
     }
 
@@ -1121,7 +1171,7 @@ export const nutritionRepository = {
       getRemoteWaterLogsAsync(userId),
     ]);
 
-    return buildDailySummary(meals, waterLogs, favorites);
+    return buildDailySummary(meals, waterLogs, favorites, targetDate);
   },
 
   async searchFoods(userId: string, query: string): Promise<FoodSearchResult[]> {
@@ -1672,9 +1722,9 @@ export const nutritionRepository = {
         return [];
       }
 
-      return (((data ?? []) as Array<Pick<FoodLogRow, 'logged_at' | 'deleted_at'>>)
+      return ((data ?? []) as Pick<FoodLogRow, 'logged_at' | 'deleted_at'>[])
         .filter((row) => !row.deleted_at)
-        .map((row) => row.logged_at.slice(0, 10)));
+        .map((row) => row.logged_at.slice(0, 10));
     }
 
     return getLocalFoodActivityKeysAsync(db, userId);

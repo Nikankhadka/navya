@@ -87,6 +87,12 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="Profile" focused={focused} />,
         }}
       />
+      <Tabs.Screen
+        name="daily-diary"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

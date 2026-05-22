@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { Stack, useRouter } from "expo-router";
-import * as Linking from "expo-linking";
-import type { Session } from "@supabase/supabase-js";
-import { Alert, Button } from "@/components/ui";
-import { Spacing, Typography, useAppTheme, type ThemeColors } from "@/theme";
-import { createSessionFromUrl, getAuthCallbackError } from "@/lib/auth/redirects";
-import { supabase } from "@/lib/supabase/client";
-import { logger } from "@/lib/logger";
-import { useAuthStore } from "@/store/useAuthStore";
-import { Text, YStack } from "tamagui";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import * as Linking from 'expo-linking';
+import type { Session } from '@supabase/supabase-js';
+import { Alert, Button } from '@/components/ui';
+import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { createSessionFromUrl, getAuthCallbackError } from '@/lib/auth/redirects';
+import { supabase } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+import { useAuthStore } from '@/store/useAuthStore';
+import { Text } from 'tamagui';
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
@@ -19,12 +19,12 @@ const createStyles = (colors: ThemeColors) =>
     },
     loadingContainer: {
       flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     buttonContainer: {
-      alignItems: "center",
-      justifyContent: "center",
+      alignItems: 'center',
+      justifyContent: 'center',
       gap: Spacing.md,
       paddingHorizontal: Spacing.xl,
       paddingBottom: Spacing.xxl,
@@ -33,16 +33,16 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.text,
       fontSize: 20,
       fontWeight: Typography.weight.bold,
-      textAlign: "center",
+      textAlign: 'center',
       marginBottom: Spacing.md,
     },
     button: {
-      width: "100%",
+      width: '100%',
     },
     redirectNotice: {
       color: colors.muted,
       fontSize: 12,
-      textAlign: "center",
+      textAlign: 'center',
     },
   });
 
@@ -50,7 +50,7 @@ interface AlertData {
   open: boolean;
   title: string;
   message: string;
-  variant: "default" | "destructive";
+  variant: 'default' | 'destructive';
   action?: { label: string; onPress: () => void };
   cancel?: { label: string; onPress: () => void };
 }
@@ -76,7 +76,7 @@ export default function AuthCallbackScreen() {
   }, []);
 
   const scheduleRedirect = useCallback(
-    (destination: "/(tabs)" | "/(onboarding)/welcome", seconds: number) => {
+    (destination: '/(tabs)' | '/(onboarding)/welcome', seconds: number) => {
       cleanup();
       setCountdown(seconds);
       redirectTimerRef.current = setTimeout(() => {
@@ -99,12 +99,12 @@ export default function AuthCallbackScreen() {
     if (authCallbackError) {
       setAlertState({
         open: true,
-        title: "Authentication Error",
+        title: 'Authentication Error',
         message: authCallbackError,
-        variant: "destructive",
+        variant: 'destructive',
         cancel: {
-          label: "Back to Login",
-          onPress: () => router.replace("/(auth)/login"),
+          label: 'Back to Login',
+          onPress: () => router.replace('/(auth)/login'),
         },
       });
       setLoading(false);
@@ -118,18 +118,18 @@ export default function AuthCallbackScreen() {
 
       if (sessionData?.session?.user?.id) {
         session = sessionData.session;
-      } else if (url.includes("token") || url.includes("code")) {
+      } else if (url.includes('token') || url.includes('code')) {
         const sessionResult = await createSessionFromUrl(url);
 
         if (!sessionResult.success) {
           setAlertState({
             open: true,
-            title: "Authentication Error",
+            title: 'Authentication Error',
             message: sessionResult.message,
-            variant: "destructive",
+            variant: 'destructive',
             cancel: {
-              label: "Back to Login",
-              onPress: () => router.replace("/(auth)/login"),
+              label: 'Back to Login',
+              onPress: () => router.replace('/(auth)/login'),
             },
           });
           setLoading(false);
@@ -143,13 +143,12 @@ export default function AuthCallbackScreen() {
       if (!session?.user?.id) {
         setAlertState({
           open: true,
-          title: "Authentication Error",
-          message:
-            "The sign-in session was not available. Please check your email and try again.",
-          variant: "destructive",
+          title: 'Authentication Error',
+          message: 'The sign-in session was not available. Please check your email and try again.',
+          variant: 'destructive',
           cancel: {
-            label: "Back to Login",
-            onPress: () => router.replace("/(auth)/login"),
+            label: 'Back to Login',
+            onPress: () => router.replace('/(auth)/login'),
           },
         });
         setLoading(false);
@@ -164,42 +163,37 @@ export default function AuthCallbackScreen() {
 
       await refreshProfile();
 
-      const onboardingComplete =
-        useAuthStore.getState().user?.onboarding_complete;
+      const onboardingComplete = useAuthStore.getState().user?.onboarding_complete;
 
       setAlertState({
         open: true,
-        title: "Signed in successfully",
+        title: 'Signed in successfully',
         message: onboardingComplete
-          ? "Redirecting to your dashboard..."
-          : "Account ready. Setting up your profile...",
-        variant: "default",
+          ? 'Redirecting to your dashboard...'
+          : 'Account ready. Setting up your profile...',
+        variant: 'default',
         action: {
-          label: "Continue",
+          label: 'Continue',
           onPress: () => {
             cleanup();
-            router.replace(onboardingComplete ? "/(tabs)" : "/(onboarding)/welcome");
+            router.replace(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome');
           },
         },
       });
 
       setLoading(false);
 
-      scheduleRedirect(
-        onboardingComplete ? "/(tabs)" : "/(onboarding)/welcome",
-        4,
-      );
+      scheduleRedirect(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome', 4);
     } catch (error) {
-      logger.error("Auth callback error", error);
+      logger.error('Auth callback error', error);
       setAlertState({
         open: true,
-        title: "Authentication Error",
-        message:
-          "An unexpected error occurred while finishing sign-in. Please try again.",
-        variant: "destructive",
+        title: 'Authentication Error',
+        message: 'An unexpected error occurred while finishing sign-in. Please try again.',
+        variant: 'destructive',
         cancel: {
-          label: "Back to Login",
-          onPress: () => router.replace("/(auth)/login"),
+          label: 'Back to Login',
+          onPress: () => router.replace('/(auth)/login'),
         },
       });
       setLoading(false);
@@ -218,13 +212,13 @@ export default function AuthCallbackScreen() {
         if (!hasHandledUrlRef.current) {
           setAlertState({
             open: true,
-            title: "No sign-in link detected",
+            title: 'No sign-in link detected',
             message:
-              "If you opened an email link, make sure it opened in the Navya app. You can request a new link from the login screen.",
-            variant: "destructive",
+              'If you opened an email link, make sure it opened in the Navya app. You can request a new link from the login screen.',
+            variant: 'destructive',
             cancel: {
-              label: "Back to Login",
-              onPress: () => router.replace("/(auth)/login"),
+              label: 'Back to Login',
+              onPress: () => router.replace('/(auth)/login'),
             },
           });
           setLoading(false);
@@ -242,11 +236,11 @@ export default function AuthCallbackScreen() {
   function handleAlertOpenChange(open: boolean) {
     if (!open && alertState) {
       cleanup();
-      if (alertState.variant === "destructive") {
-        router.replace("/(auth)/login");
+      if (alertState.variant === 'destructive') {
+        router.replace('/(auth)/login');
       } else {
         const isAuthenticated = useAuthStore.getState().isAuthenticated;
-        router.replace(isAuthenticated ? "/(tabs)/profile" : "/(auth)/login");
+        router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
       }
     }
   }
@@ -254,7 +248,7 @@ export default function AuthCallbackScreen() {
   function handleContinue() {
     cleanup();
     const isAuthenticated = useAuthStore.getState().isAuthenticated;
-    router.replace(isAuthenticated ? "/(tabs)/profile" : "/(auth)/login");
+    router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
   }
 
   return (
@@ -269,7 +263,7 @@ export default function AuthCallbackScreen() {
               color: colors.muted,
               fontSize: 14,
               marginTop: Spacing.md,
-              textAlign: "center",
+              textAlign: 'center',
             }}
           >
             Completing sign-in...
@@ -289,7 +283,7 @@ export default function AuthCallbackScreen() {
         />
       )}
 
-      {!loading && alertState?.variant === "default" && !alertState.open && (
+      {!loading && alertState?.variant === 'default' && !alertState.open && (
         <View style={styles.buttonContainer}>
           <Text style={styles.continueTitle}>Sign-in complete</Text>
           <Button
@@ -298,9 +292,7 @@ export default function AuthCallbackScreen() {
             fullWidth
             style={styles.button}
           />
-          <Text style={styles.redirectNotice}>
-            Redirecting in {countdown}s...
-          </Text>
+          <Text style={styles.redirectNotice}>Redirecting in {countdown}s...</Text>
         </View>
       )}
     </View>

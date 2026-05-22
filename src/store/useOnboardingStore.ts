@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { UserProfile, GoalType, ActivityLevel, ExperienceLevel, DietPreference, EquipmentType } from '@/types/app';
+import type { UserProfile } from '@/types/app';
 
 interface OnboardingState extends Partial<UserProfile> {
   // Helpers

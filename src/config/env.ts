@@ -1,16 +1,29 @@
 import Constants from 'expo-constants';
 
-export const appEnv = process.env.EXPO_PUBLIC_APP_ENV ?? Constants.expoConfig?.extra?.appEnv ?? 'development';
+export const appEnv =
+  process.env.EXPO_PUBLIC_APP_ENV ?? Constants.expoConfig?.extra?.appEnv ?? 'development';
+
+const rawSupabaseUrl =
+  Constants.expoConfig?.extra?.supabaseUrl ?? process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+
+const rawSupabaseAnonKey =
+  Constants.expoConfig?.extra?.supabaseAnonKey ?? process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 export const supabaseUrl =
-  Constants.expoConfig?.extra?.supabaseUrl ??
-  process.env.EXPO_PUBLIC_SUPABASE_URL ??
-  'https://placeholder.supabase.co';
+  rawSupabaseUrl ||
+  (() => {
+    throw new Error(
+      'EXPO_PUBLIC_SUPABASE_URL is not set. Copy .env.example to .env and configure your Supabase URL.',
+    );
+  })();
 
 export const supabaseAnonKey =
-  Constants.expoConfig?.extra?.supabaseAnonKey ??
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
-  'placeholder-anon-key';
+  rawSupabaseAnonKey ||
+  (() => {
+    throw new Error(
+      'EXPO_PUBLIC_SUPABASE_ANON_KEY is not set. Copy .env.example to .env and configure your Supabase anon key.',
+    );
+  })();
 
 export const demoModeFlag =
   Constants.expoConfig?.extra?.enableDemoMode ??
@@ -22,8 +35,7 @@ export const googleLoginFlag =
   process.env.EXPO_PUBLIC_ENABLE_GOOGLE_LOGIN ??
   'false';
 
-export const isSupabaseConfigured =
-  !supabaseUrl.includes('placeholder') && supabaseAnonKey !== 'placeholder-anon-key';
+export const isSupabaseConfigured = supabaseUrl.length > 0 && supabaseAnonKey.length > 0;
 
 export const isHostedAppEnv = appEnv === 'preview' || appEnv === 'production';
 

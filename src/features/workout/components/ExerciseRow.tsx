@@ -107,12 +107,12 @@ const createStyles = (colors: ThemeColors) =>
       flexShrink: 0,
     },
     checkmark: {
-      color: '#000000',
+      color: colors.textStrong,
       fontSize: 14,
       fontWeight: Typography.weight.bold,
     },
     activeDot: {
-      color: '#FFFFFF',
+      color: colors.textStrong,
       fontSize: 10,
     },
     exerciseInfo: {

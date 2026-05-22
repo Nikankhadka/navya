@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,28 +7,17 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-} from "react-native";
-import { Stack, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  Button,
-  Input,
-  ThemeModeToggle,
-  Alert as TamaguiAlert,
-} from "@/components/ui";
-import {
-  Radius,
-  Spacing,
-  Typography,
-  useAppTheme,
-  type ThemeColors,
-} from "@/theme";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
-import { getAuthRedirectUrl } from "@/lib/auth/redirects";
-import { logger } from "@/lib/logger";
-import { withMinimumLoading } from "@/lib/auth/loading";
-import { forgotPasswordSchema, getFirstErrorMessage } from "@/lib/validation";
-import type { AuthError } from "@supabase/supabase-js";
+} from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, Input, ThemeModeToggle, Alert as TamaguiAlert } from '@/components/ui';
+import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { getAuthRedirectUrl } from '@/lib/auth/redirects';
+import { logger } from '@/lib/logger';
+import { withMinimumLoading } from '@/lib/auth/loading';
+import { forgotPasswordSchema, getFirstErrorMessage } from '@/lib/validation';
+import type { AuthError } from '@supabase/supabase-js';
 
 export default function ForgotPasswordScreen() {
   const { colors } = useAppTheme();
@@ -36,7 +25,7 @@ export default function ForgotPasswordScreen() {
   const router = useRouter();
   const styles = createStyles(colors, insets.top, insets.bottom);
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string>();
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -44,13 +33,13 @@ export default function ForgotPasswordScreen() {
     open: boolean;
     title: string;
     message: string;
-    variant: "default" | "destructive";
+    variant: 'default' | 'destructive';
   } | null>(null);
 
   function validateEmail(): boolean {
     const result = forgotPasswordSchema.safeParse({ email });
     if (!result.success) {
-      setEmailError(getFirstErrorMessage(result, "email") ?? "Invalid email");
+      setEmailError(getFirstErrorMessage(result, 'email') ?? 'Invalid email');
       return false;
     }
     setEmailError(undefined);
@@ -79,24 +68,24 @@ export default function ForgotPasswordScreen() {
       setEmailSent(true);
       setAlert({
         open: true,
-        title: "Check your inbox",
-        message: "We sent a password reset link to your email. Tap it to set a new password.",
-        variant: "default",
+        title: 'Check your inbox',
+        message: 'We sent a password reset link to your email. Tap it to set a new password.',
+        variant: 'default',
       });
     } catch (error) {
       const authError = error as AuthError;
-      let message = "Unable to send reset link. Please try again.";
+      let message = 'Unable to send reset link. Please try again.';
 
       if (authError instanceof Error) {
         message = authError.message;
       }
 
-      logger.error("Password reset request failed", authError);
+      logger.error('Password reset request failed', authError);
       setAlert({
         open: true,
-        title: "Request failed",
+        title: 'Request failed',
         message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -106,7 +95,7 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen options={{ headerShown: false }} />
       <ThemeModeToggle compact style={styles.themeToggle} />
@@ -115,7 +104,7 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.title}>Reset Password</Text>
           <Text style={styles.subtitle}>
             {emailSent
-              ? "Check your email for the reset link."
+              ? 'Check your email for the reset link.'
               : "Enter your email and we'll send you a link to reset your password."}
           </Text>
         </View>
@@ -123,12 +112,10 @@ export default function ForgotPasswordScreen() {
         <View style={styles.formContainer}>
           {!isSupabaseConfigured && (
             <View style={styles.infoBanner}>
-              <Text style={styles.infoBannerTitle}>
-                Supabase not configured
-              </Text>
+              <Text style={styles.infoBannerTitle}>Supabase not configured</Text>
               <Text style={styles.infoBannerText}>
-                Real auth is unavailable until `.env.local` contains a valid
-                Supabase URL and anon key.
+                Real auth is unavailable until `.env.local` contains a valid Supabase URL and anon
+                key.
               </Text>
             </View>
           )}
@@ -152,7 +139,7 @@ export default function ForgotPasswordScreen() {
           )}
 
           <Button
-            label={emailSent ? "Resend Link" : "Send Reset Link"}
+            label={emailSent ? 'Resend Link' : 'Send Reset Link'}
             fullWidth
             loading={loading}
             onPress={handleResetRequest}
@@ -162,10 +149,7 @@ export default function ForgotPasswordScreen() {
           />
 
           <View style={styles.backRow}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              disabled={loading}
-            >
+            <TouchableOpacity onPress={() => router.back()} disabled={loading}>
               <Text style={styles.backLink}>Back to login</Text>
             </TouchableOpacity>
           </View>
@@ -187,18 +171,14 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const createStyles = (
-  colors: ThemeColors,
-  topInset: number,
-  _bottomInset: number,
-) =>
+const createStyles = (colors: ThemeColors, topInset: number, _bottomInset: number) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
     themeToggle: {
-      position: "absolute",
+      position: 'absolute',
       top: Math.max(topInset, Spacing.lg),
       right: Spacing.lg,
       zIndex: 20,
@@ -208,24 +188,24 @@ const createStyles = (
       paddingHorizontal: Spacing.xl,
       paddingTop: 112,
       paddingBottom: Spacing.xxl,
-      justifyContent: "center",
+      justifyContent: 'center',
     },
     header: {
       marginBottom: 48,
-      alignItems: "center",
+      alignItems: 'center',
     },
     title: {
       fontSize: 36,
       fontWeight: Typography.weight.extrabold,
       color: colors.text,
       marginBottom: Spacing.sm,
-      textAlign: "center",
+      textAlign: 'center',
       letterSpacing: 0.5,
     },
     subtitle: {
       fontSize: Typography.size.md,
       color: colors.textSecondary,
-      textAlign: "center",
+      textAlign: 'center',
       lineHeight: 22,
       paddingHorizontal: Spacing.lg,
     },
@@ -252,13 +232,13 @@ const createStyles = (
       lineHeight: 20,
     },
     backRow: {
-      alignItems: "center",
+      alignItems: 'center',
       marginTop: Spacing.lg,
     },
     backLink: {
       color: colors.accent,
       fontSize: Typography.size.sm,
       fontWeight: Typography.weight.semibold,
-      textDecorationLine: "underline",
+      textDecorationLine: 'underline',
     },
   });

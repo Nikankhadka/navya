@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,26 +7,15 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-} from "react-native";
-import { Stack, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  Button,
-  Input,
-  ThemeModeToggle,
-  Alert as TamaguiAlert,
-} from "@/components/ui";
-import {
-  Radius,
-  Spacing,
-  Typography,
-  useAppTheme,
-  type ThemeColors,
-} from "@/theme";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
-import { logger } from "@/lib/logger";
-import { resetPasswordSchema, getFirstErrorMessage } from "@/lib/validation";
-import type { AuthError } from "@supabase/supabase-js";
+} from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, Input, ThemeModeToggle, Alert as TamaguiAlert } from '@/components/ui';
+import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+import { resetPasswordSchema, getFirstErrorMessage } from '@/lib/validation';
+import type { AuthError } from '@supabase/supabase-js';
 
 export default function ResetPasswordScreen() {
   const { colors } = useAppTheme();
@@ -34,8 +23,8 @@ export default function ResetPasswordScreen() {
   const router = useRouter();
   const styles = createStyles(colors, insets.top, insets.bottom);
 
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,7 +34,7 @@ export default function ResetPasswordScreen() {
     open: boolean;
     title: string;
     message: string;
-    variant: "default" | "destructive";
+    variant: 'default' | 'destructive';
   } | null>(null);
 
   useEffect(() => {
@@ -53,9 +42,9 @@ export default function ResetPasswordScreen() {
       if (!session) {
         setAlert({
           open: true,
-          title: "Invalid link",
-          message: "This password reset link is invalid or has expired. Please request a new one.",
-          variant: "destructive",
+          title: 'Invalid link',
+          message: 'This password reset link is invalid or has expired. Please request a new one.',
+          variant: 'destructive',
         });
       }
     });
@@ -68,8 +57,8 @@ export default function ResetPasswordScreen() {
       setPasswordError(undefined);
       setConfirmPasswordError(undefined);
 
-      const passwordMsg = getFirstErrorMessage(result, "password");
-      const confirmMsg = getFirstErrorMessage(result, "confirmPassword");
+      const passwordMsg = getFirstErrorMessage(result, 'password');
+      const confirmMsg = getFirstErrorMessage(result, 'confirmPassword');
 
       if (passwordMsg) setPasswordError(passwordMsg);
       if (confirmMsg) setConfirmPasswordError(confirmMsg);
@@ -96,24 +85,24 @@ export default function ResetPasswordScreen() {
 
       setAlert({
         open: true,
-        title: "Password updated",
-        message: "Your password has been reset successfully. You can now sign in.",
-        variant: "default",
+        title: 'Password updated',
+        message: 'Your password has been reset successfully. You can now sign in.',
+        variant: 'default',
       });
     } catch (error) {
       const authError = error as AuthError;
-      let message = "Unable to reset password. Please try again.";
+      let message = 'Unable to reset password. Please try again.';
 
       if (authError instanceof Error) {
         message = authError.message;
       }
 
-      logger.error("Password reset failed", authError);
+      logger.error('Password reset failed', authError);
       setAlert({
         open: true,
-        title: "Reset failed",
+        title: 'Reset failed',
         message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -123,27 +112,23 @@ export default function ResetPasswordScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen options={{ headerShown: false }} />
       <ThemeModeToggle compact style={styles.themeToggle} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>New Password</Text>
-          <Text style={styles.subtitle}>
-            Enter your new password below.
-          </Text>
+          <Text style={styles.subtitle}>Enter your new password below.</Text>
         </View>
 
         <View style={styles.formContainer}>
           {!isSupabaseConfigured && (
             <View style={styles.infoBanner}>
-              <Text style={styles.infoBannerTitle}>
-                Supabase not configured
-              </Text>
+              <Text style={styles.infoBannerTitle}>Supabase not configured</Text>
               <Text style={styles.infoBannerText}>
-                Real auth is unavailable until `.env.local` contains a valid
-                Supabase URL and anon key.
+                Real auth is unavailable until `.env.local` contains a valid Supabase URL and anon
+                key.
               </Text>
             </View>
           )}
@@ -166,9 +151,7 @@ export default function ResetPasswordScreen() {
             onPress={() => setShowPassword(!showPassword)}
             style={styles.showPasswordButton}
           >
-            <Text style={styles.showPasswordText}>
-              {showPassword ? "Hide" : "Show"}
-            </Text>
+            <Text style={styles.showPasswordText}>{showPassword ? 'Hide' : 'Show'}</Text>
           </TouchableOpacity>
 
           <Input
@@ -189,9 +172,7 @@ export default function ResetPasswordScreen() {
             onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             style={styles.showPasswordButton}
           >
-            <Text style={styles.showPasswordText}>
-              {showConfirmPassword ? "Hide" : "Show"}
-            </Text>
+            <Text style={styles.showPasswordText}>{showConfirmPassword ? 'Hide' : 'Show'}</Text>
           </TouchableOpacity>
 
           <Button
@@ -210,8 +191,8 @@ export default function ResetPasswordScreen() {
         <TamaguiAlert
           open={alert.open}
           onOpenChange={(open) => {
-            if (!open && alert.variant === "default") {
-              router.replace("/(auth)/login");
+            if (!open && alert.variant === 'default') {
+              router.replace('/(auth)/login');
             }
             if (!open) setAlert(null);
           }}
@@ -224,18 +205,14 @@ export default function ResetPasswordScreen() {
   );
 }
 
-const createStyles = (
-  colors: ThemeColors,
-  topInset: number,
-  _bottomInset: number,
-) =>
+const createStyles = (colors: ThemeColors, topInset: number, _bottomInset: number) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
     themeToggle: {
-      position: "absolute",
+      position: 'absolute',
       top: Math.max(topInset, Spacing.lg),
       right: Spacing.lg,
       zIndex: 20,
@@ -245,24 +222,24 @@ const createStyles = (
       paddingHorizontal: Spacing.xl,
       paddingTop: 112,
       paddingBottom: Spacing.xxl,
-      justifyContent: "center",
+      justifyContent: 'center',
     },
     header: {
       marginBottom: 48,
-      alignItems: "center",
+      alignItems: 'center',
     },
     title: {
       fontSize: 36,
       fontWeight: Typography.weight.extrabold,
       color: colors.text,
       marginBottom: Spacing.sm,
-      textAlign: "center",
+      textAlign: 'center',
       letterSpacing: 0.5,
     },
     subtitle: {
       fontSize: Typography.size.md,
       color: colors.textSecondary,
-      textAlign: "center",
+      textAlign: 'center',
       lineHeight: 22,
       paddingHorizontal: Spacing.lg,
     },
@@ -289,7 +266,7 @@ const createStyles = (
       lineHeight: 20,
     },
     showPasswordButton: {
-      alignSelf: "flex-end",
+      alignSelf: 'flex-end',
       marginTop: -Spacing.xs,
       marginBottom: Spacing.md,
     },

@@ -3,16 +3,17 @@ import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-na
 import { useRouter } from 'expo-router';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityLevel, DietPreference, EquipmentType } from '@/types/app';
+import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
+import type { ActivityLevel, DietPreference, EquipmentType } from '@/types/app';
 
-const ACTIVITY_LEVELS: { id: ActivityLevel, label: string }[] = [
+const ACTIVITY_LEVELS: { id: ActivityLevel; label: string }[] = [
   { id: 'sedentary', label: 'Sedentary (Office job, little exercise)' },
   { id: 'lightly_active', label: 'Lightly Active (1-2 days/week)' },
   { id: 'moderately_active', label: 'Moderately Active (3-5 days/week)' },
   { id: 'very_active', label: 'Very Active (6-7 days/week)' },
 ];
 
-const DIET_PREFS: { id: DietPreference, label: string }[] = [
+const DIET_PREFS: { id: DietPreference; label: string }[] = [
   { id: 'no_preference', label: 'No Preference' },
   { id: 'high_protein', label: 'High Protein' },
   { id: 'vegetarian', label: 'Vegetarian' },
@@ -21,7 +22,7 @@ const DIET_PREFS: { id: DietPreference, label: string }[] = [
   { id: 'low_carb', label: 'Low Carb' },
 ];
 
-const EQUIPMENT: { id: EquipmentType, label: string }[] = [
+const EQUIPMENT: { id: EquipmentType; label: string }[] = [
   { id: 'gym', label: 'Full Gym' },
   { id: 'dumbbells', label: 'Dumbbells' },
   { id: 'barbell', label: 'Barbell' },
@@ -33,128 +34,244 @@ const EQUIPMENT: { id: EquipmentType, label: string }[] = [
 
 export default function PreferencesScreen() {
   const router = useRouter();
-  const { 
-    activity_level, 
-    diet_preference, 
-    equipment, 
-    workouts_per_week, 
-    setField 
-  } = useOnboardingStore();
+  const { colors } = useAppTheme();
+  const { activity_level, diet_preference, equipment, workouts_per_week, setField } =
+    useOnboardingStore();
 
   const toggleEquipment = (id: EquipmentType) => {
     const current = equipment || [];
     if (current.includes(id)) {
-      setField('equipment', current.filter(e => e !== id));
+      setField(
+        'equipment',
+        current.filter((e) => e !== id),
+      );
     } else {
       setField('equipment', [...current, id]);
     }
   };
 
+  const sectionLabelStyle = {
+    color: colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    marginBottom: Spacing.md,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1,
+  };
+
+  const sectionContainerStyle = {
+    marginBottom: Spacing.xxxl,
+  };
+
+  const currentWorkouts = workouts_per_week || 3;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <ScrollView className="flex-1 px-6 pt-10">
-        <TouchableOpacity onPress={() => router.back()} className="mb-6">
-          <Ionicons name="arrow-back" size={24} color="#94a3b8" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: Spacing.xl,
+          paddingTop: 40,
+          paddingBottom: Spacing.xxxl,
+        }}
+      >
+        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: Spacing.xxxl }}>
+          <Ionicons name="arrow-back" size={24} color={colors.muted} />
         </TouchableOpacity>
 
-        <Text className="text-white text-3xl font-bold mb-2">Final Touches</Text>
-        <Text className="text-slate-400 text-lg mb-8">Refine your daily lifestyle.</Text>
+        <Text
+          style={{
+            color: colors.textStrong,
+            fontSize: Typography.size.xxxl,
+            fontWeight: Typography.weight.bold,
+            marginBottom: Spacing.sm,
+          }}
+        >
+          Final Touches
+        </Text>
+        <Text
+          style={{
+            color: colors.textSubtle,
+            fontSize: Typography.size.lg,
+            marginBottom: Spacing.xxxl,
+          }}
+        >
+          Refine your daily lifestyle.
+        </Text>
 
         {/* Workouts per week */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Workouts per Week: {workouts_per_week}
-          </Text>
-          <View className="flex-row items-center justify-between bg-slate-800 p-2 rounded-xl border border-slate-700">
-            <TouchableOpacity 
-              onPress={() => setField('workouts_per_week', Math.max(1, (workouts_per_week || 3) - 1))}
-              className="w-12 h-12 items-center justify-center bg-slate-700 rounded-lg"
+        <View style={sectionContainerStyle}>
+          <Text style={sectionLabelStyle}>Workouts per Week: {currentWorkouts}</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: colors.card,
+              padding: Spacing.sm,
+              borderRadius: Radius.lg,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => setField('workouts_per_week', Math.max(1, currentWorkouts - 1))}
+              style={{
+                width: 48,
+                height: 48,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.surface,
+                borderRadius: Radius.md,
+              }}
             >
-              <Ionicons name="remove" size={24} color="white" />
+              <Ionicons name="remove" size={24} color={Colors.white} />
             </TouchableOpacity>
-            <Text className="text-white text-2xl font-bold">{workouts_per_week}</Text>
-            <TouchableOpacity 
-              onPress={() => setField('workouts_per_week', Math.min(7, (workouts_per_week || 3) + 1))}
-              className="w-12 h-12 items-center justify-center bg-blue-600 rounded-lg"
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: Typography.size.xxl,
+                fontWeight: Typography.weight.bold,
+              }}
             >
-              <Ionicons name="add" size={24} color="white" />
+              {currentWorkouts}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setField('workouts_per_week', Math.min(7, currentWorkouts + 1))}
+              style={{
+                width: 48,
+                height: 48,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.accent,
+                borderRadius: Radius.md,
+              }}
+            >
+              <Ionicons name="add" size={24} color={Colors.white} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Activity Level */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Daily Activity
-          </Text>
-          {ACTIVITY_LEVELS.map((level) => (
-            <TouchableOpacity
-              key={level.id}
-              onPress={() => setField('activity_level', level.id)}
-              className={`p-4 rounded-xl mb-3 border ${
-                activity_level === level.id 
-                  ? 'bg-blue-600/20 border-blue-500' 
-                  : 'bg-slate-800 border-slate-700'
-              }`}
-            >
-              <Text className={`font-medium ${
-                activity_level === level.id ? 'text-white' : 'text-slate-300'
-              }`}>
-                {level.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={sectionContainerStyle}>
+          <Text style={sectionLabelStyle}>Daily Activity</Text>
+          {ACTIVITY_LEVELS.map((level) => {
+            const isSelected = activity_level === level.id;
+            return (
+              <TouchableOpacity
+                key={level.id}
+                onPress={() => setField('activity_level', level.id)}
+                style={{
+                  padding: Spacing.lg,
+                  borderRadius: Radius.lg,
+                  marginBottom: Spacing.md,
+                  borderWidth: 1,
+                  backgroundColor: isSelected ? colors.accentMuted : colors.card,
+                  borderColor: isSelected ? colors.accent : colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    fontWeight: Typography.weight.medium,
+                    color: isSelected ? colors.text : colors.textSecondary,
+                  }}
+                >
+                  {level.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Diet */}
-        <View className="mb-8">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Dietary Preference
-          </Text>
-          <View className="flex-row flex-wrap">
-            {DIET_PREFS.map((diet) => (
-              <TouchableOpacity
-                key={diet.id}
-                onPress={() => setField('diet_preference', diet.id)}
-                className={`px-4 py-2 rounded-full mr-2 mb-2 border ${
-                  diet_preference === diet.id 
-                    ? 'bg-blue-600 border-blue-500' 
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <Text className="text-white text-sm font-medium">{diet.label}</Text>
-              </TouchableOpacity>
-            ))}
+        <View style={sectionContainerStyle}>
+          <Text style={sectionLabelStyle}>Dietary Preference</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {DIET_PREFS.map((diet) => {
+              const isSelected = diet_preference === diet.id;
+              return (
+                <TouchableOpacity
+                  key={diet.id}
+                  onPress={() => setField('diet_preference', diet.id)}
+                  style={{
+                    paddingHorizontal: Spacing.lg,
+                    paddingVertical: Spacing.sm,
+                    borderRadius: Radius.full,
+                    marginRight: Spacing.sm,
+                    marginBottom: Spacing.sm,
+                    borderWidth: 1,
+                    backgroundColor: isSelected ? colors.accent : colors.card,
+                    borderColor: isSelected ? colors.accent : colors.border,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: Colors.white,
+                      fontSize: Typography.size.sm,
+                      fontWeight: Typography.weight.medium,
+                    }}
+                  >
+                    {diet.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
         {/* Equipment */}
-        <View className="mb-12">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-            Available Equipment
-          </Text>
-          <View className="flex-row flex-wrap">
-            {EQUIPMENT.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => toggleEquipment(item.id)}
-                className={`px-4 py-2 rounded-full mr-2 mb-2 border ${
-                  equipment?.includes(item.id) 
-                    ? 'bg-blue-600 border-blue-500' 
-                    : 'bg-slate-800 border-slate-700'
-                }`}
-              >
-                <Text className="text-white text-sm font-medium">{item.label}</Text>
-              </TouchableOpacity>
-            ))}
+        <View style={{ marginBottom: 48 }}>
+          <Text style={sectionLabelStyle}>Available Equipment</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {EQUIPMENT.map((item) => {
+              const isSelected = equipment?.includes(item.id);
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() => toggleEquipment(item.id)}
+                  style={{
+                    paddingHorizontal: Spacing.lg,
+                    paddingVertical: Spacing.sm,
+                    borderRadius: Radius.full,
+                    marginRight: Spacing.sm,
+                    marginBottom: Spacing.sm,
+                    borderWidth: 1,
+                    backgroundColor: isSelected ? colors.accent : colors.card,
+                    borderColor: isSelected ? colors.accent : colors.border,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: Colors.white,
+                      fontSize: Typography.size.sm,
+                      fontWeight: Typography.weight.medium,
+                    }}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
         <TouchableOpacity
           onPress={() => router.push('/(onboarding)/complete')}
-          className="w-full bg-blue-600 py-4 rounded-xl mb-10"
+          style={{
+            width: '100%',
+            backgroundColor: colors.accent,
+            paddingVertical: Spacing.lg,
+            borderRadius: Radius.lg,
+            marginBottom: 40,
+          }}
         >
-          <Text className="text-white text-center text-lg font-semibold">
+          <Text
+            style={{
+              color: Colors.white,
+              textAlign: 'center',
+              fontSize: Typography.size.lg,
+              fontWeight: Typography.weight.semibold,
+            }}
+          >
             Done
           </Text>
         </TouchableOpacity>

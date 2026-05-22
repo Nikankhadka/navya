@@ -1,12 +1,12 @@
-import { useEffect } from "react";
-import { useToastController } from "tamagui";
+import { useEffect } from 'react';
+import { useToastController } from 'tamagui';
 
 interface AlertProps {
   title: string;
   message?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  variant?: "default" | "destructive";
+  variant?: 'default' | 'destructive';
   action?: {
     label: string;
     onPress: () => void;
@@ -22,8 +22,8 @@ export function Alert({
   title,
   message,
   open,
-  onOpenChange,
-  variant = "default",
+  onOpenChange: _onOpenChange,
+  variant = 'default',
   action,
   cancel,
   duration = 4000,
@@ -36,12 +36,12 @@ export function Alert({
         message,
         duration,
         native: false,
-        ...(variant === "destructive"
+        ...(variant === 'destructive'
           ? {
-              preset: "error",
+              preset: 'error',
             }
           : {
-              preset: "ok",
+              preset: 'ok',
             }),
         action: action
           ? {

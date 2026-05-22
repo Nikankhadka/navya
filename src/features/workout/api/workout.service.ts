@@ -12,10 +12,12 @@ import {
   mapWorkoutPlanRow,
   mapWorkoutSessionRow,
 } from '@/lib/supabase/mappers';
+import { fromDateKey, getTodayDateString } from '@/utils/date';
 
-function buildSessionFromPlan(plan: WorkoutPlan): WorkoutSession | null {
+function buildSessionFromPlan(plan: WorkoutPlan, dateKey: string): WorkoutSession | null {
+  const date = fromDateKey(dateKey);
   const todayDayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
-    .format(new Date())
+    .format(date)
     .toLowerCase();
   const planDay =
     plan.workout_plan_days.find((entry) => entry.day_of_week === todayDayOfWeek) ??
@@ -33,7 +35,7 @@ function buildSessionFromPlan(plan: WorkoutPlan): WorkoutSession | null {
     plan_day_id: planDay.id,
     day_name: planDay.day_name,
     status: 'in_progress',
-    started_at: new Date().toISOString(),
+    started_at: date.toISOString(),
     completed_at: null,
     duration_seconds: null,
     session_exercises: planDay.plan_exercises.map((exercise, index) => ({
@@ -50,8 +52,8 @@ function buildSessionFromPlan(plan: WorkoutPlan): WorkoutSession | null {
   };
 }
 
-function getWeekStart(): Date {
-  const now = new Date();
+function getWeekStart(dateKey?: string): Date {
+  const now = dateKey ? fromDateKey(dateKey) : new Date();
   const day = now.getDay();
   const diff = day === 0 ? -6 : 1 - day;
 
@@ -64,6 +66,7 @@ function getWeekStart(): Date {
 function buildWorkoutHistorySummary(
   sessions: WorkoutSession[],
   weeklyTarget: number,
+  dateKey?: string,
 ): WorkoutHistorySummary {
   const completedSessions = [...sessions]
     .filter((entry) => entry.status === 'completed' && entry.completed_at)
@@ -72,7 +75,7 @@ function buildWorkoutHistorySummary(
         new Date(right.completed_at ?? right.started_at).getTime() -
         new Date(left.completed_at ?? left.started_at).getTime(),
     );
-  const weekStart = getWeekStart().getTime();
+  const weekStart = getWeekStart(dateKey).getTime();
   const completedThisWeek = completedSessions.filter(
     (entry) => new Date(entry.completed_at ?? entry.started_at).getTime() >= weekStart,
   ).length;
@@ -85,9 +88,7 @@ function buildWorkoutHistorySummary(
     completed_this_week: completedThisWeek,
     weekly_target: weeklyTarget,
     adherence_pct:
-      weeklyTarget > 0
-        ? Math.min(Math.round((completedThisWeek / weeklyTarget) * 100), 100)
-        : 0,
+      weeklyTarget > 0 ? Math.min(Math.round((completedThisWeek / weeklyTarget) * 100), 100) : 0,
     last_completed_at: completedSessions[0]?.completed_at ?? null,
     total_completed_sessions: completedSessions.length,
     average_duration_seconds:
@@ -109,7 +110,8 @@ export const workoutService = {
 
     const { data, error } = await supabase
       .from('workout_plans')
-      .select(`
+      .select(
+        `
         *,
         workout_plan_days (
           *,
@@ -118,7 +120,8 @@ export const workoutService = {
             exercise:exercise_library (*)
           )
         )
-      `)
+      `,
+      )
       .eq('user_id', userId)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
@@ -133,19 +136,28 @@ export const workoutService = {
     return data ? mapWorkoutPlanRow(data) : null;
   },
 
-  async getTodaySession(userId: string): Promise<WorkoutSession | null> {
+  async getTodaySession(userId: string, dateKey?: string): Promise<WorkoutSession | null> {
+    const targetDate = dateKey ?? getTodayDateString();
+
     if (shouldUseDemoWorkout(userId)) {
       return MOCK_TODAY_SESSION;
     }
 
+    const startDate = fromDateKey(targetDate);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+
     const { data, error } = await supabase
       .from('workout_sessions')
-      .select(`
+      .select(
+        `
         *,
         session_exercises (*)
-      `)
+      `,
+      )
       .eq('user_id', userId)
-      .eq('status', 'in_progress')
+      .gte('started_at', startDate.toISOString())
+      .lt('started_at', endDate.toISOString())
       .order('started_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -161,10 +173,16 @@ export const workoutService = {
 
     const activePlan = await this.getActivePlan(userId);
 
-    return activePlan ? buildSessionFromPlan(activePlan) : null;
+    return activePlan ? buildSessionFromPlan(activePlan, targetDate) : null;
   },
 
-  async getWorkoutHistory(userId: string, weeklyTarget = 3): Promise<WorkoutHistorySummary> {
+  async getWorkoutHistory(
+    userId: string,
+    weeklyTarget = 3,
+    dateKey?: string,
+  ): Promise<WorkoutHistorySummary> {
+    const targetDate = dateKey ?? getTodayDateString();
+
     if (shouldUseDemoWorkout(userId)) {
       return {
         ...MOCK_WORKOUT_HISTORY,
@@ -181,10 +199,12 @@ export const workoutService = {
 
     const { data, error } = await supabase
       .from('workout_sessions')
-      .select(`
+      .select(
+        `
         *,
         session_exercises (*)
-      `)
+      `,
+      )
       .eq('user_id', userId)
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
@@ -192,10 +212,14 @@ export const workoutService = {
 
     if (error) {
       console.error('Error fetching workout history:', error);
-      return buildWorkoutHistorySummary([], weeklyTarget);
+      return buildWorkoutHistorySummary([], weeklyTarget, targetDate);
     }
 
-    return buildWorkoutHistorySummary((data ?? []).map(mapWorkoutSessionRow), weeklyTarget);
+    return buildWorkoutHistorySummary(
+      (data ?? []).map(mapWorkoutSessionRow),
+      weeklyTarget,
+      targetDate,
+    );
   },
 
   async startSession(userId: string, plan: WorkoutPlan | null): Promise<WorkoutSession | null> {
@@ -203,7 +227,7 @@ export const workoutService = {
       return null;
     }
 
-    const localSession = buildSessionFromPlan(plan);
+    const localSession = buildSessionFromPlan(plan, getTodayDateString());
 
     if (shouldUseDemoWorkout(userId) || !localSession) {
       return localSession ?? MOCK_TODAY_SESSION;
@@ -220,7 +244,9 @@ export const workoutService = {
       .select('*')
       .single();
 
-    const sessionRow = sessionRowRaw as Database['public']['Tables']['workout_sessions']['Row'] | null;
+    const sessionRow = sessionRowRaw as
+      | Database['public']['Tables']['workout_sessions']['Row']
+      | null;
 
     if (sessionError || !sessionRow) {
       console.error('Error creating workout session:', sessionError);

@@ -1,4 +1,3 @@
-import '../../global.css';
 import { Stack } from 'expo-router';
 import { ToastViewport } from 'tamagui';
 import { AppProviders } from '@/providers/AppProviders';

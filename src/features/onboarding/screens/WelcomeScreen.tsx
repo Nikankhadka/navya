@@ -2,36 +2,94 @@ import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Radius, Shadow, Spacing, Typography, useAppTheme, Colors } from '@/theme';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
 
   return (
-    <LinearGradient
-      colors={['#0f172a', '#1e293b']}
-      style={{ flex: 1 }}
-    >
+    <LinearGradient colors={Colors.gradientDark} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
-        <View className="flex-1 px-6 justify-center items-center">
-          <View className="w-20 h-20 bg-blue-500 rounded-2xl rotate-12 mb-8 items-center justify-center shadow-lg shadow-blue-500/50">
-            <Text className="text-4xl text-white font-bold -rotate-12">N</Text>
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: Spacing.xl,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              backgroundColor: colors.accent,
+              borderRadius: Radius.xl,
+              transform: [{ rotate: '12deg' }],
+              marginBottom: Spacing.xxxl,
+              alignItems: 'center',
+              justifyContent: 'center',
+              ...Shadow.lg,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: Typography.size.display,
+                color: Colors.white,
+                fontWeight: Typography.weight.bold,
+                transform: [{ rotate: '-12deg' }],
+              }}
+            >
+              N
+            </Text>
           </View>
-          
-          <Text className="text-white text-4xl font-bold text-center mb-4">
+
+          <Text
+            style={{
+              color: colors.textStrong,
+              fontSize: Typography.size.display,
+              fontWeight: Typography.weight.bold,
+              textAlign: 'center',
+              marginBottom: Spacing.lg,
+            }}
+          >
             Welcome to Navya
           </Text>
-          
-          <Text className="text-slate-400 text-lg text-center mb-12 px-4 leading-6">
-            Your AI fitness companion. Let's build your personalized training and nutrition foundation.
+
+          <Text
+            style={{
+              color: colors.textSubtle,
+              fontSize: Typography.size.lg,
+              textAlign: 'center',
+              marginBottom: Spacing.xxxl,
+              paddingHorizontal: Spacing.lg,
+              lineHeight: 24,
+            }}
+          >
+            Your AI fitness companion. Let's build your personalized training and nutrition
+            foundation.
           </Text>
 
           <TouchableOpacity
             onPress={() => router.push('/(onboarding)/basics')}
-            className="w-full bg-blue-600 py-4 rounded-xl shadow-lg shadow-blue-600/30"
+            style={{
+              width: '100%',
+              backgroundColor: colors.accent,
+              paddingVertical: Spacing.lg,
+              borderRadius: Radius.lg,
+              ...Shadow.md,
+            }}
             activeOpacity={0.8}
             testID="onboarding-get-started"
           >
-            <Text className="text-white text-center text-lg font-semibold">
+            <Text
+              style={{
+                color: Colors.white,
+                textAlign: 'center',
+                fontSize: Typography.size.lg,
+                fontWeight: Typography.weight.semibold,
+              }}
+            >
               Get Started
             </Text>
           </TouchableOpacity>

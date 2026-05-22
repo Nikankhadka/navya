@@ -28,10 +28,11 @@ Call log:
 ```yaml
 - button " Light"
 - button " Dark"
-- text: Navya Enter your email and we'll send you a one-time sign-in link. No password needed. Email
+- text: Navya Enter your email and we'll send you a one-time sign-in link. No password needed. Email Link Password Email
 - textbox "you@example.com"
-- text: Send Email Link
+- text: Send Email Link Don't have an account? Sign up
 - button "Demo mode"
+- region "Notifications (F8)"
 ```
 
 # Test source

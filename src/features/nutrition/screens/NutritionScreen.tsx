@@ -18,13 +18,15 @@ import { isNutritionLocalDatabaseSupported } from '@/features/nutrition/db/nutri
 import { useDailyNutrition } from '@/features/nutrition/hooks/useDailyNutrition';
 import { useFoodSearch } from '@/features/nutrition/hooks/useFoodSearch';
 import { useNutritionActions } from '@/features/nutrition/hooks/useNutritionActions';
-import { calculateFoodLogNutrients, getDefaultFoodPortion } from '@/features/nutrition/utils/foodCalculations';
+import {
+  calculateFoodLogNutrients,
+  getDefaultFoodPortion,
+} from '@/features/nutrition/utils/foodCalculations';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import type {
   CreateFoodLogInput,
   FavoriteFood,
-  FoodLog,
   FoodSearchResult,
   MealTime,
   RecentFood,
@@ -118,7 +120,8 @@ export default function NutritionScreen() {
   const isFoodSearchEnabled =
     (featureFlags?.food_search_enabled ?? false) && isNutritionLocalDatabaseSupported();
   const { data: nutritionSummary } = useDailyNutrition(userId);
-  const { addMeal, deleteMeal, saveCustomFood, toggleFavorite, addWater } = useNutritionActions(userId);
+  const { addMeal, deleteMeal, saveCustomFood, toggleFavorite, addWater } =
+    useNutritionActions(userId);
   const [showModal, setShowModal] = useState(false);
   const [activeMode, setActiveMode] = useState<AddMode>('manual');
   const [manualForm, setManualForm] = useState<ManualMealForm>(EMPTY_MANUAL_FORM);
@@ -153,8 +156,8 @@ export default function NutritionScreen() {
   const selectedPortion =
     selectedFood == null
       ? null
-      : selectedFood.portions.find((portion) => portion.id === selectedPortionId) ??
-        getDefaultFoodPortion(selectedFood);
+      : (selectedFood.portions.find((portion) => portion.id === selectedPortionId) ??
+        getDefaultFoodPortion(selectedFood));
   const selectedQuantity = parseNumber(searchQuantity) ?? 1;
   const selectedPreview =
     selectedFood && selectedPortion
@@ -341,10 +344,38 @@ export default function NutritionScreen() {
         >
           <Card style={styles.macroCard}>
             <View style={styles.ringRow}>
-              <MacroRing value={totalCal} max={calorieGoal} size={85} color={colors.orange} label="Calories" unit=" kcal" />
-              <MacroRing value={totalProtein} max={proteinGoal} size={85} color={colors.accent} label="Protein" unit="g" />
-              <MacroRing value={totalCarbs} max={carbGoal} size={85} color={colors.green} label="Carbs" unit="g" />
-              <MacroRing value={totalFat} max={fatGoal} size={85} color={colors.blue} label="Fat" unit="g" />
+              <MacroRing
+                value={totalCal}
+                max={calorieGoal}
+                size={85}
+                color={colors.orange}
+                label="Calories"
+                unit=" kcal"
+              />
+              <MacroRing
+                value={totalProtein}
+                max={proteinGoal}
+                size={85}
+                color={colors.accent}
+                label="Protein"
+                unit="g"
+              />
+              <MacroRing
+                value={totalCarbs}
+                max={carbGoal}
+                size={85}
+                color={colors.green}
+                label="Carbs"
+                unit="g"
+              />
+              <MacroRing
+                value={totalFat}
+                max={fatGoal}
+                size={85}
+                color={colors.blue}
+                label="Fat"
+                unit="g"
+              />
             </View>
 
             <View
@@ -376,7 +407,13 @@ export default function NutritionScreen() {
                 <Text style={styles.waterBadgeText}>Daily habit</Text>
               </View>
             </View>
-            <ProgressBar value={waterTotal} max={waterGoal} color={colors.blue} height={6} showLabel={false} />
+            <ProgressBar
+              value={waterTotal}
+              max={waterGoal}
+              color={colors.blue}
+              height={6}
+              showLabel={false}
+            />
             <View style={styles.waterActions}>
               {QUICK_ADD_OPTIONS.map((option) => (
                 <TouchableOpacity
@@ -396,7 +433,9 @@ export default function NutritionScreen() {
           <View style={styles.quickRow}>
             {favoriteFoods.length === 0 ? (
               <Card style={styles.emptyQuickCard}>
-                <Text style={styles.emptyQuickText}>Star searched foods to keep your fastest go-to meals here.</Text>
+                <Text style={styles.emptyQuickText}>
+                  Star searched foods to keep your fastest go-to meals here.
+                </Text>
               </Card>
             ) : (
               favoriteFoods.map((food) => (
@@ -421,7 +460,9 @@ export default function NutritionScreen() {
           <View style={styles.quickRow}>
             {recentFoods.length === 0 ? (
               <Card style={styles.emptyQuickCard}>
-                <Text style={styles.emptyQuickText}>Log a few foods and your repeat options will show up here.</Text>
+                <Text style={styles.emptyQuickText}>
+                  Log a few foods and your repeat options will show up here.
+                </Text>
               </Card>
             ) : (
               recentFoods.map((food) => (
@@ -490,7 +531,12 @@ export default function NutritionScreen() {
           <View style={{ height: 40 }} />
         </ScrollView>
 
-        <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeAddModal}>
+        <Modal
+          visible={showModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={closeAddModal}
+        >
           <View style={styles.modal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Log a Meal</Text>
@@ -505,7 +551,12 @@ export default function NutritionScreen() {
                   style={[styles.modeTab, activeMode === 'search' && styles.modeTabActive]}
                   onPress={() => setActiveMode('search')}
                 >
-                  <Text style={[styles.modeTabText, activeMode === 'search' && styles.modeTabTextActive]}>
+                  <Text
+                    style={[
+                      styles.modeTabText,
+                      activeMode === 'search' && styles.modeTabTextActive,
+                    ]}
+                  >
                     Search
                   </Text>
                 </TouchableOpacity>
@@ -514,7 +565,9 @@ export default function NutritionScreen() {
                 style={[styles.modeTab, activeMode === 'manual' && styles.modeTabActive]}
                 onPress={() => setActiveMode('manual')}
               >
-                <Text style={[styles.modeTabText, activeMode === 'manual' && styles.modeTabTextActive]}>
+                <Text
+                  style={[styles.modeTabText, activeMode === 'manual' && styles.modeTabTextActive]}
+                >
                   Manual
                 </Text>
               </TouchableOpacity>
@@ -569,11 +622,15 @@ export default function NutritionScreen() {
                   <Text style={styles.fieldLabel}>Results</Text>
                   {searchResults.isFetching ? (
                     <Card style={styles.searchHintCard}>
-                      <Text style={styles.searchHintText}>Searching your offline food catalog…</Text>
+                      <Text style={styles.searchHintText}>
+                        Searching your offline food catalog…
+                      </Text>
                     </Card>
                   ) : searchQuery.trim().length === 0 ? (
                     <Card style={styles.searchHintCard}>
-                      <Text style={styles.searchHintText}>Start typing to search the bundled USDA food database.</Text>
+                      <Text style={styles.searchHintText}>
+                        Start typing to search the bundled USDA food database.
+                      </Text>
                     </Card>
                   ) : searchResults.data?.length ? (
                     <View style={styles.searchResultsList}>
@@ -589,7 +646,12 @@ export default function NutritionScreen() {
                           <View style={styles.searchResultLeft}>
                             <Text style={styles.searchResultName}>{food.name}</Text>
                             <Text style={styles.searchResultMeta}>
-                              {food.category ?? 'Food'} • {food.is_custom ? 'Custom' : food.source === 'usda_foundation' ? 'Foundation' : 'SR Legacy'}
+                              {food.category ?? 'Food'} •{' '}
+                              {food.is_custom
+                                ? 'Custom'
+                                : food.source === 'usda_foundation'
+                                  ? 'Foundation'
+                                  : 'SR Legacy'}
                             </Text>
                           </View>
                           <Text style={styles.searchResultCal}>
@@ -612,10 +674,18 @@ export default function NutritionScreen() {
                         <View style={{ flex: 1 }}>
                           <Text style={styles.selectedFoodTitle}>{selectedFood.name}</Text>
                           <Text style={styles.selectedFoodSubtitle}>
-                            {selectedFood.category ?? 'Food'} • {selectedFood.source === 'usda_foundation' ? 'Foundation' : selectedFood.source === 'usda_sr_legacy' ? 'SR Legacy' : 'Custom'}
+                            {selectedFood.category ?? 'Food'} •{' '}
+                            {selectedFood.source === 'usda_foundation'
+                              ? 'Foundation'
+                              : selectedFood.source === 'usda_sr_legacy'
+                                ? 'SR Legacy'
+                                : 'Custom'}
                           </Text>
                         </View>
-                        <TouchableOpacity style={styles.favoriteToggle} onPress={handleToggleSelectedFavorite}>
+                        <TouchableOpacity
+                          style={styles.favoriteToggle}
+                          onPress={handleToggleSelectedFavorite}
+                        >
                           <Text style={styles.favoriteToggleText}>
                             {selectedFood.is_favorite ? '★ Saved' : '☆ Save'}
                           </Text>
@@ -711,7 +781,8 @@ export default function NutritionScreen() {
                   {!isFoodSearchEnabled ? (
                     <Card style={styles.searchHintCard}>
                       <Text style={styles.searchHintText}>
-                        Food search is currently feature-flagged off, so manual logging stays available as the fallback path.
+                        Food search is currently feature-flagged off, so manual logging stays
+                        available as the fallback path.
                       </Text>
                     </Card>
                   ) : null}
@@ -722,7 +793,9 @@ export default function NutritionScreen() {
                     placeholder="e.g. Chicken Rice Bowl"
                     placeholderTextColor={colors.inputPlaceholder}
                     value={manualForm.meal_name}
-                    onChangeText={(value) => setManualForm((current) => ({ ...current, meal_name: value }))}
+                    onChangeText={(value) =>
+                      setManualForm((current) => ({ ...current, meal_name: value }))
+                    }
                   />
 
                   <Text style={styles.fieldLabel}>Calories *</Text>
@@ -732,7 +805,9 @@ export default function NutritionScreen() {
                     placeholderTextColor={colors.inputPlaceholder}
                     keyboardType="numeric"
                     value={manualForm.calories}
-                    onChangeText={(value) => setManualForm((current) => ({ ...current, calories: value }))}
+                    onChangeText={(value) =>
+                      setManualForm((current) => ({ ...current, calories: value }))
+                    }
                   />
 
                   <View style={styles.macroInputRow}>
@@ -744,7 +819,9 @@ export default function NutritionScreen() {
                         placeholderTextColor={colors.inputPlaceholder}
                         keyboardType="numeric"
                         value={manualForm.protein_g}
-                        onChangeText={(value) => setManualForm((current) => ({ ...current, protein_g: value }))}
+                        onChangeText={(value) =>
+                          setManualForm((current) => ({ ...current, protein_g: value }))
+                        }
                       />
                     </View>
                     <View style={styles.macroInput}>
@@ -755,7 +832,9 @@ export default function NutritionScreen() {
                         placeholderTextColor={colors.inputPlaceholder}
                         keyboardType="numeric"
                         value={manualForm.carbs_g}
-                        onChangeText={(value) => setManualForm((current) => ({ ...current, carbs_g: value }))}
+                        onChangeText={(value) =>
+                          setManualForm((current) => ({ ...current, carbs_g: value }))
+                        }
                       />
                     </View>
                     <View style={styles.macroInput}>
@@ -766,7 +845,9 @@ export default function NutritionScreen() {
                         placeholderTextColor={colors.inputPlaceholder}
                         keyboardType="numeric"
                         value={manualForm.fat_g}
-                        onChangeText={(value) => setManualForm((current) => ({ ...current, fat_g: value }))}
+                        onChangeText={(value) =>
+                          setManualForm((current) => ({ ...current, fat_g: value }))
+                        }
                       />
                     </View>
                   </View>
@@ -780,7 +861,9 @@ export default function NutritionScreen() {
                           styles.mealTimePill,
                           manualForm.meal_time === mealTime && styles.mealTimePillActive,
                         ]}
-                        onPress={() => setManualForm((current) => ({ ...current, meal_time: mealTime }))}
+                        onPress={() =>
+                          setManualForm((current) => ({ ...current, meal_time: mealTime }))
+                        }
                       >
                         <Text
                           style={[
@@ -813,7 +896,9 @@ export default function NutritionScreen() {
                         manualForm.save_as_custom && styles.saveCustomToggleTextActive,
                       ]}
                     >
-                      {manualForm.save_as_custom ? '✓ Save as reusable custom food' : 'Save as reusable custom food'}
+                      {manualForm.save_as_custom
+                        ? '✓ Save as reusable custom food'
+                        : 'Save as reusable custom food'}
                     </Text>
                   </TouchableOpacity>
 
@@ -896,7 +981,7 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.accent,
     },
     addBtnText: {
-      color: '#fff',
+      color: colors.textStrong,
       fontWeight: Typography.weight.bold,
       fontSize: Typography.size.sm,
     },

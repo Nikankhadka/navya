@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,29 +7,17 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-} from "react-native";
-import { Stack, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  Button,
-  Input,
-  ThemeModeToggle,
-  Alert as TamaguiAlert,
-} from "@/components/ui";
-import {
-  Radius,
-  Shadow,
-  Spacing,
-  Typography,
-  useAppTheme,
-  type ThemeColors,
-} from "@/theme";
-import { getAuthRedirectUrl } from "@/lib/auth/redirects";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase/client";
-import { logger } from "@/lib/logger";
-import { withMinimumLoading } from "@/lib/auth/loading";
-import { signUpSchema, getFirstErrorMessage } from "@/lib/validation";
-import type { AuthError } from "@supabase/supabase-js";
+} from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, Input, ThemeModeToggle, Alert as TamaguiAlert } from '@/components/ui';
+import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { getAuthRedirectUrl } from '@/lib/auth/redirects';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
+import { withMinimumLoading } from '@/lib/auth/loading';
+import { signUpSchema, getFirstErrorMessage } from '@/lib/validation';
+import type { AuthError } from '@supabase/supabase-js';
 
 export default function SignupScreen() {
   const { colors } = useAppTheme();
@@ -37,9 +25,9 @@ export default function SignupScreen() {
   const router = useRouter();
   const styles = createStyles(colors, insets.top, insets.bottom);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -50,7 +38,7 @@ export default function SignupScreen() {
     open: boolean;
     title: string;
     message: string;
-    variant: "default" | "destructive";
+    variant: 'default' | 'destructive';
   } | null>(null);
 
   function validateForm(): boolean {
@@ -61,9 +49,9 @@ export default function SignupScreen() {
       setPasswordError(undefined);
       setConfirmPasswordError(undefined);
 
-      const emailMsg = getFirstErrorMessage(result, "email");
-      const passwordMsg = getFirstErrorMessage(result, "password");
-      const confirmMsg = getFirstErrorMessage(result, "confirmPassword");
+      const emailMsg = getFirstErrorMessage(result, 'email');
+      const passwordMsg = getFirstErrorMessage(result, 'password');
+      const confirmMsg = getFirstErrorMessage(result, 'confirmPassword');
 
       if (emailMsg) setEmailError(emailMsg);
       if (passwordMsg) setPasswordError(passwordMsg);
@@ -102,28 +90,29 @@ export default function SignupScreen() {
 
       setAlert({
         open: true,
-        title: "Check your inbox",
-        message: "We sent a confirmation link to your email. Please verify your email before signing in.",
-        variant: "default",
+        title: 'Check your inbox',
+        message:
+          'We sent a confirmation link to your email. Please verify your email before signing in.',
+        variant: 'default',
       });
     } catch (error) {
       const authError = error as AuthError;
-      let message = "Unable to create account. Please try again.";
+      let message = 'Unable to create account. Please try again.';
 
-      if (authError.message.includes("User already registered")) {
-        message = "An account with this email already exists. Please sign in instead.";
-      } else if (authError.message.includes("Password")) {
+      if (authError.message.includes('User already registered')) {
+        message = 'An account with this email already exists. Please sign in instead.';
+      } else if (authError.message.includes('Password')) {
         message = authError.message;
       } else if (authError instanceof Error) {
         message = authError.message;
       }
 
-      logger.error("Signup failed", authError);
+      logger.error('Signup failed', authError);
       setAlert({
         open: true,
-        title: "Signup failed",
+        title: 'Signup failed',
         message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -133,27 +122,23 @@ export default function SignupScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Stack.Screen options={{ headerShown: false }} />
       <ThemeModeToggle compact style={styles.themeToggle} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>
-            Sign up to get started with Navya.
-          </Text>
+          <Text style={styles.subtitle}>Sign up to get started with Navya.</Text>
         </View>
 
         <View style={styles.formContainer}>
           {!isSupabaseConfigured && (
             <View style={styles.infoBanner}>
-              <Text style={styles.infoBannerTitle}>
-                Supabase not configured
-              </Text>
+              <Text style={styles.infoBannerTitle}>Supabase not configured</Text>
               <Text style={styles.infoBannerText}>
-                Real auth is unavailable until `.env.local` contains a valid
-                Supabase URL and anon key.
+                Real auth is unavailable until `.env.local` contains a valid Supabase URL and anon
+                key.
               </Text>
             </View>
           )}
@@ -192,9 +177,7 @@ export default function SignupScreen() {
             onPress={() => setShowPassword(!showPassword)}
             style={styles.showPasswordButton}
           >
-            <Text style={styles.showPasswordText}>
-              {showPassword ? "Hide" : "Show"}
-            </Text>
+            <Text style={styles.showPasswordText}>{showPassword ? 'Hide' : 'Show'}</Text>
           </TouchableOpacity>
 
           <Input
@@ -215,9 +198,7 @@ export default function SignupScreen() {
             onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             style={styles.showPasswordButton}
           >
-            <Text style={styles.showPasswordText}>
-              {showConfirmPassword ? "Hide" : "Show"}
-            </Text>
+            <Text style={styles.showPasswordText}>{showConfirmPassword ? 'Hide' : 'Show'}</Text>
           </TouchableOpacity>
 
           <Button
@@ -232,10 +213,7 @@ export default function SignupScreen() {
 
           <View style={styles.loginRow}>
             <Text style={styles.loginText}>Already have an account? </Text>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              disabled={loading}
-            >
+            <TouchableOpacity onPress={() => router.back()} disabled={loading}>
               <Text style={styles.loginLink}>Log in</Text>
             </TouchableOpacity>
           </View>
@@ -257,18 +235,14 @@ export default function SignupScreen() {
   );
 }
 
-const createStyles = (
-  colors: ThemeColors,
-  topInset: number,
-  _bottomInset: number,
-) =>
+const createStyles = (colors: ThemeColors, topInset: number, _bottomInset: number) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
     themeToggle: {
-      position: "absolute",
+      position: 'absolute',
       top: Math.max(topInset, Spacing.lg),
       right: Spacing.lg,
       zIndex: 20,
@@ -278,24 +252,24 @@ const createStyles = (
       paddingHorizontal: Spacing.xl,
       paddingTop: 112,
       paddingBottom: Spacing.xxl,
-      justifyContent: "center",
+      justifyContent: 'center',
     },
     header: {
       marginBottom: 48,
-      alignItems: "center",
+      alignItems: 'center',
     },
     title: {
       fontSize: 36,
       fontWeight: Typography.weight.extrabold,
       color: colors.text,
       marginBottom: Spacing.sm,
-      textAlign: "center",
+      textAlign: 'center',
       letterSpacing: 0.5,
     },
     subtitle: {
       fontSize: Typography.size.md,
       color: colors.textSecondary,
-      textAlign: "center",
+      textAlign: 'center',
       lineHeight: 22,
       paddingHorizontal: Spacing.lg,
     },
@@ -322,7 +296,7 @@ const createStyles = (
       lineHeight: 20,
     },
     showPasswordButton: {
-      alignSelf: "flex-end",
+      alignSelf: 'flex-end',
       marginTop: -Spacing.xs,
       marginBottom: Spacing.md,
     },
@@ -332,8 +306,8 @@ const createStyles = (
       fontWeight: Typography.weight.medium,
     },
     loginRow: {
-      flexDirection: "row",
-      justifyContent: "center",
+      flexDirection: 'row',
+      justifyContent: 'center',
       marginTop: Spacing.lg,
     },
     loginText: {
@@ -344,6 +318,6 @@ const createStyles = (
       color: colors.accent,
       fontSize: Typography.size.sm,
       fontWeight: Typography.weight.semibold,
-      textDecorationLine: "underline",
+      textDecorationLine: 'underline',
     },
   });

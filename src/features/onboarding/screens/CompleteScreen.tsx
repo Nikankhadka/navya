@@ -6,9 +6,11 @@ import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { profileService } from '@/features/profile/api/profile.service';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors, Radius, Spacing, Typography, useAppTheme } from '@/theme';
 
 export default function CompleteScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
   const { buildPayload, reset } = useOnboardingStore();
   const { session, setProfile } = useAuthStore();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -17,20 +19,20 @@ export default function CompleteScreen() {
   useEffect(() => {
     async function saveOnboarding() {
       if (!session?.user.id) return;
-      
+
       try {
         const payload = buildPayload();
         await profileService.upsertProfile(session.user.id, {
           ...payload,
           onboarding_complete: true,
         });
-        
+
         // Update local auth store so layout redirects to tabs
         setProfile({ ...payload, onboarding_complete: true });
-        
+
         setStatus('success');
         reset();
-        
+
         // Brief delay for visual confirmation
         setTimeout(() => {
           router.replace('/(tabs)');
@@ -45,20 +47,48 @@ export default function CompleteScreen() {
     saveOnboarding();
   }, []);
 
+  const iconContainerStyle = {
+    width: 80,
+    height: 80,
+    borderRadius: Radius.full,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: Spacing.xxxl,
+  };
+
   return (
-    <LinearGradient
-      colors={['#0f172a', '#1e293b']}
-      style={{ flex: 1 }}
-    >
+    <LinearGradient colors={Colors.gradientDark} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
-        <View className="flex-1 px-6 justify-center items-center">
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: Spacing.xl,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           {status === 'loading' && (
             <>
-              <ActivityIndicator size="large" color="#3b82f6" />
-              <Text className="text-white text-2xl font-bold mt-8 text-center">
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text
+                style={{
+                  color: colors.textStrong,
+                  fontSize: Typography.size.xxl,
+                  fontWeight: Typography.weight.bold,
+                  marginTop: Spacing.xxl,
+                  textAlign: 'center',
+                }}
+              >
                 Saving your fitness profile...
               </Text>
-              <Text className="text-slate-400 text-center mt-4 px-8">
+              <Text
+                style={{
+                  color: colors.textSubtle,
+                  textAlign: 'center',
+                  marginTop: Spacing.lg,
+                  paddingHorizontal: Spacing.xxxl,
+                }}
+              >
                 Preparing your onboarding data so your dashboard is ready to use.
               </Text>
             </>
@@ -66,13 +96,26 @@ export default function CompleteScreen() {
 
           {status === 'success' && (
             <>
-              <View className="w-20 h-20 bg-green-500 rounded-full items-center justify-center mb-8">
-                <Ionicons name="checkmark" size={40} color="white" />
+              <View style={{ ...iconContainerStyle, backgroundColor: colors.green }}>
+                <Ionicons name="checkmark" size={40} color={Colors.white} />
               </View>
-              <Text className="text-white text-3xl font-bold text-center">
+              <Text
+                style={{
+                  color: colors.textStrong,
+                  fontSize: Typography.size.xxxl,
+                  fontWeight: Typography.weight.bold,
+                  textAlign: 'center',
+                }}
+              >
                 You're all set!
               </Text>
-              <Text className="text-slate-400 text-center mt-4">
+              <Text
+                style={{
+                  color: colors.textSubtle,
+                  textAlign: 'center',
+                  marginTop: Spacing.lg,
+                }}
+              >
                 Redirecting you to your dashboard...
               </Text>
             </>
@@ -80,20 +123,49 @@ export default function CompleteScreen() {
 
           {status === 'error' && (
             <>
-              <View className="w-20 h-20 bg-red-500 rounded-full items-center justify-center mb-8">
-                <Ionicons name="alert" size={40} color="white" />
+              <View style={{ ...iconContainerStyle, backgroundColor: colors.red }}>
+                <Ionicons name="alert" size={40} color={Colors.white} />
               </View>
-              <Text className="text-white text-2xl font-bold text-center">
+              <Text
+                style={{
+                  color: colors.textStrong,
+                  fontSize: Typography.size.xxl,
+                  fontWeight: Typography.weight.bold,
+                  textAlign: 'center',
+                }}
+              >
                 Oops!
               </Text>
-              <Text className="text-red-400 text-center mt-4 px-8">
+              <Text
+                style={{
+                  color: colors.red,
+                  textAlign: 'center',
+                  marginTop: Spacing.lg,
+                  paddingHorizontal: Spacing.xxxl,
+                }}
+              >
                 {error}
               </Text>
               <TouchableOpacity
                 onPress={() => router.replace('/(onboarding)/welcome')}
-                className="mt-8 bg-slate-800 px-8 py-3 rounded-xl border border-slate-700"
+                style={{
+                  marginTop: Spacing.xxl,
+                  backgroundColor: colors.card,
+                  paddingHorizontal: Spacing.xxl,
+                  paddingVertical: Spacing.md,
+                  borderRadius: Radius.lg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
               >
-                <Text className="text-white font-semibold">Start Over</Text>
+                <Text
+                  style={{
+                    color: Colors.white,
+                    fontWeight: Typography.weight.semibold,
+                  }}
+                >
+                  Start Over
+                </Text>
               </TouchableOpacity>
             </>
           )}

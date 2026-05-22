@@ -7,11 +7,11 @@ import { Platform, Alert } from 'react-native';
 export function crossAlert(
   title: string,
   message?: string,
-  buttons?: Array<{
+  buttons?: {
     text: string;
     style?: 'default' | 'cancel' | 'destructive';
     onPress?: () => void;
-  }>
+  }[],
 ): void {
   if (Platform.OS === 'web') {
     // Web fallback
