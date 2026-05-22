@@ -1,68 +1,105 @@
 # Navya
 
-Navya is a fitness-first, mobile-first Expo application with Supabase as the backend platform. This repository includes a complete AI-powered development operating system, architecture documentation, and a standardized MVP execution track.
-
-## Current Focus
-
-- Canonical product: `Navya`
-- MVP scope: auth, onboarding, workout plan viewing and tracking, nutrition logging, limited AI coach, profile, and internal beta deployment
-- Active sprint: **Sprint 3** (MVP Phase 1 — Complete The Daily Diary)
-- Primary runtime targets: iOS and Android
-- Secondary runtime target: web
+Fitness-first Expo (React Native) app targeting AU/NP markets. ~70% MyFitnessPal core daily user loop parity.
 
 ## Quick Start
 
 ```bash
-npm install
+npm install --legacy-peer-deps
 cp .env.example .env.local
 npm run verify
-npm run start
+npm start
 ```
 
-If Supabase is not configured yet, you can still use the `Explore Demo App` entry on the login screen for a local MVP walkthrough.
+If Supabase is not configured, use the **"Explore Demo App"** entry on the login screen for a local MVP walkthrough.
+
+## Development Setup
+
+**Prerequisites:** Node.js >= 20 (see .nvmrc), Docker Desktop (for local Supabase).
+
+```bash
+npm run dev        # Start Supabase + Expo together
+npm run db:reset   # Fresh DB with migrations, seed, and types
+npm run db:stop    # Stop Supabase containers
+```
+
+- Supabase Studio: http://localhost:54323
+- Inbucket (local email): http://localhost:54324
+
+See [docs/onboarding/local-setup.md](docs/onboarding/local-setup.md) for troubleshooting.
+
+## Available Commands
+
+| Command | Description |
+|---|---|
+| `npm start` | Start Expo dev server |
+| `npm run typecheck` | TypeScript check |
+| `npm run verify` | Project verification |
+| `npm run ci:local` | Full local CI (types + tests) |
+| `npm test` | Run tests |
+| `npm run test:e2e` | E2E tests (Playwright) |
+| `npm run verify -- --smoke-web` | Web smoke test (via verify) |
+| `npm run dev` | Start Supabase + Expo together |
+| `npm run seed:tester` | Seed tester data |
+
+## Project Structure
+
+```
+src/
+  app/                   # Expo Router screens (file-based routing)
+  components/ui/         # Shared UI components
+  features/{domain}/     # Feature domains (auth, coach, home, nutrition, ...)
+    api/ hooks/ screens/ utils/
+  store/                 # Zustand stores
+  types/                 # Shared TypeScript types
+  lib/                   # Library configs (supabase, auth)
+docs/                    # Documentation
+supabase/                # Schema, migrations, edge functions
+```
+
+## Tech Stack
+
+Expo SDK 55 · React Native 0.83 · TypeScript (strict) · Tamagui · Expo Router · Zustand · TanStack Query · Supabase (auth, Postgres, RLS, Edge Functions, storage) · OpenAI (via Edge Functions only)
+
+## Project Status
+
+Active Sprint: **Sprint 3 — Complete The Daily Diary** (May 11–24, 2026)
+
+| Phase | Status |
+|---|---|
+| Sprint 1: Foundation | ✅ Complete |
+| Sprint 2: Core Screens | ✅ Complete |
+| Sprint 3: The Daily Diary | 🚧 In Progress |
+| Sprint 4: Progress & Adherence | 📋 Planned |
+| Sprint 5: Coach & Capture Speed | 📋 Planned |
+| Sprint 6: Polish & Beta | 📋 Planned |
+
+See [docs/mvp/README.md](docs/mvp/README.md) for MVP scope and [docs/sprints/README.md](docs/sprints/README.md) for sprint details.
+
+## Testing
+
+- **E2E:** Playwright — 67 tests across 7 specs covering all user flows
+- **Unit:** Jest + React Native Testing Library (infrastructure ready)
+- Run `npm run test:e2e` or `npm run ci:local`
 
 ## AI Development System
 
-Navya runs on an AI development system aligned with the **AI-Powered Software Development Framework (2026 Edition)**. All agent configuration is tool-agnostic and stored in `.agent/`.
+Navya uses a tool-agnostic multi-agent AI development system (works with Claude Code, Cursor, Cline, opencode, etc.). Agent configuration lives in `.agent/` — see [AGENTS.md](AGENTS.md) and [docs/ai-team/README.md](docs/ai-team/README.md).
 
-| Layer | Tool | Purpose |
-|---|---|---|
-| **Agent Brain** | `CLAUDE.md` | Project-wide AI configuration and rules |
-| **Agents** | `.agent/agents/` | Code reviewer, task executor, technical designer |
-| **Commands** | `.agent/commands/` | `/review`, `/implement`, `/diagnose` |
-| **Skills** | `.agent/skills/` | Coding standards, testing principles, security checklist |
-| **Rules** | `.agent/rules/` | TypeScript, testing, and general coding rules |
-| **MCP Servers** | `.mcp.json` | GitHub, Supabase, and Filesystem tool access |
-| **Memory** | `TASKS.md` + `PROJECT_JOURNAL.md` | Cross-session context and sprint tracking |
+## Documentation
 
-## Project Operating System
-
-- AI team and routing: [docs/ai-team/README.md](docs/ai-team/README.md)
-- Multi-agent configuration: [AGENTS.md](AGENTS.md)
-- Current execution state: [docs/execution/current-status.md](docs/execution/current-status.md)
-- MVP definition: [docs/mvp/README.md](docs/mvp/README.md)
-- Sprint tracking: [docs/sprints/README.md](docs/sprints/README.md)
-- Architecture docs: [docs/architecture/README.md](docs/architecture/README.md)
-- Developer onboarding: [docs/onboarding/README.md](docs/onboarding/README.md)
-- Engineering standards: [docs/standards/engineering-standards.md](docs/standards/engineering-standards.md)
-- Security checklist: [docs/standards/security-checklist.md](docs/standards/security-checklist.md)
-- Tech stack: [docs/TECH_STACK.md](docs/TECH_STACK.md)
-
-## Standard Commands
-
-```bash
-npm run typecheck       # TypeScript check
-npm run verify          # Project verification
-npm run ci:local        # Full local CI (types + tests)
-npm run test            # Run tests
-npm run test:coverage   # Run tests with coverage
-npm run smoke:web       # Web smoke test
-npm run export:web      # Web export
-npm run seed:tester     # Seed tester data
-```
+- [Developer Onboarding](docs/onboarding/README.md) — first-day checklist and project overview
+- [Local Setup](docs/onboarding/local-setup.md) — Supabase, Docker, env config
+- [MVP Scope](docs/mvp/README.md) — capability buckets and upgrade phases
+- [Architecture](docs/architecture/README.md) — system design and domain boundaries
+- [Tech Stack](docs/TECH_STACK.md) — full technology overview
+- [Engineering Standards](docs/standards/engineering-standards.md) — code quality and PR standards
+- [Sprint Tracking](docs/sprints/README.md) — sprint planning and backlog
+- [Execution Status](docs/execution/current-status.md) — current sprint progress
 
 ## Notes
 
-- `npm` is the only supported package manager.
-- `package-lock.json` is authoritative.
-- No `src/` code was modified during the AI framework alignment — all changes are documentation and configuration.
+- `npm` is the only supported package manager. `package-lock.json` is authoritative.
+- Requires `--legacy-peer-deps` for React 19 compatibility.
+- Demo mode works without Supabase — mock data loads automatically.
+- No direct AI calls from the client — all AI logic goes through Supabase Edge Functions.

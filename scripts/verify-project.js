@@ -66,7 +66,7 @@ function verifyPackageJson() {
   );
   const scripts = packageJson.scripts ?? {};
 
-  ["typecheck", "verify", "smoke:web"].forEach((name) => {
+  ["typecheck", "verify"].forEach((name) => {
     assert(Boolean(scripts[name]), `Missing package.json script: ${name}`);
   });
 }

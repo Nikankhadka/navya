@@ -26,6 +26,8 @@ gitleaks-report.json
 
 # Agent local overrides
 .agent/local.md
+.opencode/
+.agent/
 
 # OS files
 .DS_Store
