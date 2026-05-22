@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Spacing, Radius, Typography, type ThemeColors } from '@/theme';
+import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 import { Badge } from '@/components/ui';
 import { ProgressBar } from './MacroRing';
 import { sessionProgress } from '@/utils/helpers';
@@ -54,7 +54,7 @@ export function TodaySessionCard({ colors, session }: TodaySessionCardProps) {
         activeOpacity={0.85}
         onPress={() => router.push('/(tabs)/workout')}
       >
-        <Text style={[styles.startBtnText, { color: colors.textStrong }]}>
+        <Text style={[styles.startBtnText, { color: Colors.white }]}>
           {session
             ? doneExercises > 0
               ? 'Continue Workout →'

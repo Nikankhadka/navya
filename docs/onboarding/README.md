@@ -30,7 +30,7 @@ npm start
 - [ ] Read [docs/ai-team/README.md](/docs/ai-team/README.md) — AI team roles and routing
 - [ ] Set up Supabase locally or connect to staging
 - [ ] Run `npm run typecheck` to confirm TypeScript works
-- [ ] Run `npm run smoke:web` to verify web build
+- [ ] Run `npm run verify -- --smoke-web` to verify web build
 - [ ] Explore the demo mode (login screen → "Explore Demo App")
 
 ## Project Structure

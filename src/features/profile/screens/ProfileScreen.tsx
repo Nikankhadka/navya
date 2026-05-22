@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
-import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Card, Badge, Divider, ThemeModeToggle } from '@/components/ui';
 import { formatDuration, goalLabel } from '@/utils/helpers';
@@ -863,7 +863,7 @@ const createStyles = (colors: ThemeColors) =>
       opacity: 0.6,
     },
     saveBtnText: {
-      color: colors.textStrong,
+      color: Colors.white,
       fontSize: Typography.size.md,
       fontWeight: Typography.weight.bold,
     },

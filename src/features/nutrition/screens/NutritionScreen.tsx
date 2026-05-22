@@ -23,7 +23,7 @@ import {
   getDefaultFoodPortion,
 } from '@/features/nutrition/utils/foodCalculations';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { Colors, Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import type {
   CreateFoodLogInput,
   FavoriteFood,
@@ -981,7 +981,7 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.accent,
     },
     addBtnText: {
-      color: colors.textStrong,
+      color: Colors.white,
       fontWeight: Typography.weight.bold,
       fontSize: Typography.size.sm,
     },

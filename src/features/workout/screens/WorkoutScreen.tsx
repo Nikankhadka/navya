@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useWorkoutStore } from '@/store/useWorkoutStore';
 import { Card, EmptyState } from '@/components/ui';
 import { ExerciseRow, PlanDayCard } from '@/features/workout/components';
@@ -515,7 +515,7 @@ const createStyles = (colors: ThemeColors) =>
       fontWeight: Typography.weight.medium,
     },
     tabTextActive: {
-      color: colors.textStrong,
+      color: Colors.white,
       fontWeight: Typography.weight.bold,
     },
     scroll: { flex: 1 },
@@ -600,7 +600,7 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
     },
     startBtnText: {
-      color: colors.textStrong,
+      color: Colors.white,
       fontWeight: Typography.weight.bold,
       fontSize: Typography.size.md,
       letterSpacing: 0.3,
@@ -713,7 +713,7 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.accent,
     },
     exerciseOrderText: {
-      color: colors.textStrong,
+      color: Colors.white,
       fontSize: Typography.size.sm,
       fontWeight: Typography.weight.bold,
     },

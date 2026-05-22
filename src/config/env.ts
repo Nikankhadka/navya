@@ -44,4 +44,9 @@ export const isDemoModeAvailable =
 
 export const isGoogleLoginAvailable = googleLoginFlag === 'true';
 
+export const coachFeatureFlag =
+  Constants.expoConfig?.extra?.coachFeatureFlag ?? process.env.EXPO_PUBLIC_ENABLE_COACH ?? 'true';
+
+export const isCoachEnabled = coachFeatureFlag === 'true';
+
 export const isLocalDev = supabaseUrl.includes('localhost') || supabaseUrl.includes('127.0.0.1');

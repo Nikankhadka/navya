@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Spacing, Radius, Typography, type ThemeColors } from '@/theme';
+import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 
 interface CoachCardProps {
   colors: ThemeColors;
@@ -49,6 +49,7 @@ const styles = StyleSheet.create({
   },
   avatarEmoji: {
     fontSize: 22,
+    color: Colors.white,
   },
   content: {
     flex: 1,

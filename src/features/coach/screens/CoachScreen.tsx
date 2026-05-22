@@ -10,8 +10,10 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { isCoachEnabled } from '@/config/env';
 import { COACH_QUICK_REPLIES } from '@/features/demo/mockData';
 import { formatTimeAgo } from '@/utils/helpers';
 import type { CoachMessage } from '@/types/app';
@@ -21,10 +23,17 @@ import { useFeatureFlags } from '@/features/coach/hooks/useFeatureFlags';
 import { useCoachActions } from '@/features/coach/hooks/useCoachActions';
 
 export default function CoachScreen() {
+  const router = useRouter();
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (!isCoachEnabled) {
+      router.replace('/(tabs)');
+    }
+  }, [router]);
   const { data: initialMessages } = useCoachMessages(user?.id);
   const { data: featureFlags } = useFeatureFlags();
   const { requestQuickReply } = useCoachActions(user?.id);
@@ -189,7 +198,11 @@ export default function CoachScreen() {
             disabled={!inputText.trim() || isTyping || featureFlags?.ai_enabled === false}
             activeOpacity={0.85}
           >
-            <Text style={styles.sendBtnText}>↑</Text>
+            <Text
+              style={[styles.sendBtnText, { color: inputText.trim() ? Colors.white : colors.dim }]}
+            >
+              ↑
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -219,7 +232,7 @@ const createStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    avatarEmoji: { fontSize: 22 },
+    avatarEmoji: { fontSize: 22, color: Colors.white },
     coachName: {
       color: colors.text,
       fontSize: Typography.size.lg,
@@ -284,7 +297,7 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.sm,
       lineHeight: 20,
     },
-    bubbleTextUser: { color: colors.textStrong },
+    bubbleTextUser: { color: Colors.white },
 
     quickReplyScroll: { flexGrow: 0 },
     quickReplies: {
@@ -335,7 +348,7 @@ const createStyles = (colors: ThemeColors) =>
     sendBtnActive: { backgroundColor: colors.accent },
     sendBtnInactive: { backgroundColor: colors.border },
     sendBtnText: {
-      color: colors.textStrong,
+      color: Colors.white,
       fontSize: Typography.size.lg,
       fontWeight: Typography.weight.bold,
     },

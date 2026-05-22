@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Spacing, Radius, Typography, type ThemeColors } from '@/theme';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 import { getMonthGrid, formatMonthYear, isToday, isFuture, addDays } from '@/utils/date';
 
 interface CalendarProps {
@@ -33,7 +33,7 @@ export function Calendar({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onPrevMonth} style={styles.navButton}>
           <Text style={[styles.navButtonText, { color: colors.text }]}>‹</Text>
@@ -72,15 +72,16 @@ export function Calendar({
             const isFutureDate = isFuture(dateKey);
 
             return (
-              <TouchableOpacity
+              <Pressable
                 key={dateKey}
                 onPress={() => !isFutureDate && onSelectDate(dateKey)}
                 disabled={isFutureDate}
-                style={[
+                style={({ hovered }) => [
                   styles.dayCell,
                   !isCurrentMonth && styles.dayCellOtherMonth,
                   isSelected && styles.dayCellSelected,
                   isFutureDate && styles.dayCellDisabled,
+                  hovered && { backgroundColor: colors.cardHover },
                 ]}
               >
                 <View style={styles.dayContent}>
@@ -91,7 +92,7 @@ export function Calendar({
                         color: isSelected
                           ? colors.accent
                           : isCurrentMonth
-                            ? colors.text
+                            ? colors.textStrong
                             : colors.dim,
                       },
                       isTodayDate && styles.dayNumberToday,
@@ -104,7 +105,7 @@ export function Calendar({
                   )}
                 </View>
                 {isTodayDate && <View style={[styles.todayRing, { borderColor: colors.accent }]} />}
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </View>
@@ -115,7 +116,7 @@ export function Calendar({
           onPress={onToday}
           style={[styles.todayButton, { backgroundColor: colors.accent }]}
         >
-          <Text style={[styles.todayButtonText, { color: colors.textStrong }]}>Today</Text>
+          <Text style={[styles.todayButtonText, { color: Colors.white }]}>Today</Text>
         </TouchableOpacity>
       </View>
     </View>

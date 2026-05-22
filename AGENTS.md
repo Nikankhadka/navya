@@ -190,9 +190,8 @@ Root cause analysis for complex bugs. Analyze symptoms, stack traces, logs, rece
 ```bash
 npm start                 # Start Expo dev server
 npm run typecheck         # TypeScript check (run before completing tasks)
-npm run verify            # Project verification
+npm run verify            # Project verification (add -- --smoke-web for web smoke test)
 npm run ci:local          # Full local CI (lint + types + tests)
-npm run smoke:web         # Web smoke test
 npm run seed:tester       # Seed tester data
 ```
 

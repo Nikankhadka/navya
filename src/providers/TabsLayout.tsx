@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Typography, useAppTheme } from '@/theme';
+import { isCoachEnabled } from '@/config/env';
 
 interface TabIconProps {
   emoji: string;
@@ -78,6 +79,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="coach"
         options={{
+          href: isCoachEnabled ? undefined : null,
           tabBarIcon: ({ focused }) => <TabIcon emoji="🤖" label="Coach" focused={focused} />,
         }}
       />
