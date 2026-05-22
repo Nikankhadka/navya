@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { Colors, Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import type { SessionExercise } from '@/features/workout/types';
 
 interface ExerciseRowProps {
@@ -112,7 +112,7 @@ const createStyles = (colors: ThemeColors) =>
       fontWeight: Typography.weight.bold,
     },
     activeDot: {
-      color: colors.textStrong,
+      color: Colors.white,
       fontSize: 10,
     },
     exerciseInfo: {

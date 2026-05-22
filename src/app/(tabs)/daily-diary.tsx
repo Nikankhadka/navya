@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text as RNText, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, Typography, useAppTheme } from '@/theme';
+import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { Calendar } from '@/components/ui/Calendar';
 import { useDateStore } from '@/store/useDateStore';
 import { getTodayDateString, isFuture } from '@/utils/date';
@@ -24,6 +24,7 @@ function addMonths(dateKey: string, months: number): string {
 
 export default function DailyDiaryScreen() {
   const { colors } = useAppTheme();
+  const styles = createStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
@@ -100,34 +101,20 @@ export default function DailyDiaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  content: {
-    padding: Spacing.xl,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: Spacing.xl,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  headerTitle: {
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.extrabold,
-  },
-});
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.background },
+    content: { padding: Spacing.xl, paddingBottom: 40 },
+    header: { marginBottom: Spacing.xl },
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+    dot: { width: 8, height: 8, borderRadius: 4 },
+    headerTitle: {
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.extrabold,
+    },
+  });

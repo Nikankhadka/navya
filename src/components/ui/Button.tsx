@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { TouchableOpacityProps, ViewStyle } from 'react-native';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
-import { Radius, Shadow, Typography, useAppTheme } from '@/theme';
+import { Colors, Radius, Shadow, Typography, useAppTheme } from '@/theme';
 
 interface ButtonProps extends TouchableOpacityProps {
   label: string;
@@ -33,10 +33,10 @@ export function Button({
   }[variant];
 
   const textColor = {
-    primary: colors.textStrong,
+    primary: Colors.white,
     secondary: colors.text,
     ghost: colors.accent,
-    danger: colors.textStrong,
+    danger: Colors.white,
   }[variant];
 
   const padding = {
