@@ -11,6 +11,7 @@ import { useTodaySession } from '@/features/workout/hooks/useTodaySession';
 import { useWorkoutHistory } from '@/features/workout/hooks/useWorkoutHistory';
 import { useDailyNutrition } from '@/features/nutrition/hooks/useDailyNutrition';
 import { useCoachMessages } from '@/features/coach/hooks/useCoachMessages';
+import { isCoachEnabled } from '@/config/env';
 import { useHabitStreak } from '@/features/home/hooks/useHabitStreak';
 import { useWeightProgress } from '@/features/profile/hooks/useWeightProgress';
 import { useDateStore } from '@/store/useDateStore';
@@ -29,7 +30,7 @@ export default function HomeScreen() {
 
   const { data: todaySession } = useTodaySession(userId, selectedDate);
   const { data: dailyNutrition } = useDailyNutrition(userId, selectedDate);
-  const { data: coachMessages } = useCoachMessages(userId);
+  const { data: coachMessages } = useCoachMessages(isCoachEnabled ? userId : undefined);
   const { data: habitStreak } = useHabitStreak(userId, selectedDate);
   const { data: weightProgress } = useWeightProgress(userId);
   const weeklyTarget = user?.workouts_per_week ?? 3;
@@ -136,8 +137,12 @@ export default function HomeScreen() {
         weeklyTarget={weeklyTarget}
       />
 
-      <SectionHeader title="AI Coach" />
-      <CoachCard colors={colors} coachPreview={coachPreview} />
+      {isCoachEnabled && (
+        <>
+          <SectionHeader title="AI Coach" />
+          <CoachCard colors={colors} coachPreview={coachPreview} />
+        </>
+      )}
 
       <View style={{ height: Spacing.xl }} />
     </ScrollView>

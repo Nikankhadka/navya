@@ -10,8 +10,10 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { isCoachEnabled } from '@/config/env';
 import { COACH_QUICK_REPLIES } from '@/features/demo/mockData';
 import { formatTimeAgo } from '@/utils/helpers';
 import type { CoachMessage } from '@/types/app';
@@ -21,10 +23,17 @@ import { useFeatureFlags } from '@/features/coach/hooks/useFeatureFlags';
 import { useCoachActions } from '@/features/coach/hooks/useCoachActions';
 
 export default function CoachScreen() {
+  const router = useRouter();
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (!isCoachEnabled) {
+      router.replace('/(tabs)');
+    }
+  }, [router]);
   const { data: initialMessages } = useCoachMessages(user?.id);
   const { data: featureFlags } = useFeatureFlags();
   const { requestQuickReply } = useCoachActions(user?.id);
