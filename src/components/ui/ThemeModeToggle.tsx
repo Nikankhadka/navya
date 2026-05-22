@@ -10,12 +10,12 @@ interface ThemeModeToggleProps {
   testIDPrefix?: string;
 }
 
-const OPTIONS: Array<{
+const OPTIONS: {
   id: ThemeName;
   label: string;
   icon: 'sunny-outline' | 'moon-outline';
   activeIcon: 'sunny' | 'moon';
-}> = [
+}[] = [
   {
     id: 'light',
     label: 'Light',

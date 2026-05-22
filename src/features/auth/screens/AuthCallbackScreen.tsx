@@ -1,15 +1,59 @@
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import type { Session } from '@supabase/supabase-js';
-import { Button } from '@/components/ui';
+import { Alert, Button } from '@/components/ui';
 import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { createSessionFromUrl, getAuthCallbackError } from '@/lib/auth/redirects';
 import { supabase } from '@/lib/supabase/client';
+import { logger } from '@/lib/logger';
 import { useAuthStore } from '@/store/useAuthStore';
+import { Text } from 'tamagui';
 
-type CallbackState = 'loading' | 'success' | 'error';
+const createStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    buttonContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.md,
+      paddingHorizontal: Spacing.xl,
+      paddingBottom: Spacing.xxl,
+    },
+    continueTitle: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: Typography.weight.bold,
+      textAlign: 'center',
+      marginBottom: Spacing.md,
+    },
+    button: {
+      width: '100%',
+    },
+    redirectNotice: {
+      color: colors.muted,
+      fontSize: 12,
+      textAlign: 'center',
+    },
+  });
+
+interface AlertData {
+  open: boolean;
+  title: string;
+  message: string;
+  variant: 'default' | 'destructive';
+  action?: { label: string; onPress: () => void };
+  cancel?: { label: string; onPress: () => void };
+}
 
 export default function AuthCallbackScreen() {
   const { colors } = useAppTheme();
@@ -18,66 +62,96 @@ export default function AuthCallbackScreen() {
   const incomingUrl = Linking.useURL();
   const refreshProfile = useAuthStore((state) => state.refreshProfile);
   const hasHandledUrlRef = useRef<string | null>(null);
-  const [status, setStatus] = useState<CallbackState>('loading');
-  const [message, setMessage] = useState('Navya is verifying your secure sign-in.');
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function getSessionWithRetry(): Promise<Session | null> {
-    const waitDurationsMs = [0, 150, 300, 600];
+  const [loading, setLoading] = useState(true);
+  const [alertState, setAlertState] = useState<AlertData | null>(null);
+  const [countdown, setCountdown] = useState(4);
 
-    for (const waitMs of waitDurationsMs) {
-      if (waitMs > 0) {
-        await new Promise((resolve) => setTimeout(resolve, waitMs));
-      }
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session?.user.id) {
-        return session;
-      }
+  const cleanup = useCallback(() => {
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
     }
+  }, []);
 
-    return null;
-  }
+  const scheduleRedirect = useCallback(
+    (destination: '/(tabs)' | '/(onboarding)/welcome', seconds: number) => {
+      cleanup();
+      setCountdown(seconds);
+      redirectTimerRef.current = setTimeout(() => {
+        router.replace(destination);
+      }, seconds * 1000);
+    },
+    [cleanup, router],
+  );
 
-  useEffect(() => {
-    const currentUrl =
-      incomingUrl ?? (typeof window !== 'undefined' ? window.location.href : null);
+  const handleCallback = useCallback(async () => {
+    const url = incomingUrl;
+    if (!url) return;
+    if (hasHandledUrlRef.current === url) return;
+    hasHandledUrlRef.current = url;
 
-    if (!currentUrl || hasHandledUrlRef.current === currentUrl) {
+    cleanup();
+    setLoading(true);
+
+    const authCallbackError = getAuthCallbackError(url);
+    if (authCallbackError) {
+      setAlertState({
+        open: true,
+        title: 'Authentication Error',
+        message: authCallbackError,
+        variant: 'destructive',
+        cancel: {
+          label: 'Back to Login',
+          onPress: () => router.replace('/(auth)/login'),
+        },
+      });
+      setLoading(false);
       return;
     }
 
-    const callbackUrl = currentUrl;
-    hasHandledUrlRef.current = currentUrl;
+    try {
+      let session: Session | null = null;
 
-    let isCancelled = false;
-    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+      const { data: sessionData } = await supabase.auth.getSession();
 
-    async function completeAuth() {
-      const authCallbackError = getAuthCallbackError(callbackUrl);
+      if (sessionData?.session?.user?.id) {
+        session = sessionData.session;
+      } else if (url.includes('token') || url.includes('code')) {
+        const sessionResult = await createSessionFromUrl(url);
 
-      if (authCallbackError) {
-        if (!isCancelled) {
-          setStatus('error');
-          setMessage(authCallbackError);
+        if (!sessionResult.success) {
+          setAlertState({
+            open: true,
+            title: 'Authentication Error',
+            message: sessionResult.message,
+            variant: 'destructive',
+            cancel: {
+              label: 'Back to Login',
+              onPress: () => router.replace('/(auth)/login'),
+            },
+          });
+          setLoading(false);
+          return;
         }
-        return;
+
+        const { data: refreshed } = await supabase.auth.getSession();
+        session = refreshed?.session ?? null;
       }
 
-      const sessionResult = await createSessionFromUrl(callbackUrl);
-      const session = await getSessionWithRetry();
-
-      if (!session?.user.id) {
-        if (!isCancelled) {
-          setStatus('error');
-          setMessage(
-            sessionResult.success
-              ? 'The sign-in session was not available after callback completion. Please try again.'
-              : sessionResult.message,
-          );
-        }
+      if (!session?.user?.id) {
+        setAlertState({
+          open: true,
+          title: 'Authentication Error',
+          message: 'The sign-in session was not available. Please check your email and try again.',
+          variant: 'destructive',
+          cancel: {
+            label: 'Back to Login',
+            onPress: () => router.replace('/(auth)/login'),
+          },
+        });
+        setLoading(false);
         return;
       }
 
@@ -89,84 +163,138 @@ export default function AuthCallbackScreen() {
 
       await refreshProfile();
 
-      if (isCancelled) {
-        return;
-      }
-
       const onboardingComplete = useAuthStore.getState().user?.onboarding_complete;
 
-      setStatus('success');
-      setMessage(
-        onboardingComplete
-          ? 'Sign-in complete. Taking you to your dashboard.'
-          : 'Sign-in complete. Taking you to onboarding.',
-      );
+      setAlertState({
+        open: true,
+        title: 'Signed in successfully',
+        message: onboardingComplete
+          ? 'Redirecting to your dashboard...'
+          : 'Account ready. Setting up your profile...',
+        variant: 'default',
+        action: {
+          label: 'Continue',
+          onPress: () => {
+            cleanup();
+            router.replace(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome');
+          },
+        },
+      });
 
-      redirectTimer = setTimeout(() => {
-        router.replace(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome');
-      }, 600);
+      setLoading(false);
+
+      scheduleRedirect(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome', 4);
+    } catch (error) {
+      logger.error('Auth callback error', error);
+      setAlertState({
+        open: true,
+        title: 'Authentication Error',
+        message: 'An unexpected error occurred while finishing sign-in. Please try again.',
+        variant: 'destructive',
+        cancel: {
+          label: 'Back to Login',
+          onPress: () => router.replace('/(auth)/login'),
+        },
+      });
+      setLoading(false);
     }
+  }, [incomingUrl, cleanup, refreshProfile, scheduleRedirect, router]);
 
-    void completeAuth().catch((error) => {
-      console.error('Auth callback error:', error);
+  useEffect(() => {
+    if (incomingUrl) {
+      handleCallback();
+    }
+  }, [incomingUrl, handleCallback]);
 
-      if (!isCancelled) {
-        setStatus('error');
-        setMessage('Navya hit an unexpected error while finishing sign-in. Please try again.');
+  useEffect(() => {
+    if (!incomingUrl && loading) {
+      const timeout = setTimeout(() => {
+        if (!hasHandledUrlRef.current) {
+          setAlertState({
+            open: true,
+            title: 'No sign-in link detected',
+            message:
+              'If you opened an email link, make sure it opened in the Navya app. You can request a new link from the login screen.',
+            variant: 'destructive',
+            cancel: {
+              label: 'Back to Login',
+              onPress: () => router.replace('/(auth)/login'),
+            },
+          });
+          setLoading(false);
+        }
+      }, 10000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [incomingUrl, loading, router]);
+
+  useEffect(() => {
+    return cleanup;
+  }, [cleanup]);
+
+  function handleAlertOpenChange(open: boolean) {
+    if (!open && alertState) {
+      cleanup();
+      if (alertState.variant === 'destructive') {
+        router.replace('/(auth)/login');
+      } else {
+        const isAuthenticated = useAuthStore.getState().isAuthenticated;
+        router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
       }
-    });
+    }
+  }
 
-    return () => {
-      isCancelled = true;
-      if (redirectTimer) {
-        clearTimeout(redirectTimer);
-      }
-    };
-  }, [incomingUrl, refreshProfile, router]);
+  function handleContinue() {
+    cleanup();
+    const isAuthenticated = useAuthStore.getState().isAuthenticated;
+    router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
+  }
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      {status === 'loading' ? <ActivityIndicator size="large" color={colors.text} /> : null}
-      <Text style={styles.title}>
-        {status === 'success' ? 'Sign-in complete' : status === 'error' ? 'Sign-in issue' : 'Completing sign-in'}
-      </Text>
-      <Text style={styles.subtitle}>{message}</Text>
-      {status === 'error' ? (
-        <Button
-          label="Back to Login"
-          onPress={() => router.replace('/(auth)/login')}
-          fullWidth
-          style={styles.button}
+
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.text} />
+          <Text
+            style={{
+              color: colors.muted,
+              fontSize: 14,
+              marginTop: Spacing.md,
+              textAlign: 'center',
+            }}
+          >
+            Completing sign-in...
+          </Text>
+        </View>
+      )}
+
+      {alertState && (
+        <Alert
+          open={alertState.open}
+          onOpenChange={handleAlertOpenChange}
+          title={alertState.title}
+          message={alertState.message}
+          variant={alertState.variant}
+          action={alertState.action}
+          cancel={alertState.cancel}
         />
-      ) : null}
+      )}
+
+      {!loading && alertState?.variant === 'default' && !alertState.open && (
+        <View style={styles.buttonContainer}>
+          <Text style={styles.continueTitle}>Sign-in complete</Text>
+          <Button
+            label="Continue to Profile"
+            onPress={handleContinue}
+            fullWidth
+            style={styles.button}
+          />
+          <Text style={styles.redirectNotice}>Redirecting in {countdown}s...</Text>
+        </View>
+      )}
     </View>
   );
 }
-
-const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: Spacing.md,
-      paddingHorizontal: Spacing.xl,
-      backgroundColor: colors.background,
-    },
-    title: {
-      color: colors.text,
-      fontSize: 24,
-      fontWeight: Typography.weight.bold,
-      textAlign: 'center',
-    },
-    subtitle: {
-      color: colors.textSecondary,
-      fontSize: 16,
-      textAlign: 'center',
-    },
-    button: {
-      marginTop: Spacing.sm,
-      width: '100%',
-    },
-  });

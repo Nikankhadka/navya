@@ -12,8 +12,8 @@ import type {
 import { nutritionRepository } from '@/features/nutrition/api/nutrition.repository';
 
 export const nutritionService = {
-  getDailySummary(userId: string): Promise<DailyNutritionSummary> {
-    return nutritionRepository.getDailySummary(userId);
+  getDailySummary(userId: string, dateKey?: string): Promise<DailyNutritionSummary> {
+    return nutritionRepository.getDailySummary(userId, dateKey);
   },
 
   searchFoods(userId: string, query: string): Promise<FoodSearchResult[]> {

@@ -33,10 +33,10 @@ export function Button({
   }[variant];
 
   const textColor = {
-    primary: '#FFFFFF',
+    primary: colors.textStrong,
     secondary: colors.text,
     ghost: colors.accent,
-    danger: '#FFFFFF',
+    danger: colors.textStrong,
   }[variant];
 
   const padding = {

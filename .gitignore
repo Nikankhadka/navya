@@ -5,6 +5,30 @@
 expo-env.d.ts
 # @end expo-cli
 /dist
+.env
 .env.local
+.env.*.local
 .expo
 dist/web-smoke
+
+# Coverage outputs
+/coverage
+/coverage-final.json
+
+# Playwright e2e test results
+/playwright-report
+/test-results
+/blob-report
+
+# Secret scanning
+.gitleaks.toml
+gitleaks-report.json
+
+# Agent local overrides
+.agent/local.md
+
+# OS files
+.DS_Store
+*.swp
+*.swo
+*~

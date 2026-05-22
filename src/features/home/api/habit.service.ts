@@ -3,6 +3,7 @@ import type { Database } from '@/types/database';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { MOCK_DAILY_NUTRITION, MOCK_TODAY_SESSION } from '@/features/demo/mockData';
 import { nutritionService } from '@/features/nutrition/api/nutrition.service';
+import { fromDateKey, getTodayDateString } from '@/utils/date';
 
 type WaterLogActivityRow = Pick<Database['public']['Tables']['water_logs']['Row'], 'logged_at'>;
 type WorkoutSessionActivityRow = Pick<
@@ -18,13 +19,13 @@ function dayKeyFromIso(value: string): string {
   return value.slice(0, 10);
 }
 
-function currentWeekKeys(): string[] {
-  const now = new Date();
-  const day = now.getDay();
+function weekKeysFromDate(dateKey: string): string[] {
+  const date = fromDateKey(dateKey);
+  const day = date.getDay();
   const mondayOffset = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
+  const monday = new Date(date);
   monday.setHours(0, 0, 0, 0);
-  monday.setDate(now.getDate() + mondayOffset);
+  monday.setDate(date.getDate() + mondayOffset);
 
   return Array.from({ length: 7 }, (_, index) => {
     const entry = new Date(monday);
@@ -33,14 +34,14 @@ function currentWeekKeys(): string[] {
   });
 }
 
-function buildHabitSummary(activityKeys: Set<string>): HabitStreakSummary {
-  const today = new Date();
+function buildHabitSummary(activityKeys: Set<string>, dateKey: string): HabitStreakSummary {
+  const baseDate = fromDateKey(dateKey);
   let streak = 0;
 
   for (let offset = 0; offset < 30; offset += 1) {
-    const date = new Date(today);
+    const date = new Date(baseDate);
     date.setHours(0, 0, 0, 0);
-    date.setDate(today.getDate() - offset);
+    date.setDate(baseDate.getDate() - offset);
     const key = dayKeyFromDate(date);
 
     if (!activityKeys.has(key)) {
@@ -50,7 +51,7 @@ function buildHabitSummary(activityKeys: Set<string>): HabitStreakSummary {
     streak += 1;
   }
 
-  const weekKeys = currentWeekKeys();
+  const weekKeys = weekKeysFromDate(dateKey);
   const weeklyActivity = weekKeys.map((key) => activityKeys.has(key));
 
   return {
@@ -61,25 +62,40 @@ function buildHabitSummary(activityKeys: Set<string>): HabitStreakSummary {
 }
 
 export const habitService = {
-  async getHabitStreak(userId: string): Promise<HabitStreakSummary> {
+  async getHabitStreak(userId: string, dateKey?: string): Promise<HabitStreakSummary> {
+    const targetDate = dateKey ?? getTodayDateString();
+
     if (!isSupabaseConfigured) {
       const activityKeys = new Set<string>([
         ...MOCK_DAILY_NUTRITION.meals.map((meal) => dayKeyFromIso(meal.logged_at)),
         ...MOCK_DAILY_NUTRITION.water_logs.map((entry) => dayKeyFromIso(entry.logged_at)),
       ]);
 
-      if (MOCK_TODAY_SESSION.status === 'in_progress' || MOCK_TODAY_SESSION.status === 'completed') {
+      if (
+        MOCK_TODAY_SESSION.status === 'in_progress' ||
+        MOCK_TODAY_SESSION.status === 'completed'
+      ) {
         activityKeys.add(dayKeyFromIso(MOCK_TODAY_SESSION.started_at));
       }
 
-      return buildHabitSummary(activityKeys);
+      return buildHabitSummary(activityKeys, targetDate);
     }
 
     const [mealKeys, { data: water, error: waterError }, { data: sessions, error: sessionsError }] =
       await Promise.all([
         nutritionService.getLocalFoodActivityKeys(userId),
-        supabase.from('water_logs').select('logged_at').eq('user_id', userId).order('logged_at', { ascending: false }).limit(60),
-        supabase.from('workout_sessions').select('started_at,status').eq('user_id', userId).order('started_at', { ascending: false }).limit(30),
+        supabase
+          .from('water_logs')
+          .select('logged_at')
+          .eq('user_id', userId)
+          .order('logged_at', { ascending: false })
+          .limit(60),
+        supabase
+          .from('workout_sessions')
+          .select('started_at,status')
+          .eq('user_id', userId)
+          .order('started_at', { ascending: false })
+          .limit(30),
       ]);
 
     if (waterError) {
@@ -106,6 +122,6 @@ export const habitService = {
       }
     }
 
-    return buildHabitSummary(activityKeys);
+    return buildHabitSummary(activityKeys, targetDate);
   },
 };

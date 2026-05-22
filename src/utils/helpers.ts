@@ -45,7 +45,7 @@ export function getTodayDateString(): string {
 export function calcCalorieGoal(
   weightKg: number,
   goal: GoalType,
-  activityLevel: ActivityLevel
+  activityLevel: ActivityLevel,
 ): number {
   const activityMultiplier: Record<ActivityLevel, number> = {
     sedentary: 1.2,
@@ -110,11 +110,13 @@ export function formatWaterAmount(amountMl: number): string {
 
 // ─── Workout ──────────────────────────────────────────────────────────────────
 
-export function sessionProgress(session: { session_exercises: Array<{ completed_sets: unknown[]; planned_sets: number; is_skipped: boolean }> }): number {
+export function sessionProgress(session: {
+  session_exercises: { completed_sets: unknown[]; planned_sets: number; is_skipped: boolean }[];
+}): number {
   const total = session.session_exercises.length;
   if (total === 0) return 0;
   const done = session.session_exercises.filter(
-    (ex) => ex.is_skipped || ex.completed_sets.length >= ex.planned_sets
+    (ex) => ex.is_skipped || ex.completed_sets.length >= ex.planned_sets,
   ).length;
   return Math.round((done / total) * 100);
 }

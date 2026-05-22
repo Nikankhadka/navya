@@ -10,7 +10,7 @@ This document serves as a quick technical summary for Navya. Canonical architect
 - **Language:** TypeScript (Strict mode)
 - **Styling:** Tamagui as the shared UI foundation, with NativeWind retained only for legacy-screen migration
 - **State Management:** Zustand (Client state), TanStack Query (Server state)
-- **Platform:** iOS, Android (Primary), Web (Secondary)
+- **Platform:** iOS-primary, Android (Primary), Web (Secondary)
 
 ### Backend
 - **Platform:** Supabase (PostgreSQL, Auth, Storage, Edge Functions)
@@ -20,7 +20,6 @@ This document serves as a quick technical summary for Navya. Canonical architect
 
 ### AI & Agents
 - **Provider:** OpenAI (via Supabase Edge Functions)
-- **Framework:** BMAD (v6.1.0) for agentic workflows
 - **Constraints:** Max A$50/mo infra budget; AI logic must be through backend only.
 
 ## Development Environment

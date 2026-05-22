@@ -1,97 +1,203 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  StyleSheet,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { Ionicons } from '@expo/vector-icons';
+import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
+import type { ExperienceLevel } from '@/types/app';
 
-const EXPERIENCE_LEVELS = [
+const EXPERIENCE_LEVELS: { id: ExperienceLevel; label: string }[] = [
   { id: 'beginner', label: 'New to fitness' },
   { id: 'intermediate', label: 'Consistent for 6+ months' },
   { id: 'advanced', label: 'Years of training' },
-] as const;
+];
 
 export default function BodyScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
   const { weight_kg, height_cm, experience_level, setField } = useOnboardingStore();
+  const [weightFocused, setWeightFocused] = useState(false);
+  const [heightFocused, setHeightFocused] = useState(false);
 
   const isComplete = !!weight_kg && !!height_cm && !!experience_level;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <ScrollView className="flex-1 px-6 pt-10">
-        <TouchableOpacity onPress={() => router.back()} className="mb-6">
-          <Ionicons name="arrow-back" size={24} color="#94a3b8" />
+    <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={colors.muted} />
         </TouchableOpacity>
 
-        <Text className="text-white text-3xl font-bold mb-2">Metrics</Text>
-        <Text className="text-slate-400 text-lg mb-8">Your baseline for training, recovery, and progress.</Text>
+        <Text style={[styles.title, { color: colors.textStrong }]}>Metrics</Text>
+        <Text style={[styles.subtitle, { color: colors.textSubtle }]}>
+          Your baseline for training, recovery, and progress.
+        </Text>
 
-        {/* Biometrics */}
-        <View className="flex-row justify-between mb-8">
-          <View className="w-[48%]">
-            <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
-              Weight (kg)
-            </Text>
+        <View style={styles.biometricsRow}>
+          <View style={styles.biometricField}>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Weight (kg)</Text>
             <TextInput
               keyboardType="numeric"
-              className="bg-slate-800 text-white p-4 rounded-xl border border-slate-700 focus:border-blue-500"
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  borderColor: weightFocused ? colors.accent : colors.border,
+                },
+              ]}
               placeholder="0.0"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colors.dim}
               value={weight_kg?.toString() || ''}
               onChangeText={(text) => setField('weight_kg', parseFloat(text) || null)}
+              onFocus={() => setWeightFocused(true)}
+              onBlur={() => setWeightFocused(false)}
             />
           </View>
-          <View className="w-[48%]">
-            <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider" >
-              Height (cm)
-            </Text>
+          <View style={styles.biometricField}>
+            <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Height (cm)</Text>
             <TextInput
               keyboardType="numeric"
-              className="bg-slate-800 text-white p-4 rounded-xl border border-slate-700 focus:border-blue-500"
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.card,
+                  color: colors.text,
+                  borderColor: heightFocused ? colors.accent : colors.border,
+                },
+              ]}
               placeholder="0"
-              placeholderTextColor="#64748b"
+              placeholderTextColor={colors.dim}
               value={height_cm?.toString() || ''}
               onChangeText={(text) => setField('height_cm', parseInt(text) || null)}
+              onFocus={() => setHeightFocused(true)}
+              onBlur={() => setHeightFocused(false)}
             />
           </View>
         </View>
 
-        {/* Experience Level */}
-        <View className="mb-12">
-          <Text className="text-slate-300 text-sm font-semibold mb-3 uppercase tracking-wider">
+        <View style={styles.experienceSection}>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
             Experience Level
           </Text>
-          {EXPERIENCE_LEVELS.map((level) => (
-            <TouchableOpacity
-              key={level.id}
-              onPress={() => setField('experience_level', level.id)}
-              className={`w-full p-4 rounded-xl mb-4 border ${
-                experience_level === level.id 
-                  ? 'bg-blue-600/20 border-blue-500' 
-                  : 'bg-slate-800 border-slate-700'
-              }`}
-            >
-              <Text className={`text-lg font-medium ${
-                experience_level === level.id ? 'text-white' : 'text-slate-300'
-              }`}>
-                {level.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {EXPERIENCE_LEVELS.map((level) => {
+            const isSelected = experience_level === level.id;
+            return (
+              <TouchableOpacity
+                key={level.id}
+                onPress={() => setField('experience_level', level.id)}
+                style={[
+                  styles.levelOption,
+                  {
+                    backgroundColor: isSelected ? colors.accentMuted : colors.card,
+                    borderColor: isSelected ? colors.accent : colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.levelText,
+                    { color: isSelected ? colors.text : colors.textSecondary },
+                  ]}
+                >
+                  {level.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <TouchableOpacity
           disabled={!isComplete}
           onPress={() => router.push('/(onboarding)/goal')}
-          className={`w-full py-4 rounded-xl mb-10 ${
-            isComplete ? 'bg-blue-600' : 'bg-slate-700 opacity-50'
-          }`}
+          style={[
+            styles.continueButton,
+            {
+              backgroundColor: isComplete ? colors.accent : colors.surface,
+              opacity: isComplete ? 1 : 0.5,
+            },
+          ]}
         >
-          <Text className="text-white text-center text-lg font-semibold">
-            Continue
-          </Text>
+          <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: 40,
+    paddingBottom: Spacing.xxxl,
+  },
+  backButton: {
+    marginBottom: Spacing.xxxl,
+  },
+  title: {
+    fontSize: Typography.size.xxxl,
+    fontWeight: Typography.weight.bold,
+    marginBottom: Spacing.sm,
+  },
+  subtitle: {
+    fontSize: Typography.size.lg,
+    marginBottom: Spacing.xxxl,
+  },
+  biometricsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xxxl,
+  },
+  biometricField: {
+    width: '48%',
+  },
+  sectionLabel: {
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    marginBottom: Spacing.md,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  input: {
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+  },
+  experienceSection: {
+    marginBottom: 48,
+  },
+  levelOption: {
+    width: '100%',
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+  },
+  levelText: {
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.medium,
+  },
+  continueButton: {
+    width: '100%',
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
+    marginBottom: 40,
+  },
+  continueButtonText: {
+    color: Colors.white,
+    textAlign: 'center',
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.semibold,
+  },
+});

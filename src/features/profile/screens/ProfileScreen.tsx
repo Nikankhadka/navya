@@ -12,13 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  Spacing,
-  Radius,
-  Typography,
-  useAppTheme,
-  type ThemeColors,
-} from '@/theme';
+import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Card, Badge, Divider, ThemeModeToggle } from '@/components/ui';
 import { formatDuration, goalLabel } from '@/utils/helpers';
@@ -40,7 +34,7 @@ type EditProfileForm = {
   workouts_per_week: string;
 };
 
-const GOAL_OPTIONS: Array<{ id: GoalType; label: string }> = [
+const GOAL_OPTIONS: { id: GoalType; label: string }[] = [
   { id: 'build_muscle', label: 'Build Muscle' },
   { id: 'lose_weight', label: 'Lose Weight' },
   { id: 'maintain', label: 'Maintain' },
@@ -86,9 +80,7 @@ export default function ProfileScreen() {
       workouts_per_week:
         activeUser.workouts_per_week != null ? String(activeUser.workouts_per_week) : '3',
     });
-    setCheckInWeight(
-      activeUser.weight_kg != null ? String(activeUser.weight_kg) : '',
-    );
+    setCheckInWeight(activeUser.weight_kg != null ? String(activeUser.weight_kg) : '');
   }, [
     activeUser?.full_name,
     activeUser?.weight_kg,
@@ -180,11 +172,35 @@ export default function ProfileScreen() {
 
   const setupRows = [
     { icon: '🎯', label: 'Goal', value: activeUser.goal ? goalLabel(activeUser.goal) : 'Not set' },
-    { icon: '⚡', label: 'Activity Level', value: activeUser.activity_level?.replace('_', ' ') || 'Not set' },
-    { icon: '🏋️', label: 'Equipment', value: activeUser.equipment ? activeUser.equipment.slice(0, 2).join(', ') + (activeUser.equipment.length > 2 ? ' +more' : '') : 'Not set' },
+    {
+      icon: '⚡',
+      label: 'Activity Level',
+      value: activeUser.activity_level?.replace('_', ' ') || 'Not set',
+    },
+    {
+      icon: '🏋️',
+      label: 'Equipment',
+      value: activeUser.equipment
+        ? activeUser.equipment.slice(0, 2).join(', ') +
+          (activeUser.equipment.length > 2 ? ' +more' : '')
+        : 'Not set',
+    },
     { icon: '📅', label: 'Workouts / week', value: `${activeUser.workouts_per_week ?? 0}x` },
-    { icon: '🥗', label: 'Diet Preference', value: activeUser.diet_preference?.replace('_', ' ') || 'Not set' },
-    { icon: '📍', label: 'Country', value: activeUser.country === 'AU' ? 'Australia 🇦🇺' : activeUser.country === 'NP' ? 'Nepal 🇳🇵' : 'Other' },
+    {
+      icon: '🥗',
+      label: 'Diet Preference',
+      value: activeUser.diet_preference?.replace('_', ' ') || 'Not set',
+    },
+    {
+      icon: '📍',
+      label: 'Country',
+      value:
+        activeUser.country === 'AU'
+          ? 'Australia 🇦🇺'
+          : activeUser.country === 'NP'
+            ? 'Nepal 🇳🇵'
+            : 'Other',
+    },
   ];
 
   return (
@@ -202,7 +218,9 @@ export default function ProfileScreen() {
         <View style={styles.badgeRow}>
           {isDemoSession && <Badge label="Demo Session" color={colors.orange} />}
           {activeUser.goal && <Badge label={goalLabel(activeUser.goal)} color={colors.accent} />}
-          {activeUser.experience_level && <Badge label={activeUser.experience_level} color={colors.green} />}
+          {activeUser.experience_level && (
+            <Badge label={activeUser.experience_level} color={colors.green} />
+          )}
         </View>
       </View>
 
@@ -254,10 +272,7 @@ export default function ProfileScreen() {
               {weightProgress?.check_ins_this_month ?? 0} check-ins this month
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.inlineActionBtn}
-            onPress={() => setShowWeightModal(true)}
-          >
+          <TouchableOpacity style={styles.inlineActionBtn} onPress={() => setShowWeightModal(true)}>
             <Text style={styles.inlineActionText}>Log Weight</Text>
           </TouchableOpacity>
         </View>
@@ -297,9 +312,7 @@ export default function ProfileScreen() {
             weightProgress.recent_logs.map((entry) => (
               <View key={entry.id} style={styles.progressHistoryRow}>
                 <View>
-                  <Text style={styles.progressHistoryWeight}>
-                    {entry.weight_kg.toFixed(1)}kg
-                  </Text>
+                  <Text style={styles.progressHistoryWeight}>{entry.weight_kg.toFixed(1)}kg</Text>
                   <Text style={styles.progressHistoryDate}>
                     {new Date(entry.logged_at).toLocaleDateString('en-AU', {
                       weekday: 'short',
@@ -341,13 +354,10 @@ export default function ProfileScreen() {
           onPress={() => setShowEditModal(true)}
           testID="profile-edit-button"
         >
-          <Text style={styles.actionBtnText}>✏️  Edit Profile</Text>
+          <Text style={styles.actionBtnText}>✏️ Edit Profile</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => setShowWeightModal(true)}
-        >
-          <Text style={styles.actionBtnText}>📈  Log Weight Check-in</Text>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => setShowWeightModal(true)}>
+          <Text style={styles.actionBtnText}>📈 Log Weight Check-in</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionBtn}
@@ -358,7 +368,7 @@ export default function ProfileScreen() {
             )
           }
         >
-          <Text style={styles.actionBtnText}>🔔  Notification Settings</Text>
+          <Text style={styles.actionBtnText}>🔔 Notification Settings</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionBtn}
@@ -369,12 +379,9 @@ export default function ProfileScreen() {
             )
           }
         >
-          <Text style={styles.actionBtnText}>🤖  Regenerate Workout Plan</Text>
+          <Text style={styles.actionBtnText}>🤖 Regenerate Workout Plan</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.signOutBtn]}
-          onPress={signOut}
-        >
+        <TouchableOpacity style={[styles.actionBtn, styles.signOutBtn]} onPress={signOut}>
           <Text style={styles.signOutText}>{isDemoSession ? 'Exit Demo' : 'Sign Out'}</Text>
         </TouchableOpacity>
       </View>
@@ -384,7 +391,10 @@ export default function ProfileScreen() {
         <Text style={styles.appearanceFooterText}>
           Switch between light and dark mode from the bottom of your profile.
         </Text>
-        <ThemeModeToggle style={styles.appearanceFooterToggle} testIDPrefix="profile-theme-toggle" />
+        <ThemeModeToggle
+          style={styles.appearanceFooterToggle}
+          testIDPrefix="profile-theme-toggle"
+        />
       </Card>
 
       <View style={{ height: 40 }} />
@@ -544,339 +554,339 @@ export default function ProfileScreen() {
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  content: { paddingBottom: 40 },
+    screen: { flex: 1, backgroundColor: colors.background },
+    content: { paddingBottom: 40 },
 
-  hero: {
-    alignItems: 'center',
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.xxl,
-    paddingHorizontal: Spacing.xl,
-  },
-  avatarContainer: {
-    width: 84,
-    height: 84,
-    borderRadius: 24,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.md,
-    borderWidth: 2,
-    borderColor: `${colors.accent}55`,
-  },
-  avatarEmoji: { fontSize: 40 },
-  fullName: {
-    color: colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.extrabold,
-    letterSpacing: -0.5,
-    marginBottom: 4,
-  },
-  email: {
-    color: colors.muted,
-    fontSize: Typography.size.sm,
-    marginBottom: Spacing.md,
-  },
-  badgeRow: { flexDirection: 'row', gap: Spacing.sm },
+    hero: {
+      alignItems: 'center',
+      paddingTop: Spacing.xxl,
+      paddingBottom: Spacing.xxl,
+      paddingHorizontal: Spacing.xl,
+    },
+    avatarContainer: {
+      width: 84,
+      height: 84,
+      borderRadius: 24,
+      backgroundColor: colors.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: Spacing.md,
+      borderWidth: 2,
+      borderColor: `${colors.accent}55`,
+    },
+    avatarEmoji: { fontSize: 40 },
+    fullName: {
+      color: colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.extrabold,
+      letterSpacing: -0.5,
+      marginBottom: 4,
+    },
+    email: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      marginBottom: Spacing.md,
+    },
+    badgeRow: { flexDirection: 'row', gap: Spacing.sm },
 
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.sm,
-    marginBottom: Spacing.xxl,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: colors.card,
-    borderRadius: Radius.xl,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statValue: {
-    color: colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.extrabold,
-    letterSpacing: -0.5,
-  },
-  statLabel: { color: colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
-  statSuffix: { color: colors.dim, fontSize: Typography.size.xs },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: Spacing.xl,
+      gap: Spacing.sm,
+      marginBottom: Spacing.xxl,
+    },
+    statCard: {
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: colors.card,
+      borderRadius: Radius.xl,
+      padding: Spacing.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    statValue: {
+      color: colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.extrabold,
+      letterSpacing: -0.5,
+    },
+    statLabel: { color: colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
+    statSuffix: { color: colors.dim, fontSize: Typography.size.xs },
 
-  metricsCard: { marginHorizontal: Spacing.xl, marginBottom: Spacing.xxl },
-  metricsRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: Spacing.md },
-  metric: { alignItems: 'center' },
-  metricVal: {
-    color: colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-  },
-  metricUnit: { color: colors.muted, fontSize: Typography.size.sm },
-  metricLabel: { color: colors.muted, fontSize: Typography.size.sm, marginTop: 2 },
-  metricDivider: { width: 1, backgroundColor: colors.border },
+    metricsCard: { marginHorizontal: Spacing.xl, marginBottom: Spacing.xxl },
+    metricsRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: Spacing.md },
+    metric: { alignItems: 'center' },
+    metricVal: {
+      color: colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+    },
+    metricUnit: { color: colors.muted, fontSize: Typography.size.sm },
+    metricLabel: { color: colors.muted, fontSize: Typography.size.sm, marginTop: 2 },
+    metricDivider: { width: 1, backgroundColor: colors.border },
 
-  sectionTitle: {
-    color: colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing.md,
-  },
-  sectionTitleInline: {
-    color: colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  progressSubtext: {
-    color: colors.muted,
-    fontSize: Typography.size.sm,
-    marginTop: 4,
-  },
-  inlineActionBtn: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radius.full,
-    backgroundColor: colors.accentMuted,
-    borderWidth: 1,
-    borderColor: `${colors.accent}55`,
-  },
-  inlineActionText: {
-    color: colors.accent,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  progressHighlights: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  progressHighlight: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  progressHighlightLabel: {
-    color: colors.muted,
-    fontSize: Typography.size.xs,
-    marginBottom: 4,
-  },
-  progressHighlightValue: {
-    color: colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  progressHighlightValueSmall: {
-    color: colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  progressHistoryList: { gap: Spacing.sm },
-  progressHistoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  progressHistoryWeight: {
-    color: colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-  progressHistoryDate: {
-    color: colors.muted,
-    fontSize: Typography.size.sm,
-    marginTop: 2,
-  },
-  progressHistoryTag: {
-    color: colors.accent,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  progressEmptyText: {
-    color: colors.muted,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
-  },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+      paddingHorizontal: Spacing.xl,
+      marginBottom: Spacing.md,
+    },
+    sectionTitleInline: {
+      color: colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    progressHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: Spacing.md,
+      marginBottom: Spacing.md,
+    },
+    progressSubtext: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      marginTop: 4,
+    },
+    inlineActionBtn: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: Radius.full,
+      backgroundColor: colors.accentMuted,
+      borderWidth: 1,
+      borderColor: `${colors.accent}55`,
+    },
+    inlineActionText: {
+      color: colors.accent,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    progressHighlights: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      marginBottom: Spacing.lg,
+    },
+    progressHighlight: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    progressHighlightLabel: {
+      color: colors.muted,
+      fontSize: Typography.size.xs,
+      marginBottom: 4,
+    },
+    progressHighlightValue: {
+      color: colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    progressHighlightValueSmall: {
+      color: colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    progressHistoryList: { gap: Spacing.sm },
+    progressHistoryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: Spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    progressHistoryWeight: {
+      color: colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    progressHistoryDate: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      marginTop: 2,
+    },
+    progressHistoryTag: {
+      color: colors.accent,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    progressEmptyText: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      lineHeight: 20,
+    },
 
-  setupList: {
-    marginHorizontal: Spacing.xl,
-    backgroundColor: colors.card,
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.xxl,
-  },
-  setupRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-  },
-  setupLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  setupIcon: { fontSize: 18 },
-  setupLabel: { color: colors.muted, fontSize: Typography.size.md },
-  setupValue: {
-    color: colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'capitalize',
-  },
-  rowDivider: { marginVertical: 0 },
+    setupList: {
+      marginHorizontal: Spacing.xl,
+      backgroundColor: colors.card,
+      borderRadius: Radius.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.xxl,
+    },
+    setupRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: Spacing.md,
+    },
+    setupLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+    setupIcon: { fontSize: 18 },
+    setupLabel: { color: colors.muted, fontSize: Typography.size.md },
+    setupValue: {
+      color: colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'capitalize',
+    },
+    rowDivider: { marginVertical: 0 },
 
-  actions: {
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  appearanceFooterCard: {
-    marginHorizontal: Spacing.xl,
-    marginTop: Spacing.xxl,
-  },
-  appearanceFooterText: {
-    color: colors.textSecondary,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.lg,
-  },
-  appearanceFooterToggle: {
-    alignSelf: 'flex-start',
-  },
-  actionBtn: {
-    backgroundColor: colors.card,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  modalScreen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  modalScroll: {
-    flex: 1,
-  },
-  modalContent: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xxl,
-    paddingBottom: 48,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.xl,
-  },
-  modalTitle: {
-    color: colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.extrabold,
-  },
-  modalClose: {
-    color: colors.accent,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  fieldLabel: {
-    color: colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.md,
-  },
-  input: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    color: colors.text,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    fontSize: Typography.size.md,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  inputCol: {
-    flex: 1,
-  },
-  goalGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  goalChip: {
-    backgroundColor: colors.card,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  goalChipActive: {
-    backgroundColor: colors.accentMuted,
-    borderColor: colors.accent,
-  },
-  goalChipText: {
-    color: colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  goalChipTextActive: {
-    color: colors.accent,
-  },
-  saveBtn: {
-    marginTop: Spacing.xxl,
-    backgroundColor: colors.accent,
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.lg,
-    alignItems: 'center',
-  },
-  saveBtnDisabled: {
-    opacity: 0.6,
-  },
-  saveBtnText: {
-    color: '#fff',
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-  progressModalHint: {
-    color: colors.muted,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
-    marginTop: Spacing.md,
-  },
-  actionBtnText: {
-    color: colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.medium,
-  },
-  signOutBtn: {
-    borderColor: `${colors.red}44`,
-    backgroundColor: colors.redMuted,
-    marginTop: Spacing.sm,
-  },
-  signOutText: {
-    color: colors.red,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-    textAlign: 'center',
-  },
-});
+    actions: {
+      paddingHorizontal: Spacing.xl,
+      gap: Spacing.sm,
+    },
+    appearanceFooterCard: {
+      marginHorizontal: Spacing.xl,
+      marginTop: Spacing.xxl,
+    },
+    appearanceFooterText: {
+      color: colors.textSecondary,
+      fontSize: Typography.size.sm,
+      lineHeight: 20,
+      marginTop: Spacing.xs,
+      marginBottom: Spacing.lg,
+    },
+    appearanceFooterToggle: {
+      alignSelf: 'flex-start',
+    },
+    actionBtn: {
+      backgroundColor: colors.card,
+      borderRadius: Radius.lg,
+      paddingVertical: Spacing.lg,
+      paddingHorizontal: Spacing.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modalScreen: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    modalScroll: {
+      flex: 1,
+    },
+    modalContent: {
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.xxl,
+      paddingBottom: 48,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.xl,
+    },
+    modalTitle: {
+      color: colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.extrabold,
+    },
+    modalClose: {
+      color: colors.accent,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    fieldLabel: {
+      color: colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+      marginBottom: Spacing.sm,
+      marginTop: Spacing.md,
+    },
+    input: {
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+      borderWidth: 1,
+      borderRadius: Radius.lg,
+      color: colors.text,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      fontSize: Typography.size.md,
+    },
+    inputRow: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+    },
+    inputCol: {
+      flex: 1,
+    },
+    goalGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
+    },
+    goalChip: {
+      backgroundColor: colors.card,
+      borderRadius: Radius.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+    },
+    goalChipActive: {
+      backgroundColor: colors.accentMuted,
+      borderColor: colors.accent,
+    },
+    goalChipText: {
+      color: colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    goalChipTextActive: {
+      color: colors.accent,
+    },
+    saveBtn: {
+      marginTop: Spacing.xxl,
+      backgroundColor: colors.accent,
+      borderRadius: Radius.lg,
+      paddingVertical: Spacing.lg,
+      alignItems: 'center',
+    },
+    saveBtnDisabled: {
+      opacity: 0.6,
+    },
+    saveBtnText: {
+      color: colors.textStrong,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    progressModalHint: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      lineHeight: 20,
+      marginTop: Spacing.md,
+    },
+    actionBtnText: {
+      color: colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+    },
+    signOutBtn: {
+      borderColor: `${colors.red}44`,
+      backgroundColor: colors.redMuted,
+      marginTop: Spacing.sm,
+    },
+    signOutText: {
+      color: colors.red,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+      textAlign: 'center',
+    },
+  });

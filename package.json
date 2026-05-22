@@ -10,14 +10,26 @@
     "open-route": "npx uri-scheme open",
     "export:web": "node scripts/export-web.js",
     "typecheck": "tsc --noEmit",
-    "lint": "npm run typecheck",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
     "verify": "node scripts/verify-project.js",
+    "test": "jest --passWithNoTests",
+    "test:coverage": "jest --coverage --coverageThreshold='{\"global\":{\"lines\":50}}'",
+    "ci:local": "npm run typecheck && npm run test -- --passWithNoTests",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "build:nutrition-catalog": "node scripts/build-nutrition-catalog.js",
     "smoke:web": "node scripts/verify-project.js --smoke-web",
     "visual:smoke": "node scripts/visual-smoke.js",
     "seed:tester": "node scripts/prepare-tester-seed.js",
     "validate:tester": "node scripts/prepare-tester-validation.js",
-    "sync:codex-skills": "node scripts/sync-codex-skills.js"
+    "dev": "concurrently -n db,expo -c blue,green \"npx supabase start\" \"npm start\"",
+    "db:reset": "npx supabase db reset && npx supabase gen types typescript --local > src/types/database.ts",
+    "db:stop": "npx supabase stop",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=20.10.0",
@@ -46,7 +58,6 @@
     "expo-sqlite": "^55.0.15",
     "expo-status-bar": "~55.0.4",
     "expo-web-browser": "^55.0.9",
-    "nativewind": "^4.2.2",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.2",
@@ -54,15 +65,33 @@
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.23.0",
     "react-native-web": "^0.21.2",
-    "tailwindcss": "^3.4.19",
+    "react-native-worklets": "^0.8.3",
     "tamagui": "^2.0.0-rc.41",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
     "@types/react": "~19.2.2",
-    "@types/react-native": "^0.72.8",
+    "concurrently": "^9.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-expo": "^7.1.2",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.7",
+    "jest": "^30.4.2",
+    "jest-expo": "^55.0.18",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.4.2",
+    "supabase": "^2.9.6",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  }
 }
