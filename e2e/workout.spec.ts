@@ -3,11 +3,9 @@ import { test, expect } from '@playwright/test';
 test.describe('Workout Tracking', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    const demoButton = page.getByRole('button', { name: 'Explore Demo App' });
-    await demoButton.click();
-    await page.waitForTimeout(1000);
+    await page.getByTestId('login-demo-shortcut').click();
+    await page.waitForURL(/\/(tabs)/);
     await page.goto('/(tabs)/workout');
-    await page.waitForTimeout(1000);
   });
 
   test('should display workout screen header', async ({ page }) => {
