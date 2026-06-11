@@ -16,12 +16,10 @@ test.describe('Demo Mode & Auth', () => {
 
   test('should have demo mode entry point', async ({ page }) => {
     await page.goto('/');
-    const demoButton = page.getByRole('button', { name: 'Explore Demo App' });
-    await expect(demoButton).toBeVisible();
-    await demoButton.click();
-    await page.waitForTimeout(1000);
-    const url = page.url();
-    expect(url).toContain('tabs');
+    await expect(page.getByTestId('login-demo-shortcut')).toBeVisible();
+    await page.getByTestId('login-demo-shortcut').click();
+    await page.waitForURL(/\/(tabs)/);
+    expect(page.url()).toContain('tabs');
   });
 
   test('should have theme toggle', async ({ page }) => {

@@ -52,17 +52,17 @@ minimum_password_length = 6
 
 [auth.email]
 enable_signup = true
-double_confirm_changes = true
-enable_confirmations = true
+double_confirm_changes = false
+enable_confirmations = false
 secure_password_change = false
-max_frequency = "1s"
+max_frequency = "0s"
 otp_length = 6
 otp_expiry = 86400
 
 [auth.email.smtp]
 enabled = true
 host = "inbucket"
-port = 54325
+port = 1025
 user = "inbucket"
 pass = "inbucket"
 admin_email = "admin@email.com"
