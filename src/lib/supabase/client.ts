@@ -3,7 +3,6 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import {
   isDemoModeAvailable,
-  isGoogleLoginAvailable,
   isSupabaseConfigured,
   supabaseAnonKey,
   supabaseUrl,
@@ -75,7 +74,7 @@ const SecureStoreAdapter = {
   },
 };
 
-export { isDemoModeAvailable, isGoogleLoginAvailable, isSupabaseConfigured };
+export { isDemoModeAvailable, isSupabaseConfigured };
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {

@@ -11,7 +11,7 @@ npm run verify
 npm start
 ```
 
-If Supabase is not configured, use the **"Explore Demo App"** entry on the login screen for a local MVP walkthrough.
+If Supabase is not configured, use the **"Demo mode"** button on the login screen for a local MVP walkthrough. Authentication is via magic link (passwordless) only.
 
 ## Development Setup
 
@@ -78,7 +78,7 @@ See [docs/mvp/README.md](docs/mvp/README.md) for MVP scope and [docs/sprints/REA
 
 ## Testing
 
-- **E2E:** Playwright — 67 tests across 7 specs covering all user flows
+- **E2E:** Playwright — 60+ tests across 7 specs covering all user flows
 - **Unit:** Jest + React Native Testing Library (infrastructure ready)
 - Run `npm run test:e2e` or `npm run ci:local`
 
@@ -101,5 +101,6 @@ Navya uses a tool-agnostic multi-agent AI development system (works with Claude 
 
 - `npm` is the only supported package manager. `package-lock.json` is authoritative.
 - Requires `--legacy-peer-deps` for React 19 compatibility.
+- Auth is magic link (passwordless) only via Supabase Auth. No passwords, no OAuth providers.
 - Demo mode works without Supabase — mock data loads automatically.
 - No direct AI calls from the client — all AI logic goes through Supabase Edge Functions.

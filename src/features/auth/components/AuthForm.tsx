@@ -1,51 +1,29 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Input, Button } from '@/components/ui';
-import { Radius, Spacing, Typography, type ThemeColors } from '@/theme';
-
-type AuthMode = 'link' | 'password';
+import { Spacing, Typography, type ThemeColors } from '@/theme';
 
 interface AuthFormProps {
   colors: ThemeColors;
-  mode: AuthMode;
   email: string;
-  password: string;
-  showPassword: boolean;
   emailSent: boolean;
   emailError?: string;
-  passwordError?: string;
   loading: boolean;
   isSupabaseConfigured: boolean;
-  onModeChange: (mode: AuthMode) => void;
   onEmailChange: (text: string) => void;
-  onPasswordChange: (text: string) => void;
-  onTogglePassword: () => void;
   onSubmit: () => void;
-  onForgotPassword: () => void;
-  onSignUp: () => void;
 }
 
 export function AuthForm({
   colors,
-  mode,
   email,
-  password,
-  showPassword,
   emailSent,
   emailError,
-  passwordError,
   loading,
   isSupabaseConfigured,
-  onModeChange,
   onEmailChange,
-  onPasswordChange,
-  onTogglePassword,
   onSubmit,
-  onForgotPassword,
-  onSignUp,
 }: AuthFormProps) {
-  const isLinkMode = mode === 'link';
-
   return (
     <View style={styles.container}>
       {!isSupabaseConfigured && (
@@ -64,35 +42,6 @@ export function AuthForm({
         </View>
       )}
 
-      <View style={[styles.modeToggle, { borderColor: colors.border }]}>
-        <TouchableOpacity
-          onPress={() => onModeChange('link')}
-          style={[
-            styles.modeButton,
-            { backgroundColor: isLinkMode ? colors.accentMuted : 'transparent' },
-          ]}
-        >
-          <Text
-            style={[styles.modeText, { color: isLinkMode ? colors.accent : colors.textSubtle }]}
-          >
-            Email Link
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => onModeChange('password')}
-          style={[
-            styles.modeButton,
-            { backgroundColor: !isLinkMode ? colors.accentMuted : 'transparent' },
-          ]}
-        >
-          <Text
-            style={[styles.modeText, { color: !isLinkMode ? colors.accent : colors.textSubtle }]}
-          >
-            Password
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       <Input
         label="Email"
         placeholder="you@example.com"
@@ -106,57 +55,15 @@ export function AuthForm({
         testID="login-email-input"
       />
 
-      {!isLinkMode && (
-        <View>
-          <Input
-            label="Password"
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={onPasswordChange}
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            autoComplete="password"
-            error={passwordError}
-            testID="login-password-input"
-          />
-          <TouchableOpacity onPress={onTogglePassword} style={styles.togglePassword}>
-            <Text style={[styles.togglePasswordText, { color: colors.accent }]}>
-              {showPassword ? 'Hide' : 'Show'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {!isLinkMode && (
-        <TouchableOpacity
-          onPress={onForgotPassword}
-          style={styles.forgotPassword}
-          disabled={loading}
-        >
-          <Text style={[styles.forgotPasswordText, { color: colors.accent }]}>
-            Forgot password?
-          </Text>
-        </TouchableOpacity>
-      )}
-
       <Button
-        label={isLinkMode ? (emailSent ? 'Link Sent' : 'Send Email Link') : 'Log In'}
+        label={emailSent ? 'Link Sent' : 'Send Email Link'}
         fullWidth
         loading={loading}
         onPress={onSubmit}
         style={styles.submitButton}
-        disabled={!isSupabaseConfigured || (isLinkMode && emailSent)}
-        testID={isLinkMode ? 'login-send-magic-link' : 'login-submit'}
+        disabled={!isSupabaseConfigured || emailSent}
+        testID="login-send-magic-link"
       />
-
-      <View style={styles.signUpRow}>
-        <Text style={[styles.signUpText, { color: colors.textSecondary }]}>
-          Don't have an account?{' '}
-        </Text>
-        <TouchableOpacity onPress={onSignUp} disabled={loading}>
-          <Text style={[styles.signUpLink, { color: colors.accent }]}>Sign up</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -180,56 +87,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     lineHeight: 20,
   },
-  modeToggle: {
-    flexDirection: 'row',
-    marginBottom: Spacing.md,
-    borderRadius: Radius.lg,
-    padding: 2,
-    borderWidth: 1,
-  },
-  modeButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderRadius: Radius.md,
-  },
-  modeText: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-  togglePassword: {
-    alignSelf: 'flex-end',
-    marginTop: -Spacing.xs,
-    marginBottom: Spacing.md,
-  },
-  togglePasswordText: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: -Spacing.xs,
-    marginBottom: Spacing.md,
-  },
-  forgotPasswordText: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-    textDecorationLine: 'underline',
-  },
   submitButton: {
-    marginTop: Spacing.sm,
-  },
-  signUpRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
     marginTop: Spacing.lg,
-  },
-  signUpText: {
-    fontSize: Typography.size.sm,
-  },
-  signUpLink: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-    textDecorationLine: 'underline',
   },
 });

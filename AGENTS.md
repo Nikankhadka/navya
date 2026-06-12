@@ -17,7 +17,7 @@ Target: ~70% MyFitnessPal core daily user loop parity.
 | Navigation | Expo Router (file-based) |
 | Styling | Tamagui (primary), NativeWind (legacy) |
 | State | Zustand (client), TanStack Query (server) |
-| Backend | Supabase (auth, Postgres, RLS, Edge Functions, storage) |
+| Backend | Supabase (magic-link auth only, Postgres, RLS, Edge Functions, storage) |
 | AI | OpenAI via Supabase Edge Functions only (no client AI calls) |
 | Testing | Jest + React Native Testing Library |
 | Deploy | EAS (iOS/Android), Vercel (web) |

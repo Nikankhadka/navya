@@ -30,19 +30,12 @@ export const demoModeFlag =
   process.env.EXPO_PUBLIC_ENABLE_DEMO_MODE ??
   'false';
 
-export const googleLoginFlag =
-  Constants.expoConfig?.extra?.enableGoogleLogin ??
-  process.env.EXPO_PUBLIC_ENABLE_GOOGLE_LOGIN ??
-  'false';
-
 export const isSupabaseConfigured = supabaseUrl.length > 0 && supabaseAnonKey.length > 0;
 
 export const isHostedAppEnv = appEnv === 'preview' || appEnv === 'production';
 
 export const isDemoModeAvailable =
   demoModeFlag === 'true' || (!isHostedAppEnv && !isSupabaseConfigured);
-
-export const isGoogleLoginAvailable = googleLoginFlag === 'true';
 
 export const coachFeatureFlag =
   Constants.expoConfig?.extra?.coachFeatureFlag ?? process.env.EXPO_PUBLIC_ENABLE_COACH ?? 'true';

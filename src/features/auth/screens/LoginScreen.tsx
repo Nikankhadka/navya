@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,60 +7,26 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeModeToggle, Alert as TamaguiAlert } from '@/components/ui';
 import { Radius, Shadow, Spacing, Typography, useAppTheme } from '@/theme';
-import {
-  createSessionFromUrl,
-  getAuthRedirectUrl,
-  getSupabaseProviderCallbackUrl,
-} from '@/lib/auth/redirects';
-import { isGoogleLoginAvailable, isSupabaseConfigured, supabase } from '@/lib/supabase/client';
+import { getAuthRedirectUrl } from '@/lib/auth/redirects';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase/client';
 import { logger } from '@/lib/logger';
 import { withMinimumLoading } from '@/lib/auth/loading';
-import { emailSchema, signInPasswordSchema, getFirstErrorMessage } from '@/lib/validation';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import * as WebBrowser from 'expo-web-browser';
+import { emailSchema, getFirstErrorMessage } from '@/lib/validation';
 import { useAuthStore } from '@/store/useAuthStore';
-import type { AuthError } from '@supabase/supabase-js';
-import { AuthForm, SocialLogin } from '@/features/auth/components';
-
-function getOAuthErrorMessage(
-  provider: 'google' | 'apple',
-  error: unknown,
-  redirectUrl: string,
-): string {
-  const fallbackMessage = `Unable to start ${provider} sign-in.`;
-  const rawMessage = error instanceof Error ? error.message : fallbackMessage;
-
-  if (provider === 'google' && /provider is not enabled/i.test(rawMessage)) {
-    return [
-      'Google sign-in is not enabled in your Supabase project yet.',
-      'In Supabase Dashboard -> Authentication -> Providers -> Google, enable the provider and paste a Google OAuth Client ID and Client Secret.',
-      `In Google Cloud Console, add this Authorized redirect URI to the Web OAuth client: ${getSupabaseProviderCallbackUrl()}`,
-      `In Supabase Authentication -> URL Configuration, keep this app redirect allow-listed: ${redirectUrl}`,
-    ].join('\n\n');
-  }
-
-  return rawMessage;
-}
-
-type AuthMode = 'link' | 'password';
+import { AuthForm } from '@/features/auth/components';
 
 export default function LoginScreen() {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const router = useRouter();
 
-  const [mode, setMode] = useState<AuthMode>('link');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string>();
-  const [passwordError, setPasswordError] = useState<string>();
   const [alert, setAlert] = useState<{
     open: boolean;
     title: string;
@@ -72,12 +38,6 @@ export default function LoginScreen() {
 
   const enterDemoMode = useAuthStore((state) => state.enterDemoMode);
 
-  useEffect(() => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      WebBrowser.maybeCompleteAuthSession();
-    }
-  }, []);
-
   function validateEmail(): boolean {
     const result = emailSchema.safeParse(email);
     if (!result.success) {
@@ -85,17 +45,6 @@ export default function LoginScreen() {
       return false;
     }
     setEmailError(undefined);
-    return true;
-  }
-
-  function validatePassword(): boolean {
-    const result = signInPasswordSchema.safeParse({ email, password });
-    if (!result.success) {
-      const msg = getFirstErrorMessage(result, 'password');
-      if (msg) setPasswordError(msg);
-      return false;
-    }
-    setPasswordError(undefined);
     return true;
   }
 
@@ -134,164 +83,6 @@ export default function LoginScreen() {
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handlePasswordAuth() {
-    if (!validateEmail()) return;
-    if (!validatePassword()) return;
-    const normalizedEmail = email.trim().toLowerCase();
-
-    try {
-      setLoading(true);
-      const { error } = await withMinimumLoading(
-        () => supabase.auth.signInWithPassword({ email: normalizedEmail, password }),
-        500,
-      );
-      if (error) throw error;
-      setAlert({
-        open: true,
-        title: 'Welcome back',
-        message: 'You are signed in.',
-        variant: 'default',
-      });
-    } catch (error) {
-      const authError = error as AuthError;
-      let message = 'Unable to sign in. Please check your credentials.';
-      let needsResend = false;
-
-      if (authError.message.includes('Invalid login credentials')) {
-        message = 'Incorrect email or password. Please try again.';
-      } else if (authError.message.includes('Email not confirmed')) {
-        message = 'Please verify your email before signing in.';
-        needsResend = true;
-      } else if (authError instanceof Error) {
-        message = authError.message;
-      }
-
-      setAlert({
-        open: true,
-        title: 'Sign-in failed',
-        message,
-        variant: 'destructive',
-        action: needsResend
-          ? {
-              label: 'Resend Verification',
-              onPress: async () => {
-                setAlert(null);
-                const normalizedEmail = email.trim().toLowerCase();
-                try {
-                  const { error: resendError } = await supabase.auth.resend({
-                    type: 'signup',
-                    email: normalizedEmail,
-                  });
-                  if (resendError) throw resendError;
-                  setAlert({
-                    open: true,
-                    title: 'Verification email sent',
-                    message: 'Check your inbox for the new confirmation link.',
-                    variant: 'default',
-                  });
-                } catch (resendErr) {
-                  setAlert({
-                    open: true,
-                    title: 'Failed to resend',
-                    message:
-                      resendErr instanceof Error
-                        ? resendErr.message
-                        : 'Could not send verification email.',
-                    variant: 'destructive',
-                  });
-                }
-              },
-            }
-          : undefined,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleOAuth(provider: 'google' | 'apple') {
-    if (provider === 'google' && !isGoogleLoginAvailable) {
-      setAlert({
-        open: true,
-        title: 'Google sign-in unavailable',
-        message: 'Google sign-in is temporarily disabled.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    if (provider === 'apple' && Platform.OS === 'ios') {
-      try {
-        const credential = await AppleAuthentication.signInAsync({
-          requestedScopes: [
-            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-            AppleAuthentication.AppleAuthenticationScope.EMAIL,
-          ],
-        });
-        if (credential.identityToken) {
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'apple',
-            token: credential.identityToken,
-          });
-          if (error) throw error;
-        } else {
-          throw new Error('No identityToken.');
-        }
-      } catch (e) {
-        const authError = e as { code?: string; message?: string };
-        if (authError.code !== 'ERR_REQUEST_CANCELED') {
-          setAlert({
-            open: true,
-            title: 'Apple Auth Error',
-            message: authError.message ?? 'Unable to sign in with Apple.',
-            variant: 'destructive',
-          });
-        }
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    try {
-      const redirectUrl = getAuthRedirectUrl();
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: redirectUrl },
-      });
-      if (error) throw error;
-
-      if (data?.url) {
-        if (Platform.OS === 'web') {
-          window.location.href = data.url;
-        } else {
-          const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-          if (result.type === 'success') {
-            const sessionResult = await createSessionFromUrl(result.url);
-            if (!sessionResult.success) throw new Error(sessionResult.message);
-          }
-        }
-      }
-    } catch (e) {
-      const error = e as Error;
-      setAlert({
-        open: true,
-        title: `${provider} Auth Error`,
-        message: getOAuthErrorMessage(provider, error, getAuthRedirectUrl()),
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function handlePrimaryAction() {
-    if (mode === 'link') handleMagicLinkAuth();
-    else handlePasswordAuth();
   }
 
   return (
@@ -340,50 +131,22 @@ export default function LoginScreen() {
               paddingHorizontal: Spacing.lg,
             }}
           >
-            {mode === 'link'
-              ? "Enter your email and we'll send you a one-time sign-in link. No password needed."
-              : 'Sign in with your email and password.'}
+            Enter your email and we'll send you a one-time sign-in link. No password needed.
           </Text>
         </View>
 
         <AuthForm
           colors={colors}
-          mode={mode}
           email={email}
-          password={password}
-          showPassword={showPassword}
           emailSent={emailSent}
           emailError={emailError}
-          passwordError={passwordError}
           loading={loading}
           isSupabaseConfigured={isSupabaseConfigured}
-          onModeChange={(newMode: AuthMode) => {
-            setMode(newMode);
-            setEmailSent(false);
-            setPassword('');
-            setPasswordError(undefined);
-          }}
           onEmailChange={(text: string) => {
             setEmail(text);
             setEmailError(undefined);
           }}
-          onPasswordChange={(text: string) => {
-            setPassword(text);
-            setPasswordError(undefined);
-          }}
-          onTogglePassword={() => setShowPassword(!showPassword)}
-          onSubmit={handlePrimaryAction}
-          onForgotPassword={() => router.push('/(auth)/forgot-password')}
-          onSignUp={() => router.push('/(auth)/signup')}
-        />
-
-        <SocialLogin
-          colors={colors}
-          loading={loading}
-          isSupabaseConfigured={isSupabaseConfigured}
-          isGoogleLoginAvailable={isGoogleLoginAvailable}
-          onAppleLogin={() => handleOAuth('apple')}
-          onGoogleLogin={() => handleOAuth('google')}
+          onSubmit={handleMagicLinkAuth}
         />
       </ScrollView>
 

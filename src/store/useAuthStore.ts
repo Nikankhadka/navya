@@ -22,8 +22,6 @@ interface AuthState {
   setProfile: (profile: Partial<UserProfile>) => void;
   refreshProfile: () => Promise<void>;
   enterDemoMode: (options?: { onboardingComplete?: boolean }) => void;
-  signInWithEmailPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUpWithEmailPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 let authInitPromise: Promise<void> | null = null;
@@ -110,9 +108,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             });
 
             if (newSession) {
-              void get().refreshProfile().catch((error) => {
-                logger.error('Profile refresh after auth change failed', error);
-              });
+              void get()
+                .refreshProfile()
+                .catch((error) => {
+                  logger.error('Profile refresh after auth change failed', error);
+                });
             } else {
               set({ user: null });
             }
@@ -179,51 +179,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const currentUser = get().user;
     if (currentUser) {
       set({ user: { ...currentUser, ...profile } });
-    }
-  },
-
-  signInWithEmailPassword: async (email: string, password: string) => {
-    try {
-      set({ isLoading: true });
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      logger.error('Email/password sign in failed', error);
-      return { success: false, error: 'Unable to sign in. Please try again.' };
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  signUpWithEmailPassword: async (email: string, password: string) => {
-    try {
-      set({ isLoading: true });
-      const { error } = await supabase.auth.signUp({
-        email: email.trim().toLowerCase(),
-        password,
-        options: {
-          emailRedirectTo: `${process.env.EXPO_PUBLIC_APP_URL ?? 'navya://'}auth/callback`,
-        },
-      });
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      logger.error('Email/password sign up failed', error);
-      return { success: false, error: 'Unable to create account. Please try again.' };
-    } finally {
-      set({ isLoading: false });
     }
   },
 }));

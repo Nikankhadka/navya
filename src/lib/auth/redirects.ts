@@ -1,7 +1,6 @@
 import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
 import { Platform } from 'react-native';
-import { supabaseUrl } from '@/config/env';
 import { supabase } from '@/lib/supabase/client';
 
 export function getAuthRedirectUrl(): string {
@@ -14,10 +13,6 @@ export function getAuthRedirectUrl(): string {
     native: 'navya://auth/callback',
     path: 'auth/callback',
   });
-}
-
-export function getSupabaseProviderCallbackUrl(): string {
-  return `${supabaseUrl.replace(/\/$/, '')}/auth/v1/callback`;
 }
 
 type AuthCallbackParams = {
@@ -67,7 +62,9 @@ function extractSessionParams(url: string): AuthCallbackParams {
     errorCode:
       params.get('error_code') ??
       params.get('error') ??
-      (typeof parsed.queryParams?.error_code === 'string' ? parsed.queryParams.error_code : undefined) ??
+      (typeof parsed.queryParams?.error_code === 'string'
+        ? parsed.queryParams.error_code
+        : undefined) ??
       undefined,
     errorDescription: params.get('error_description') ?? undefined,
   };
@@ -109,7 +106,8 @@ export async function createSessionFromUrl(url: string): Promise<CreateSessionFr
   if (errorCode) {
     return {
       success: false,
-      message: getAuthCallbackError(url) ?? 'Authentication could not be completed. Please try again.',
+      message:
+        getAuthCallbackError(url) ?? 'Authentication could not be completed. Please try again.',
     };
   }
 
