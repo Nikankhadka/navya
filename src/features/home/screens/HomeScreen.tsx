@@ -1,11 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, Animated, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
 import { SectionHeader, DateNavBar } from '@/components/ui';
-import { TodaySessionCard, NutritionCard, ProgressCard, CoachCard } from '@/components/shared';
+import {
+  TodaySessionCard,
+  NutritionCard,
+  ProgressCard,
+  CoachCard,
+  DiaryCompletionCard,
+  type DiaryCompletionCategory,
+} from '@/components/shared';
 import { addDays, getTodayDateString, getWeekDayLabels, isToday } from '@/utils/date';
 import { useTodaySession } from '@/features/workout/hooks/useTodaySession';
 import { useWorkoutHistory } from '@/features/workout/hooks/useWorkoutHistory';
@@ -64,6 +71,59 @@ export default function HomeScreen() {
   };
 
   const isFutureDate = (dateKey: string) => dateKey > getTodayDateString();
+
+  /** Compute diary completion categories from existing hook data */
+  const diaryCategories: DiaryCompletionCategory[] = useMemo(() => {
+    const foodLogged = (dailyNutrition?.total_calories ?? 0) > 0;
+    const waterMet =
+      (dailyNutrition?.water_total_ml ?? 0) >= (dailyNutrition?.water_goal_ml ?? 2500);
+    const workoutDone = todaySession?.status === 'completed';
+    // Weight was logged today if most recent log date matches today
+    const todayKey = getTodayDateString();
+    const weightLogged =
+      weightProgress?.recent_logs?.some((log) => log.logged_at.slice(0, 10) === todayKey) ?? false;
+
+    const caloriesStr = `${dailyNutrition?.total_calories ?? 0} / ${dailyNutrition?.calorie_goal ?? 0} kcal`;
+    const waterStr = `${(Math.round((dailyNutrition?.water_total_ml ?? 0) / 100) * 100) / 1000}L / ${(dailyNutrition?.water_goal_ml ?? 2500) / 1000}L`;
+    const weightCurrent = weightProgress?.current_weight_kg
+      ? `${weightProgress.current_weight_kg} kg`
+      : undefined;
+
+    return [
+      {
+        key: 'food',
+        label: 'Food',
+        completed: foodLogged,
+        emoji: '🍽️',
+        subtitle: foodLogged ? caloriesStr : 'Log a meal',
+        onPress: () => router.push('/(tabs)/nutrition'),
+      },
+      {
+        key: 'water',
+        label: 'Water',
+        completed: waterMet,
+        emoji: '💧',
+        subtitle: waterMet ? 'Goal met!' : waterStr,
+        onPress: () => router.push('/(tabs)/nutrition'),
+      },
+      {
+        key: 'workout',
+        label: 'Workout',
+        completed: workoutDone,
+        emoji: '🏋️',
+        subtitle: workoutDone ? 'Done!' : 'Start session',
+        onPress: () => router.push('/(tabs)/workout'),
+      },
+      {
+        key: 'weight',
+        label: 'Weight',
+        completed: weightLogged,
+        emoji: '⚖️',
+        subtitle: weightLogged ? (weightCurrent ?? 'Logged') : 'Check in',
+        onPress: () => router.push('/(tabs)/profile'),
+      },
+    ];
+  }, [dailyNutrition, todaySession, weightProgress, router]);
 
   return (
     <ScrollView
@@ -132,6 +192,10 @@ export default function HomeScreen() {
           </View>
         ))}
       </Animated.View>
+
+      {/* Daily Diary Completion State */}
+      <SectionHeader title="Day Complete?" />
+      <DiaryCompletionCard colors={colors} categories={diaryCategories} />
 
       <SectionHeader
         title="Today's Session"
