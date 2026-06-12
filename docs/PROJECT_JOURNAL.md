@@ -174,3 +174,29 @@ Audit workout feature against MVP scope and user stories, plan Sprint 4-5 workou
 - Review updated user stories and sprint docs
 - Begin Sprint 4 implementation: per-set logging UI + rest timer upgrade
 - Run `npm run typecheck` before starting
+## [2026-06-13] Session — MVP Build (Phase 1-2)
+
+### Branch
+`0.1-mvp` (created from `main`)
+
+### Phase 1: Complete The Daily Diary ✅
+- **Daily Diary Completion Card**: Added `DiaryCompletionCard` with 4-category completion status (food, water, workout, weight) and % ring on Home screen
+- **Meal Templates**: Created `meal_templates` migration with RLS, types (`MealTemplate`, `TemplateFoodEntry`), `templateService`, `useMealTemplates` hook, and `MealTemplatesSheet` UI component with 8 system presets (AU/NP relevant meals)
+- Verified: TASK-003 (Recent meals) and TASK-005 (Real streak) already built
+
+### Phase 2: Progress & Adherence 🚧 (3 of 8 complete)
+- **Workout Session Detail**: Added `SessionDetailModal` with full per-set review (weight, reps, RPE) and volume calculation
+- **Weight Trend Chart**: Added `WeightTrendCard` with bar visualization, 14d change, goal comparison on Profile
+- **Workout Split Templates**: Created `splitTemplates.ts` with 4 pre-built programs (PPL, Upper/Lower, Full Body, Bro Split) — 280 lines of exercise programming
+- Added `goal_weight` and `water_target_ml` fields to `UserProfile` type and mock data
+
+### Files Changed
+- 15 commits on `0.1-mvp`
+- 16 files created/modified
+- TypeScript: 0 errors throughout
+- Pushed to `origin/0.1-mvp`
+
+### Remaining for Full MVP
+- Phase 2 (cont'd): Per-set logging UI, rest timer upgrade, post-hoc workout logging
+- Phase 3: Weekly coach summary, plan regeneration, barcode capture, meal template creation UI
+- Phase 4: Polish, edge cases, offline resilience, E2E tests
