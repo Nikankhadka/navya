@@ -5,11 +5,7 @@ export type GoalType =
   | 'improve_endurance'
   | 'general_fitness';
 
-export type ActivityLevel =
-  | 'sedentary'
-  | 'lightly_active'
-  | 'moderately_active'
-  | 'very_active';
+export type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active';
 
 export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
 
@@ -38,6 +34,8 @@ export interface UserProfile {
   age_range: '18-24' | '25-34' | '35-44' | '45-54' | '55+';
   gender: 'male' | 'female' | 'non_binary' | 'prefer_not_to_say';
   weight_kg: number | null;
+  goal_weight: number | null;
+  water_target_ml: number;
   height_cm: number | null;
   goal: GoalType;
   activity_level: ActivityLevel;

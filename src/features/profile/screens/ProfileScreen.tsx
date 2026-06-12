@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Spacing, Radius, Typography, useAppTheme } from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Card, Divider, ThemeModeToggle } from '@/components/ui';
+import { WeightTrendCard } from '@/components/shared/WeightTrendCard';
 import { formatDuration, goalLabel } from '@/utils/helpers';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { useWeightActions } from '@/features/profile/hooks/useWeightActions';
@@ -203,6 +204,7 @@ export default function ProfileScreen() {
   const { user, signOut, isDemoSession, setProfile } = useAuthStore();
   const { data: profile } = useProfile(user?.id);
   const { data: weightProgress } = useWeightProgress(user?.id);
+  const goalWeight = user?.goal_weight ?? null;
   const { data: habitStreak } = useHabitStreak(user?.id);
   const workoutTarget = user?.workouts_per_week ?? profile?.workouts_per_week ?? 3;
   const { data: workoutHistory } = useWorkoutHistory(user?.id, workoutTarget);
@@ -443,6 +445,14 @@ export default function ProfileScreen() {
           )}
         </View>
       </Card>
+
+      <WeightTrendCard
+        colors={colors}
+        weightProgress={weightProgress ?? null}
+        goalWeight={goalWeight}
+      />
+
+      <View style={{ height: Spacing.xl }} />
 
       <Text style={styles.sectionTitle}>My Setup</Text>
       <View style={styles.setupList}>

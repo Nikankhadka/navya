@@ -8,6 +8,8 @@ export const MOCK_PROFILE: UserProfile = {
   age_range: '25-34',
   gender: 'male',
   weight_kg: 78,
+  goal_weight: 75,
+  water_target_ml: 2500,
   height_cm: 178,
   goal: 'build_muscle',
   activity_level: 'moderately_active',
