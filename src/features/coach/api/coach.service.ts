@@ -49,8 +49,7 @@ export const coachService = {
     };
 
     if (shouldUseDemoCoach(userId)) {
-      const reply =
-        DEMO_COACH_RESPONSES[Math.floor(Math.random() * DEMO_COACH_RESPONSES.length)];
+      const reply = DEMO_COACH_RESPONSES[Math.floor(Math.random() * DEMO_COACH_RESPONSES.length)];
 
       return {
         id: `coach-local-${Date.now()}`,
@@ -111,5 +110,25 @@ export const coachService = {
     }
 
     return mapCoachMessageRow(insertedReply);
+  },
+
+  async getWeeklySummary(userId: string): Promise<string> {
+    if (shouldUseDemoCoach(userId)) {
+      return "You've completed 3 of 5 planned workouts this week — solid consistency. Your average session duration was 45 minutes. Try increasing protein at breakfast for better recovery. Next week, aim for all 5 sessions to hit your adherence goal.";
+    }
+
+    const { data, error } = await supabase.functions.invoke('coach-weekly-summary', {
+      body: { userId },
+    });
+
+    if (error) {
+      console.error('Error fetching weekly summary:', error);
+      return 'Weekly summary is not available right now. Check back later.';
+    }
+
+    return (
+      (data as { summary?: string })?.summary ??
+      'Weekly summary is not available right now. Check back later.'
+    );
   },
 };

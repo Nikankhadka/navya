@@ -5,3 +5,4 @@ export { CoachCard } from './CoachCard';
 export { DiaryCompletionCard } from './DiaryCompletionCard';
 export type { DiaryCompletionCategory } from './DiaryCompletionCard';
 export { WeightTrendCard } from './WeightTrendCard';
+export { WeeklyCoachSummaryCard } from './WeeklyCoachSummaryCard';

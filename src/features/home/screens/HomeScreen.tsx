@@ -11,6 +11,7 @@ import {
   ProgressCard,
   CoachCard,
   DiaryCompletionCard,
+  WeeklyCoachSummaryCard,
   type DiaryCompletionCategory,
 } from '@/components/shared';
 import { addDays, getTodayDateString, getWeekDayLabels, isToday } from '@/utils/date';
@@ -18,6 +19,7 @@ import { useTodaySession } from '@/features/workout/hooks/useTodaySession';
 import { useWorkoutHistory } from '@/features/workout/hooks/useWorkoutHistory';
 import { useDailyNutrition } from '@/features/nutrition/hooks/useDailyNutrition';
 import { useCoachMessages } from '@/features/coach/hooks/useCoachMessages';
+import { useWeeklyCoachSummary } from '@/features/coach/hooks/useWeeklyCoachSummary';
 import { isCoachEnabled } from '@/config/env';
 import { useHabitStreak } from '@/features/home/hooks/useHabitStreak';
 import { useWeightProgress } from '@/features/profile/hooks/useWeightProgress';
@@ -43,6 +45,7 @@ export default function HomeScreen() {
   const { data: weightProgress } = useWeightProgress(userId);
   const weeklyTarget = user?.workouts_per_week ?? 3;
   const { data: workoutHistory } = useWorkoutHistory(userId, weeklyTarget, selectedDate);
+  const { data: weeklySummary } = useWeeklyCoachSummary(userId);
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }).start();
@@ -226,6 +229,12 @@ export default function HomeScreen() {
 
       {isCoachEnabled && (
         <>
+          <SectionHeader title="Weekly Coach Summary" />
+          <WeeklyCoachSummaryCard
+            colors={colors}
+            summary={weeklySummary ?? 'Generating your weekly summary...'}
+          />
+
           <SectionHeader title="AI Coach" />
           <CoachCard colors={colors} coachPreview={coachPreview} />
         </>
