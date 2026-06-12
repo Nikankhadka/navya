@@ -1,5 +1,3 @@
-import { createTokens } from 'tamagui';
-
 export const Colors = {
   bg: '#0A0A0F',
   surface: '#12121A',
@@ -95,67 +93,3 @@ export const Shadow = {
     elevation: 10,
   },
 } as const;
-
-export const tokens = createTokens({
-  color: {
-    background: Colors.bg,
-    surface: Colors.surface,
-    card: Colors.card,
-    cardHover: Colors.cardHover,
-    border: Colors.border,
-    borderLight: Colors.borderLight,
-    accent: Colors.accent,
-    accentSoft: Colors.accentSoft,
-    accentMuted: Colors.accentMuted,
-    green: Colors.green,
-    greenMuted: Colors.greenMuted,
-    orange: Colors.orange,
-    orangeMuted: Colors.orangeMuted,
-    red: Colors.red,
-    redMuted: Colors.redMuted,
-    blue: Colors.blue,
-    blueMuted: Colors.blueMuted,
-    text: Colors.text,
-    textSecondary: Colors.textSecondary,
-    muted: Colors.muted,
-    dim: Colors.dim,
-    white: Colors.white,
-    black: Colors.black,
-  },
-  space: {
-    0: 0,
-    xs: Spacing.xs,
-    sm: Spacing.sm,
-    md: Spacing.md,
-    true: Spacing.md,
-    lg: Spacing.lg,
-    xl: Spacing.xl,
-    xxl: Spacing.xxl,
-    xxxl: Spacing.xxxl,
-  },
-  size: {
-    xs: 28,
-    sm: 36,
-    md: 44,
-    true: 44,
-    lg: 52,
-    xl: 60,
-  },
-  radius: {
-    0: 0,
-    sm: Radius.sm,
-    md: Radius.md,
-    lg: Radius.lg,
-    xl: Radius.xl,
-    xxl: Radius.xxl,
-    full: Radius.full,
-  },
-  zIndex: {
-    xs: 0,
-    sm: 1,
-    md: 10,
-    true: 10,
-    lg: 100,
-    xl: 1000,
-  },
-});

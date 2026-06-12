@@ -1,20 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
-import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Card, Badge, Divider, ThemeModeToggle } from '@/components/ui';
+import { Card, Divider, ThemeModeToggle } from '@/components/ui';
 import { formatDuration, goalLabel } from '@/utils/helpers';
 import { useProfile } from '@/features/profile/hooks/useProfile';
 import { useWeightActions } from '@/features/profile/hooks/useWeightActions';
@@ -22,25 +12,18 @@ import { useWeightProgress } from '@/features/profile/hooks/useWeightProgress';
 import { useHabitStreak } from '@/features/home/hooks/useHabitStreak';
 import { useWorkoutHistory } from '@/features/workout/hooks/useWorkoutHistory';
 import { profileService } from '@/features/profile/api/profile.service';
-import type { GoalType, UserProfile } from '@/types/app';
+import {
+  ProfileHeader,
+  ProfileStatsSection,
+  EditProfileModal,
+  WeightCheckInModal,
+  type EditProfileModalProps,
+} from '@/features/profile/components';
+import type { UserProfile } from '@/types/app';
 import { crossAlert } from '@/utils/crossAlert';
 import { isVisualTestScenario } from '@/utils/visualTest';
 
-type EditProfileForm = {
-  full_name: string;
-  weight_kg: string;
-  height_cm: string;
-  goal: GoalType;
-  workouts_per_week: string;
-};
-
-const GOAL_OPTIONS: { id: GoalType; label: string }[] = [
-  { id: 'build_muscle', label: 'Build Muscle' },
-  { id: 'lose_weight', label: 'Lose Weight' },
-  { id: 'maintain', label: 'Maintain' },
-  { id: 'improve_endurance', label: 'Endurance' },
-  { id: 'general_fitness', label: 'General Fitness' },
-];
+type EditProfileForm = EditProfileModalProps['form'];
 
 export default function ProfileScreen() {
   const { colors } = useAppTheme();
@@ -209,60 +192,19 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.hero}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatarEmoji}>🧑‍💪</Text>
-        </View>
-        <Text style={styles.fullName}>{activeUser.full_name ?? 'Navya User'}</Text>
-        <Text style={styles.email}>{activeUser.email}</Text>
-        <View style={styles.badgeRow}>
-          {isDemoSession && <Badge label="Demo Session" color={colors.orange} />}
-          {activeUser.goal && <Badge label={goalLabel(activeUser.goal)} color={colors.accent} />}
-          {activeUser.experience_level && (
-            <Badge label={activeUser.experience_level} color={colors.green} />
-          )}
-        </View>
-      </View>
+      <ProfileHeader
+        fullName={activeUser.full_name}
+        email={activeUser.email}
+        goal={activeUser.goal}
+        experienceLevel={activeUser.experience_level}
+        isDemoSession={isDemoSession}
+      />
 
-      <View style={styles.statsGrid}>
-        {stats.map((stat) => (
-          <View key={stat.label} style={styles.statCard}>
-            <Text style={styles.statValue}>{stat.value}</Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-            <Text style={styles.statSuffix}>{stat.suffix}</Text>
-          </View>
-        ))}
-      </View>
-
-      <Card style={styles.metricsCard}>
-        <Text style={styles.sectionTitle}>Body Metrics</Text>
-        <View style={styles.metricsRow}>
-          <View style={styles.metric}>
-            <Text style={styles.metricVal}>
-              {activeUser.weight_kg ?? '—'}
-              <Text style={styles.metricUnit}> kg</Text>
-            </Text>
-            <Text style={styles.metricLabel}>Weight</Text>
-          </View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metric}>
-            <Text style={styles.metricVal}>
-              {activeUser.height_cm ?? '—'}
-              <Text style={styles.metricUnit}> cm</Text>
-            </Text>
-            <Text style={styles.metricLabel}>Height</Text>
-          </View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metric}>
-            <Text style={styles.metricVal}>
-              {activeUser.weight_kg && activeUser.height_cm
-                ? (activeUser.weight_kg / Math.pow(activeUser.height_cm / 100, 2)).toFixed(1)
-                : '—'}
-            </Text>
-            <Text style={styles.metricLabel}>BMI</Text>
-          </View>
-        </View>
-      </Card>
+      <ProfileStatsSection
+        stats={stats}
+        weightKg={activeUser.weight_kg ?? null}
+        heightCm={activeUser.height_cm ?? null}
+      />
 
       <Card style={styles.metricsCard}>
         <View style={styles.progressHeader}>
@@ -399,155 +341,24 @@ export default function ProfileScreen() {
 
       <View style={{ height: 40 }} />
 
-      <Modal
+      <EditProfileModal
         visible={showEditModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowEditModal(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalScreen}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            style={styles.modalScroll}
-            contentContainerStyle={styles.modalContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Profile</Text>
-              <TouchableOpacity onPress={() => setShowEditModal(false)}>
-                <Text style={styles.modalClose}>Close</Text>
-              </TouchableOpacity>
-            </View>
+        onClose={() => setShowEditModal(false)}
+        onSave={handleSaveProfile}
+        form={form}
+        onFormChange={setForm}
+        isSaving={isSaving}
+        isDemoSession={isDemoSession}
+      />
 
-            <Text style={styles.fieldLabel}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              value={form.full_name}
-              onChangeText={(value) => setForm((current) => ({ ...current, full_name: value }))}
-              placeholder="Your name"
-              placeholderTextColor={colors.inputPlaceholder}
-              testID="profile-full-name-input"
-            />
-
-            <Text style={styles.fieldLabel}>Goal</Text>
-            <View style={styles.goalGrid}>
-              {GOAL_OPTIONS.map((option) => {
-                const selected = form.goal === option.id;
-                return (
-                  <TouchableOpacity
-                    key={option.id}
-                    style={[styles.goalChip, selected && styles.goalChipActive]}
-                    onPress={() => setForm((current) => ({ ...current, goal: option.id }))}
-                  >
-                    <Text style={[styles.goalChipText, selected && styles.goalChipTextActive]}>
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <View style={styles.inputRow}>
-              <View style={styles.inputCol}>
-                <Text style={styles.fieldLabel}>Weight (kg)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.weight_kg}
-                  onChangeText={(value) => setForm((current) => ({ ...current, weight_kg: value }))}
-                  placeholder="78"
-                  placeholderTextColor={colors.inputPlaceholder}
-                  keyboardType="numeric"
-                />
-              </View>
-              <View style={styles.inputCol}>
-                <Text style={styles.fieldLabel}>Height (cm)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.height_cm}
-                  onChangeText={(value) => setForm((current) => ({ ...current, height_cm: value }))}
-                  placeholder="178"
-                  placeholderTextColor={colors.inputPlaceholder}
-                  keyboardType="numeric"
-                />
-              </View>
-            </View>
-
-            <Text style={styles.fieldLabel}>Workouts Per Week</Text>
-            <TextInput
-              style={styles.input}
-              value={form.workouts_per_week}
-              onChangeText={(value) =>
-                setForm((current) => ({ ...current, workouts_per_week: value }))
-              }
-              placeholder="3"
-              placeholderTextColor={colors.inputPlaceholder}
-              keyboardType="numeric"
-            />
-
-            <TouchableOpacity
-              style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
-              onPress={handleSaveProfile}
-              disabled={isSaving || !form.full_name.trim()}
-              testID="profile-save-button"
-            >
-              <Text style={styles.saveBtnText}>
-                {isSaving ? 'Saving...' : isDemoSession ? 'Save Demo Profile' : 'Save Changes'}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      <Modal
+      <WeightCheckInModal
         visible={showWeightModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowWeightModal(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.modalScreen}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            style={styles.modalScroll}
-            contentContainerStyle={styles.modalContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Log Weight Check-in</Text>
-              <TouchableOpacity onPress={() => setShowWeightModal(false)}>
-                <Text style={styles.modalClose}>Close</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.fieldLabel}>Weight (kg)</Text>
-            <TextInput
-              style={styles.input}
-              value={checkInWeight}
-              onChangeText={setCheckInWeight}
-              placeholder="79.4"
-              placeholderTextColor={colors.inputPlaceholder}
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.progressModalHint}>
-              This saves a timestamped check-in and updates your current profile weight.
-            </Text>
-
-            <TouchableOpacity
-              style={[styles.saveBtn, logWeight.isPending && styles.saveBtnDisabled]}
-              onPress={handleLogWeight}
-              disabled={logWeight.isPending || !checkInWeight.trim()}
-            >
-              <Text style={styles.saveBtnText}>
-                {logWeight.isPending ? 'Saving...' : 'Save Check-in'}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={() => setShowWeightModal(false)}
+        onLog={handleLogWeight}
+        weight={checkInWeight}
+        onWeightChange={setCheckInWeight}
+        isPending={logWeight.isPending}
+      />
     </ScrollView>
   );
 }
@@ -557,75 +368,7 @@ const createStyles = (colors: ThemeColors) =>
     screen: { flex: 1, backgroundColor: colors.background },
     content: { paddingBottom: 40 },
 
-    hero: {
-      alignItems: 'center',
-      paddingTop: Spacing.xxl,
-      paddingBottom: Spacing.xxl,
-      paddingHorizontal: Spacing.xl,
-    },
-    avatarContainer: {
-      width: 84,
-      height: 84,
-      borderRadius: 24,
-      backgroundColor: colors.accentSoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: Spacing.md,
-      borderWidth: 2,
-      borderColor: `${colors.accent}55`,
-    },
-    avatarEmoji: { fontSize: 40 },
-    fullName: {
-      color: colors.text,
-      fontSize: Typography.size.xxl,
-      fontWeight: Typography.weight.extrabold,
-      letterSpacing: -0.5,
-      marginBottom: 4,
-    },
-    email: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-      marginBottom: Spacing.md,
-    },
-    badgeRow: { flexDirection: 'row', gap: Spacing.sm },
-
-    statsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      paddingHorizontal: Spacing.xl,
-      gap: Spacing.sm,
-      marginBottom: Spacing.xxl,
-    },
-    statCard: {
-      flex: 1,
-      minWidth: '45%',
-      backgroundColor: colors.card,
-      borderRadius: Radius.xl,
-      padding: Spacing.lg,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    statValue: {
-      color: colors.text,
-      fontSize: Typography.size.xxl,
-      fontWeight: Typography.weight.extrabold,
-      letterSpacing: -0.5,
-    },
-    statLabel: { color: colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
-    statSuffix: { color: colors.dim, fontSize: Typography.size.xs },
-
     metricsCard: { marginHorizontal: Spacing.xl, marginBottom: Spacing.xxl },
-    metricsRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: Spacing.md },
-    metric: { alignItems: 'center' },
-    metricVal: {
-      color: colors.text,
-      fontSize: Typography.size.xl,
-      fontWeight: Typography.weight.bold,
-    },
-    metricUnit: { color: colors.muted, fontSize: Typography.size.sm },
-    metricLabel: { color: colors.muted, fontSize: Typography.size.sm, marginTop: 2 },
-    metricDivider: { width: 1, backgroundColor: colors.border },
-
     sectionTitle: {
       color: colors.text,
       fontSize: Typography.size.lg,
@@ -774,104 +517,6 @@ const createStyles = (colors: ThemeColors) =>
       paddingHorizontal: Spacing.xl,
       borderWidth: 1,
       borderColor: colors.border,
-    },
-    modalScreen: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    modalScroll: {
-      flex: 1,
-    },
-    modalContent: {
-      paddingHorizontal: Spacing.xl,
-      paddingTop: Spacing.xxl,
-      paddingBottom: 48,
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: Spacing.xl,
-    },
-    modalTitle: {
-      color: colors.text,
-      fontSize: Typography.size.xxl,
-      fontWeight: Typography.weight.extrabold,
-    },
-    modalClose: {
-      color: colors.accent,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.semibold,
-    },
-    fieldLabel: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.semibold,
-      marginBottom: Spacing.sm,
-      marginTop: Spacing.md,
-    },
-    input: {
-      backgroundColor: colors.card,
-      borderColor: colors.border,
-      borderWidth: 1,
-      borderRadius: Radius.lg,
-      color: colors.text,
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md,
-      fontSize: Typography.size.md,
-    },
-    inputRow: {
-      flexDirection: 'row',
-      gap: Spacing.md,
-    },
-    inputCol: {
-      flex: 1,
-    },
-    goalGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: Spacing.sm,
-    },
-    goalChip: {
-      backgroundColor: colors.card,
-      borderRadius: Radius.full,
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-    },
-    goalChipActive: {
-      backgroundColor: colors.accentMuted,
-      borderColor: colors.accent,
-    },
-    goalChipText: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.semibold,
-    },
-    goalChipTextActive: {
-      color: colors.accent,
-    },
-    saveBtn: {
-      marginTop: Spacing.xxl,
-      backgroundColor: colors.accent,
-      borderRadius: Radius.lg,
-      paddingVertical: Spacing.lg,
-      alignItems: 'center',
-    },
-    saveBtnDisabled: {
-      opacity: 0.6,
-    },
-    saveBtnText: {
-      color: Colors.white,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.bold,
-    },
-    progressModalHint: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-      lineHeight: 20,
-      marginTop: Spacing.md,
     },
     actionBtnText: {
       color: colors.text,

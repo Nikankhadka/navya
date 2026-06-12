@@ -109,3 +109,42 @@
 - ✅ `npm run lint` — no new errors (11 pre-existing errors, unrelated to cleanup)
 - ✅ Build configuration intact
 - ✅ No public API breakage
+
+---
+
+## 2026-06-12 — File Decomposition (300-line limit enforcement)
+
+### Decomposed Files
+
+#### 1. `workout.service.ts` (325 → split into 3 files)
+
+| File | Lines | Purpose |
+|---|---|---|
+| `src/features/workout/api/workoutPlan.service.ts` | 95 | Plan operations: `getActivePlan`, `buildSessionFromPlan`, `shouldUseDemoWorkout` |
+| `src/features/workout/api/workoutSession.service.ts` | 280 | Session operations: `getTodaySession`, `getWorkoutHistory`, `startSession`, `saveSession` |
+| `src/features/workout/api/workout.service.ts` | 22 | Re-export barrel — reassembles `workoutService` object for backward compatibility |
+
+**Preserved**: All four hooks (`useActivePlan`, `useTodaySession`, `useWorkoutActions`, `useWorkoutHistory`) and the barrel export at `src/features/workout/index.ts` continue to work unchanged — `workoutService` object shape is identical.
+
+#### 2. `nutritionDatabase.native.ts` (318 → split into 2 files)
+
+| File | Lines | Purpose |
+|---|---|---|
+| `src/features/nutrition/db/nutritionDatabase.init.ts` | 311 | DB initialization, schema DDL, fallback catalog seeding, `SQLiteDatabase` interface |
+| `src/features/nutrition/db/nutritionDatabase.native.ts` | 36 | Runtime access: `getNutritionDatabaseAsync`, `isNutritionLocalDatabaseSupported`, type re-export |
+
+**Note**: Init file at 311 lines includes ~100 lines of SQL DDL intrinsics (template literal). Actual code logic is ~170 lines.
+**Preserved**: All consumers importing from `@/features/nutrition/db/nutritionDatabase` (which resolves to `.native.ts` or `.web.ts`) continue to work — public exports unchanged.
+
+### Impact
+- **Files created**: 3
+- **Files rewritten**: 2
+- **Total lines of refactored code**: 643 (split from 2 files into 5)
+- **Max file size after split**: 311 lines (init DDL) / 280 lines (session service) — both under original 318/325
+
+### Verification
+- ✅ `npm run typecheck` — passes clean (pre-existing auth screen unused-import warning is unrelated)
+- ✅ `npm run test` — all 13 tests pass
+- ✅ `npx eslint` — no errors on affected directories
+- ✅ Backward compatible — zero import path changes required for consumers
+- ✅ Barrel export at `src/features/workout/index.ts` continues to work

@@ -14,6 +14,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isInitialized: boolean;
   isDemoSession: boolean;
+  isProfileReady: boolean;
 
   // Actions
   initializeAuth: () => Promise<void>;
@@ -34,6 +35,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isInitialized: false,
   isDemoSession: false,
+  isProfileReady: false,
 
   setLoading: (isLoading) => set({ isLoading }),
 
@@ -47,6 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: true,
       isInitialized: true,
       isDemoSession: true,
+      isProfileReady: true,
       isLoading: false,
     }),
 
@@ -101,20 +104,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         if (!hasRegisteredAuthListener) {
           supabase.auth.onAuthStateChange((_event, newSession) => {
-            set({
-              session: newSession,
-              isAuthenticated: !!newSession,
-              isDemoSession: false,
-            });
-
             if (newSession) {
+              set({
+                session: newSession,
+                isAuthenticated: true,
+                isDemoSession: false,
+                isProfileReady: false,
+              });
+
               void get()
                 .refreshProfile()
+                .then(() => {
+                  set({ isProfileReady: true });
+                })
                 .catch((error) => {
                   logger.error('Profile refresh after auth change failed', error);
+                  set({ isProfileReady: true });
                 });
             } else {
-              set({ user: null });
+              set({
+                user: null,
+                session: null,
+                isAuthenticated: false,
+                isDemoSession: false,
+                isProfileReady: true,
+              });
             }
           });
           hasRegisteredAuthListener = true;
@@ -139,7 +153,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } catch (error) {
         logger.error('Auth initialization error', error);
       } finally {
-        set({ isLoading: false, isInitialized: true });
+        set({ isLoading: false, isInitialized: true, isProfileReady: true });
         authInitPromise = null;
       }
     })();

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ThemeModeToggle, Alert as TamaguiAlert } from '@/components/ui';
+import { ThemeModeToggle, Alert } from '@/components/ui';
 import { Radius, Shadow, Spacing, Typography, useAppTheme } from '@/theme';
 import { getAuthRedirectUrl } from '@/lib/auth/redirects';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase/client';
@@ -182,7 +182,7 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       {alert && (
-        <TamaguiAlert
+        <Alert
           open={alert.open}
           onOpenChange={(open) => {
             if (!open) setAlert(null);

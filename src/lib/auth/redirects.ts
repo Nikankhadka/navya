@@ -2,16 +2,18 @@ import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
 import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase/client';
+import { siteUrl } from '@/config/env';
 
 export function getAuthRedirectUrl(): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    return `${window.location.origin}/auth/callback`;
+    const baseUrl = siteUrl ?? window.location.origin;
+    return `${baseUrl}/callback`;
   }
 
   return makeRedirectUri({
     scheme: 'navya',
-    native: 'navya://auth/callback',
-    path: 'auth/callback',
+    native: 'navya://callback',
+    path: 'callback',
   });
 }
 
@@ -101,6 +103,13 @@ function getCodeExchangeErrorMessage(message: string): string {
 }
 
 export async function createSessionFromUrl(url: string): Promise<CreateSessionFromUrlResult> {
+  if (!url) {
+    return {
+      success: false,
+      message: 'No sign-in URL was provided.',
+    };
+  }
+
   const { accessToken, refreshToken, code, errorCode } = extractSessionParams(url);
 
   if (errorCode) {
@@ -116,7 +125,7 @@ export async function createSessionFromUrl(url: string): Promise<CreateSessionFr
       return {
         success: false,
         message:
-          'The sign-in link did not include a valid auth code. Confirm your exact `/auth/callback` URL is allow-listed in Supabase and try the newest email link.',
+          'The sign-in link did not include a valid auth code. Confirm your exact callback URL is allow-listed in Supabase and try the newest email link.',
       };
     }
 

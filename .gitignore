@@ -67,6 +67,10 @@ yarn-error.log*
 .pnpm-debug.log*
 *.log
 
+# ── SQLite artifacts ──
+*.db-wal
+*.db-shm
+
 # ── Temporary ──
 *.tmp
 *.temp

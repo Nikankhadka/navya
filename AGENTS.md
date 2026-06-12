@@ -1,7 +1,8 @@
 # AGENTS.md — Navya Universal Agent Reference
 
-> **Single source of truth for all AI agents** (opencode, Claude, Cursor, Cline, etc.)
-> Read this file at session start. All rules, roles, and skills auto-apply.
+> **ECC Enhanced** — Agents, commands, and plugin hooks loaded globally from
+> `~/.config/opencode/`. See `WORKFLOW.md` for daily usage guide.
+> To disable ECC globally: `rm -rf ~/.config/opencode/{commands,prompts,plugins,tools,instructions,skills,dist,index.ts,package.json,tsconfig.json}` and restore `~/.config/opencode/opencode.jsonc`.
 
 ---
 
@@ -15,7 +16,7 @@ Target: ~70% MyFitnessPal core daily user loop parity.
 |---|---|
 | Frontend | Expo SDK 55, React Native 0.83, TypeScript (strict) |
 | Navigation | Expo Router (file-based) |
-| Styling | Tamagui (primary), NativeWind (legacy) |
+| Styling | Tamagui |
 | State | Zustand (client), TanStack Query (server) |
 | Backend | Supabase (magic-link auth only, Postgres, RLS, Edge Functions, storage) |
 | AI | OpenAI via Supabase Edge Functions only (no client AI calls) |
@@ -64,7 +65,7 @@ src/
 - try/catch with typed errors, never silent catch
 
 ### Do Not Touch
-`tsconfig.json`, `app.json`, `eas.json`, `supabase/migrations/`, `.env` files, `metro.config.js`, `tailwind.config.js`, `nativewind-env.d.ts`
+`tsconfig.json`, `app.json`, `eas.json`, `supabase/migrations/`, `.env` files, `metro.config.js`
 
 ### Known Gotchas
 - React pinned to 19.2.0, react-dom 19.2.0, @types/react ~19.2.2
@@ -105,84 +106,24 @@ src/
 
 ---
 
-## Automatic Task Routing
+## ECC Agent Quick-Map
 
-On receiving any task, agents MUST:
+Use opencode slash commands to activate specialized subagents. Each agent runs with isolated context and restricted tool access.
 
-### 1. Classify
-| Task Type | Keywords | Route |
+| Command | Agent | Purpose |
 |---|---|---|
-| New Feature | add, implement, create, build | Product Owner → Technical Designer → Task Executor |
-| Bug Fix | fix, bug, error, crash, broken | Diagnostic Agent → Task Executor → Code Reviewer |
-| Architecture | architecture, design, schema, migration | CTO Expert → Senior Engineer App/Platform |
-| UX/Design | ux, ui, flow, layout, copy | Product Research Designer → Senior Engineer App |
-| Backend | supabase, migration, rls, auth, edge function | Senior Engineer Platform → Senior Engineer App |
-| Frontend | screen, component, hook, navigation, store | Senior Engineer App → Product Research Designer |
-| Code Review | review, pr, diff | Code Reviewer |
-| Prompt Refinement | refine, ambiguous, unclear | Prompt Master |
+| `/plan` | planner | Implementation planning — no code until approved |
+| `/tdd` | tdd-guide | Red → Green → Refactor cycle with 80%+ coverage |
+| `/code-review` | code-reviewer | Post-change quality/security review |
+| `/security` | security-reviewer | Deep security audit |
+| `/build-fix` | build-error-resolver | Fix TypeScript/build errors |
+| `/e2e` | e2e-runner | Generate E2E Playwright tests |
+| `/refactor-clean` | refactor-cleaner | Dead code cleanup |
+| `/orchestrate` | planner | Multi-agent pipeline for complex tasks |
+| `/update-docs` | doc-updater | Update documentation and codemaps |
+| `/test-coverage` | tdd-guide | Analyze coverage gaps |
 
-### 2. State Routing Preamble
-```
-🧭 Work Router: Task Classification
-Task Type: [type]
-Primary Role: [agent]
-Secondary Roles: [agents]
-Artifacts to Update: [files]
-```
-
-### 3. Execute
-Follow the active role's definition below. Coordinate with secondary roles. Escalate to CTO Expert if blocked or cross-domain.
-
-### 4. Update Trail
-- Update `TASKS.md` after completion
-- Add session notes to `PROJECT_JOURNAL.md`
-
----
-
-## Role Definitions
-
-### Work Router (default intake)
-Classifies tasks, selects best role, states routing preamble. Escalate to CTO Expert when task spans multiple roles or is ambiguous.
-
-### Prompt Master
-Refine raw prompts using PROMPT framework (Purpose, Role, Objective, Materials, Process, Testing). Detect ambiguity, add context from this file, structure instructions, define verification. Present refined prompt for approval before execution. Never execute yourself.
-
-### Technical Designer
-Plan before code. Output: files to create/modify, component tree, data flow, key decisions, testing strategy, edge cases. No code in output. Flag ambiguity. Prefer existing patterns.
-
-### Task Executor
-Implement from spec. Read spec first → list files → implement one unit at a time → typecheck after each → write tests → no TODO/FIXME left. Completion: all criteria met, typecheck passes, tests pass, no debug logs, TASKS.md updated.
-
-### Code Reviewer
-Review diffs as senior engineer. Focus: logic errors, edge cases, security, missing error handling, breaking changes. Output format: `[CRITICAL|MAJOR|MINOR] - description` then `VERDICT: APPROVE | REQUEST CHANGES | REJECT`. Skip style comments (linter handles it).
-
-### Product Owner
-Manage MVP scope, write user stories with acceptance criteria, sequence backlog, detect scope creep. Coordinate with CTO Expert for MVP boundary decisions, Product Research Designer for UX, engineers for feasibility.
-
-### Product Research Designer
-Improve clarity, flow, copy. Review onboarding friction, competitor analysis, tone consistency, accessibility. Output: actionable UX recommendations, copy suggestions, flow critiques.
-
-### Senior Engineer App
-Own client-side: screens, hooks, navigation, state (Zustand + TanStack Query), UI quality (loading/empty/error states), cross-platform differences. Escalate to CTO Expert for architecture, coordinate with Platform for API contracts.
-
-### Senior Engineer Platform
-Own backend: Supabase migrations, RLS policies, auth, Edge Functions, EAS/Vercel deploy, env vars, generated types (`src/types/database.ts`), seed data. Escalate to CTO Expert for schema architecture, coordinate with App for contract alignment.
-
-### CTO Expert (escalation)
-Architecture decisions, cross-domain conflicts, standards enforcement, release risk assessment, ADR authoring. Highest architectural authority. Delegates to specialized roles. Hands off to Product Owner for scope implications.
-
-### Diagnostic Agent
-Root cause analysis for complex bugs. Analyze symptoms, stack traces, logs, recent changes. Output: root cause with evidence, reproduction steps, suggested fix approach, risk assessment. Hand off to Task Executor for implementation.
-
----
-
-## Commands (shorthand)
-| Command | Action |
-|---|---|
-| `/refine` | Prompt Master refines the prompt |
-| `/implement` | Technical Designer plans → Task Executor implements |
-| `/review` | Code Reviewer reviews current diff |
-| `/diagnose` | Diagnostic Agent finds root cause |
+> See `WORKFLOW.md` for full command reference and best practices.
 
 ---
 
@@ -200,7 +141,7 @@ If `ci:local` fails:
 1. Fix the specific failing assertion
 2. Check if test expectation is wrong (not implementation)
 3. Revert to last clean commit and report
-4. After 3 attempts: STOP. Add TODO comment. Ask for human help.
+4. After 3 attempts: STOP. Ask for human help.
 
 ## Context Management
 | Context Level | Action |
@@ -216,4 +157,4 @@ If `ci:local` fails:
 
 ---
 
-> **All agents read this file at session start. Rules and skills auto-apply to every task. Roles activate based on task classification.**
+> **Project context and rules auto-apply. ECC agents/commands extend via `opencode.json`.**

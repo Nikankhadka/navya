@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useWorkoutStore } from '@/store/useWorkoutStore';
 import { Card, EmptyState } from '@/components/ui';
-import { ExerciseRow, PlanDayCard } from '@/features/workout/components';
+import {
+  PlanDayCard,
+  PlanDayModal,
+  TimerDisplay,
+  SessionCompleteCard,
+  WorkoutStats,
+} from '@/features/workout/components';
 import { formatDuration, sessionProgress } from '@/utils/helpers';
 import { crossAlert } from '@/utils/crossAlert';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -142,67 +148,16 @@ export default function WorkoutScreen() {
       >
         {activeTab === 'today' ? (
           <>
-            {isComplete ? (
-              /* ── Complete state ──────────────────────────────────── */
-              <View style={styles.completeCard}>
-                <Text style={styles.completeEmoji}>🎉</Text>
-                <Text style={styles.completeTitle}>Session Complete!</Text>
-                <Text style={styles.completeSub}>
-                  You crushed it in {formatDuration(elapsedSeconds)}
-                </Text>
-                <View style={styles.completeStats}>
-                  <View style={styles.completeStat}>
-                    <Text style={styles.completeStatVal}>
-                      {activeSession?.session_exercises.length}
-                    </Text>
-                    <Text style={styles.completeStatLabel}>Exercises</Text>
-                  </View>
-                  <View style={styles.completeStat}>
-                    <Text style={styles.completeStatVal}>
-                      {activeSession?.session_exercises.reduce(
-                        (sum, ex) => sum + ex.completed_sets.length,
-                        0,
-                      )}
-                    </Text>
-                    <Text style={styles.completeStatLabel}>Sets</Text>
-                  </View>
-                </View>
-              </View>
+            {isComplete && activeSession ? (
+              <SessionCompleteCard activeSession={activeSession} elapsedSeconds={elapsedSeconds} />
             ) : activeSession ? (
-              /* ── Active session ──────────────────────────────────── */
-              <>
-                <Card style={styles.progressCard}>
-                  <View style={styles.progressRow}>
-                    <Text style={styles.progressLabel}>Progress</Text>
-                    <Text style={styles.progressPct}>{progress}%</Text>
-                  </View>
-                  <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${progress}%` }]} />
-                  </View>
-                </Card>
-
-                <View style={styles.exerciseList}>
-                  {activeSession.session_exercises.map((exercise, i) => {
-                    const isDone = exercise.completed_sets.length >= exercise.planned_sets;
-                    const prevDone = activeSession.session_exercises
-                      .slice(0, i)
-                      .every((e) => e.completed_sets.length >= e.planned_sets || e.is_skipped);
-                    const isActive = !isDone && !exercise.is_skipped && prevDone;
-
-                    return (
-                      <ExerciseRow
-                        key={exercise.id}
-                        exercise={exercise}
-                        isActive={isActive}
-                        onComplete={() => handleCompleteSet(exercise.exercise_id)}
-                        onSkip={() => skipExercise(exercise.exercise_id)}
-                      />
-                    );
-                  })}
-                </View>
-              </>
+              <TimerDisplay
+                activeSession={activeSession}
+                progress={progress}
+                onCompleteSet={handleCompleteSet}
+                onSkipExercise={skipExercise}
+              />
             ) : (
-              /* ── Not started ─────────────────────────────────────── */
               <>
                 <Card style={styles.todayCard}>
                   <View style={styles.todayCardTop}>
@@ -287,173 +242,16 @@ export default function WorkoutScreen() {
             )}
           </>
         )}
-        <Card style={styles.historySummaryCard}>
-          <View style={styles.historySummaryHeader}>
-            <View>
-              <Text style={styles.historySummaryTitle}>Recent Training History</Text>
-              <Text style={styles.historySummarySub}>
-                {workoutHistory?.completed_this_week ?? 0}/
-                {workoutHistory?.weekly_target ?? weeklyTarget} sessions completed this week
-              </Text>
-            </View>
-            <View style={styles.historySummaryBadge}>
-              <Text style={styles.historySummaryBadgeValue}>
-                {workoutHistory?.adherence_pct ?? 0}%
-              </Text>
-              <Text style={styles.historySummaryBadgeLabel}>adherence</Text>
-            </View>
-          </View>
 
-          {workoutHistory?.recent_sessions.length ? (
-            <View style={styles.historyList}>
-              {workoutHistory.recent_sessions.slice(0, 3).map((session) => (
-                <View key={session.id} style={styles.historyRow}>
-                  <View style={styles.historyRowText}>
-                    <Text style={styles.historyDay}>{session.day_name}</Text>
-                    <Text style={styles.historyMeta}>
-                      {session.completed_at
-                        ? new Date(session.completed_at).toLocaleDateString('en-AU', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                          })
-                        : 'Completed session'}
-                    </Text>
-                  </View>
-                  <View style={styles.historyRowStats}>
-                    <Text style={styles.historyStatPrimary}>
-                      {session.session_exercises.reduce(
-                        (sum, exercise) => sum + exercise.completed_sets.length,
-                        0,
-                      )}{' '}
-                      sets
-                    </Text>
-                    <Text style={styles.historyStatSecondary}>
-                      {session.duration_seconds != null
-                        ? formatDuration(session.duration_seconds)
-                        : 'Tracked'}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.historyEmptyText}>
-              Completed sessions will appear here once you finish your first workout.
-            </Text>
-          )}
-        </Card>
+        <WorkoutStats workoutHistory={workoutHistory} weeklyTarget={weeklyTarget} />
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      <Modal
+      <PlanDayModal
         visible={Boolean(planDayDetail)}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setSelectedPlanDay(null)}
-      >
-        <View style={styles.modalScreen}>
-          <ScrollView
-            style={styles.modalScroll}
-            contentContainerStyle={[
-              styles.modalContent,
-              { paddingTop: insets.top + Spacing.lg, paddingBottom: Math.max(insets.bottom, 24) },
-            ]}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.modalHeader}>
-              <View style={styles.modalHeaderText}>
-                <Text style={styles.modalDayLabel}>
-                  {planDayDetail?.day_of_week.slice(0, 3).toUpperCase()}
-                </Text>
-                <Text style={styles.modalTitle}>{planDayDetail?.day_name}</Text>
-                <Text style={styles.modalSubtitle}>
-                  {planDayDetail
-                    ? `${planDayDetail.plan_exercises.length} exercises · ~${planDayDetail.estimated_minutes} min`
-                    : ''}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.modalCloseBtn}
-                onPress={() => setSelectedPlanDay(null)}
-              >
-                <Text style={styles.modalCloseText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-
-            {planDayDetail && (
-              <>
-                <Card style={styles.modalSummaryCard}>
-                  <Text style={styles.summaryTitle}>Focus Areas</Text>
-                  <View style={styles.summaryTags}>
-                    {[
-                      ...new Set(
-                        planDayDetail.plan_exercises.flatMap(
-                          (exercise) => exercise.exercise.muscle_groups,
-                        ),
-                      ),
-                    ].map((group) => (
-                      <View key={group} style={styles.summaryTag}>
-                        <Text style={styles.summaryTagText}>{group.replace('_', ' ')}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </Card>
-
-                <Text style={styles.planSectionTitle}>Exercises</Text>
-                <View style={styles.modalExerciseList}>
-                  {planDayDetail.plan_exercises
-                    .sort((left, right) => left.order_index - right.order_index)
-                    .map((exercise, index) => (
-                      <View key={exercise.id} style={styles.planExerciseCard}>
-                        <View style={styles.planExerciseTop}>
-                          <View style={styles.exerciseOrderBadge}>
-                            <Text style={styles.exerciseOrderText}>{index + 1}</Text>
-                          </View>
-                          <View style={styles.planExerciseText}>
-                            <Text style={styles.planExerciseName}>{exercise.exercise.name}</Text>
-                            <Text style={styles.planExerciseMeta}>
-                              {exercise.sets} sets × {exercise.reps} · rest {exercise.rest_seconds}s
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.exerciseInfoRow}>
-                          <Text style={styles.exerciseInfoLabel}>Difficulty</Text>
-                          <Text style={styles.exerciseInfoValue}>
-                            {exercise.exercise.difficulty}
-                          </Text>
-                        </View>
-
-                        <View style={styles.exerciseInfoRow}>
-                          <Text style={styles.exerciseInfoLabel}>Equipment</Text>
-                          <Text style={styles.exerciseInfoValue}>
-                            {exercise.exercise.equipment_required.length > 0
-                              ? exercise.exercise.equipment_required.join(', ')
-                              : 'None'}
-                          </Text>
-                        </View>
-
-                        {exercise.notes && (
-                          <View style={styles.exerciseNotesBox}>
-                            <Text style={styles.exerciseNotesLabel}>Coach note</Text>
-                            <Text style={styles.exerciseNotesText}>{exercise.notes}</Text>
-                          </View>
-                        )}
-
-                        {exercise.exercise.instructions ? (
-                          <Text style={styles.exerciseInstructions}>
-                            {exercise.exercise.instructions}
-                          </Text>
-                        ) : null}
-                      </View>
-                    ))}
-                </View>
-              </>
-            )}
-          </ScrollView>
-        </View>
-      </Modal>
+        planDayDetail={planDayDetail}
+        onClose={() => setSelectedPlanDay(null)}
+      />
     </View>
   );
 }
@@ -521,33 +319,6 @@ const createStyles = (colors: ThemeColors) =>
     scroll: { flex: 1 },
     content: { padding: Spacing.xl, paddingBottom: 40 },
 
-    // Progress
-    progressCard: { marginBottom: Spacing.lg, padding: Spacing.lg },
-    progressRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: Spacing.sm,
-    },
-    progressLabel: { color: colors.muted, fontSize: Typography.size.sm },
-    progressPct: {
-      color: colors.accent,
-      fontWeight: Typography.weight.bold,
-      fontSize: Typography.size.sm,
-    },
-    progressBar: {
-      height: 8,
-      backgroundColor: colors.border,
-      borderRadius: 4,
-      overflow: 'hidden',
-    },
-    progressFill: {
-      height: '100%',
-      backgroundColor: colors.accent,
-      borderRadius: 4,
-    },
-
-    exerciseList: { gap: Spacing.sm },
-
     // Today card
     todayCard: { marginBottom: Spacing.lg },
     todayCardTop: { marginBottom: Spacing.lg },
@@ -605,206 +376,6 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.md,
       letterSpacing: 0.3,
     },
-    modalScreen: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    modalScroll: {
-      flex: 1,
-    },
-    modalContent: {
-      paddingHorizontal: Spacing.xl,
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: Spacing.xl,
-      gap: Spacing.md,
-    },
-    modalHeaderText: {
-      flex: 1,
-    },
-    modalDayLabel: {
-      color: colors.muted,
-      fontSize: Typography.size.xs,
-      fontWeight: Typography.weight.bold,
-      letterSpacing: 1.4,
-      marginBottom: 4,
-    },
-    modalTitle: {
-      color: colors.text,
-      fontSize: Typography.size.xxl,
-      fontWeight: Typography.weight.extrabold,
-    },
-    modalSubtitle: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      marginTop: 4,
-    },
-    modalCloseBtn: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      borderRadius: Radius.full,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    modalCloseText: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.semibold,
-    },
-    modalSummaryCard: {
-      marginBottom: Spacing.xl,
-    },
-    summaryTitle: {
-      color: colors.text,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.bold,
-      marginBottom: Spacing.md,
-    },
-    summaryTags: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: Spacing.sm,
-    },
-    summaryTag: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      borderRadius: Radius.full,
-      backgroundColor: colors.accentMuted,
-      borderWidth: 1,
-      borderColor: `${colors.accent}55`,
-    },
-    summaryTagText: {
-      color: colors.accent,
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.semibold,
-      textTransform: 'capitalize',
-    },
-    planSectionTitle: {
-      color: colors.text,
-      fontSize: Typography.size.lg,
-      fontWeight: Typography.weight.bold,
-      marginBottom: Spacing.md,
-    },
-    modalExerciseList: {
-      gap: Spacing.md,
-    },
-    planExerciseCard: {
-      backgroundColor: colors.card,
-      borderRadius: Radius.xl,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: Spacing.lg,
-    },
-    planExerciseTop: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: Spacing.md,
-      marginBottom: Spacing.md,
-    },
-    exerciseOrderBadge: {
-      width: 28,
-      height: 28,
-      borderRadius: Radius.full,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.accent,
-    },
-    exerciseOrderText: {
-      color: Colors.white,
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.bold,
-    },
-    planExerciseText: {
-      flex: 1,
-    },
-    planExerciseName: {
-      color: colors.text,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.bold,
-    },
-    planExerciseMeta: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      marginTop: 4,
-    },
-    exerciseInfoRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: Spacing.md,
-      marginTop: Spacing.sm,
-    },
-    exerciseInfoLabel: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-    },
-    exerciseInfoValue: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      textTransform: 'capitalize',
-      flex: 1,
-      textAlign: 'right',
-    },
-    exerciseNotesBox: {
-      marginTop: Spacing.md,
-      padding: Spacing.md,
-      borderRadius: Radius.lg,
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    exerciseNotesLabel: {
-      color: colors.accent,
-      fontSize: Typography.size.xs,
-      fontWeight: Typography.weight.bold,
-      letterSpacing: 1,
-      marginBottom: 4,
-      textTransform: 'uppercase',
-    },
-    exerciseNotesText: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      lineHeight: 20,
-    },
-    exerciseInstructions: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      lineHeight: 20,
-      marginTop: Spacing.md,
-    },
-
-    // Complete
-    completeCard: {
-      alignItems: 'center',
-      paddingVertical: 48,
-      backgroundColor: colors.card,
-      borderRadius: Radius.xxl,
-      borderWidth: 1,
-      borderColor: `${colors.green}44`,
-    },
-    completeEmoji: { fontSize: 52 },
-    completeTitle: {
-      color: colors.green,
-      fontSize: Typography.size.xxl,
-      fontWeight: Typography.weight.extrabold,
-      marginTop: Spacing.md,
-    },
-    completeSub: {
-      color: colors.muted,
-      fontSize: Typography.size.md,
-      marginTop: Spacing.xs,
-      marginBottom: Spacing.xxl,
-    },
-    completeStats: { flexDirection: 'row', gap: 48 },
-    completeStat: { alignItems: 'center' },
-    completeStatVal: {
-      color: colors.text,
-      fontSize: Typography.size.xxxl,
-      fontWeight: Typography.weight.extrabold,
-    },
-    completeStatLabel: { color: colors.muted, fontSize: Typography.size.sm },
 
     // Plan
     planHeaderCard: { marginBottom: Spacing.lg },
@@ -815,85 +386,4 @@ const createStyles = (colors: ThemeColors) =>
       marginBottom: 4,
     },
     planMeta: { color: colors.muted, fontSize: Typography.size.sm },
-    historySummaryCard: {
-      marginTop: Spacing.lg,
-      gap: Spacing.lg,
-    },
-    historySummaryHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: Spacing.md,
-      alignItems: 'flex-start',
-    },
-    historySummaryTitle: {
-      color: colors.text,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.bold,
-    },
-    historySummarySub: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-      marginTop: 4,
-    },
-    historySummaryBadge: {
-      backgroundColor: colors.accentMuted,
-      borderRadius: Radius.lg,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: `${colors.accent}55`,
-    },
-    historySummaryBadgeValue: {
-      color: colors.accent,
-      fontSize: Typography.size.lg,
-      fontWeight: Typography.weight.extrabold,
-    },
-    historySummaryBadgeLabel: {
-      color: colors.accent,
-      fontSize: Typography.size.xs,
-      fontWeight: Typography.weight.semibold,
-    },
-    historyList: {
-      gap: Spacing.sm,
-    },
-    historyRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      paddingTop: Spacing.sm,
-    },
-    historyRowText: {
-      flex: 1,
-    },
-    historyDay: {
-      color: colors.text,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.semibold,
-    },
-    historyMeta: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-      marginTop: 2,
-    },
-    historyRowStats: {
-      alignItems: 'flex-end',
-      gap: 2,
-    },
-    historyStatPrimary: {
-      color: colors.text,
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.bold,
-    },
-    historyStatSecondary: {
-      color: colors.dim,
-      fontSize: Typography.size.xs,
-    },
-    historyEmptyText: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-      lineHeight: 20,
-    },
   });
