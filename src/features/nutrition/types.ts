@@ -164,3 +164,33 @@ export interface DailyNutritionSummary {
   favorite_foods: FavoriteFood[];
   water_logs: WaterLog[];
 }
+
+// ---------------------------------------------------------------------------
+// Meal Templates
+// ---------------------------------------------------------------------------
+
+export interface TemplateFoodEntry {
+  meal_name: string;
+  calories: number;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+}
+
+export interface MealTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  meal_time: MealTime;
+  foods: TemplateFoodEntry[];
+  is_system: boolean;
+  is_favorite: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateMealTemplateInput {
+  name: string;
+  meal_time: MealTime;
+  foods: TemplateFoodEntry[];
+}
