@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable } from 'react-native';
 import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 import { getMonthGrid, formatMonthYear, isToday, isFuture, addDays } from '@/utils/date';
 
@@ -123,7 +123,7 @@ export function Calendar({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     gap: Spacing.md,
   },
@@ -223,4 +223,4 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
   },
-});
+} as const;

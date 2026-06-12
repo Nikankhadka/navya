@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
-import { Ionicons } from '@expo/vector-icons';
 import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
 import type { ExperienceLevel } from '@/types/app';
 
@@ -33,7 +26,11 @@ export default function BodyScreen() {
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.muted} />
+          <Image
+            source="sf:chevron.left"
+            style={{ width: 24, height: 24 }}
+            tintColor={colors.muted}
+          />
         </TouchableOpacity>
 
         <Text style={[styles.title, { color: colors.textStrong }]}>Metrics</Text>
@@ -133,7 +130,7 @@ export default function BodyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   screen: {
     flex: 1,
   },
@@ -200,4 +197,4 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.semibold,
   },
-});
+} as const;

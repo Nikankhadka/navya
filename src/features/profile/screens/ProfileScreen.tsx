@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
-import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { Spacing, Radius, Typography, useAppTheme } from '@/theme';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Card, Divider, ThemeModeToggle } from '@/components/ui';
 import { formatDuration, goalLabel } from '@/utils/helpers';
@@ -27,7 +27,177 @@ type EditProfileForm = EditProfileModalProps['form'];
 
 export default function ProfileScreen() {
   const { colors } = useAppTheme();
-  const styles = createStyles(colors);
+  const styles = {
+    screen: { flex: 1, backgroundColor: colors.background },
+    content: { paddingBottom: 40 },
+
+    metricsCard: { marginHorizontal: Spacing.xl, marginBottom: Spacing.xxl },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+      paddingHorizontal: Spacing.xl,
+      marginBottom: Spacing.md,
+    },
+    sectionTitleInline: {
+      color: colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    progressHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: Spacing.md,
+      marginBottom: Spacing.md,
+    },
+    progressSubtext: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      marginTop: 4,
+    },
+    inlineActionBtn: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: Radius.full,
+      backgroundColor: colors.accentMuted,
+      borderWidth: 1,
+      borderColor: `${colors.accent}55`,
+    },
+    inlineActionText: {
+      color: colors.accent,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    progressHighlights: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      marginBottom: Spacing.lg,
+    },
+    progressHighlight: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: Radius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    progressHighlightLabel: {
+      color: colors.muted,
+      fontSize: Typography.size.xs,
+      marginBottom: 4,
+    },
+    progressHighlightValue: {
+      color: colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    progressHighlightValueSmall: {
+      color: colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    progressHistoryList: { gap: Spacing.sm },
+    progressHistoryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: Spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    progressHistoryWeight: {
+      color: colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    progressHistoryDate: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      marginTop: 2,
+    },
+    progressHistoryTag: {
+      color: colors.accent,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    progressEmptyText: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      lineHeight: 20,
+    },
+
+    setupList: {
+      marginHorizontal: Spacing.xl,
+      backgroundColor: colors.card,
+      borderRadius: Radius.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.xxl,
+    },
+    setupRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: Spacing.md,
+    },
+    setupLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+    setupIcon: { fontSize: 18 },
+    setupLabel: { color: colors.muted, fontSize: Typography.size.md },
+    setupValue: {
+      color: colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'capitalize',
+    },
+    rowDivider: { marginVertical: 0 },
+
+    actions: {
+      paddingHorizontal: Spacing.xl,
+      gap: Spacing.sm,
+    },
+    appearanceFooterCard: {
+      marginHorizontal: Spacing.xl,
+      marginTop: Spacing.xxl,
+    },
+    appearanceFooterText: {
+      color: colors.textSecondary,
+      fontSize: Typography.size.sm,
+      lineHeight: 20,
+      marginTop: Spacing.xs,
+      marginBottom: Spacing.lg,
+    },
+    appearanceFooterToggle: {
+      alignSelf: 'flex-start',
+    },
+    actionBtn: {
+      backgroundColor: colors.card,
+      borderRadius: Radius.lg,
+      paddingVertical: Spacing.lg,
+      paddingHorizontal: Spacing.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    actionBtnText: {
+      color: colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+    },
+    signOutBtn: {
+      borderColor: `${colors.red}44`,
+      backgroundColor: colors.redMuted,
+      marginTop: Spacing.sm,
+    },
+    signOutText: {
+      color: colors.red,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+      textAlign: 'center',
+    },
+  } as const;
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { user, signOut, isDemoSession, setProfile } = useAuthStore();
@@ -362,176 +532,3 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 }
-
-const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.background },
-    content: { paddingBottom: 40 },
-
-    metricsCard: { marginHorizontal: Spacing.xl, marginBottom: Spacing.xxl },
-    sectionTitle: {
-      color: colors.text,
-      fontSize: Typography.size.lg,
-      fontWeight: Typography.weight.bold,
-      paddingHorizontal: Spacing.xl,
-      marginBottom: Spacing.md,
-    },
-    sectionTitleInline: {
-      color: colors.text,
-      fontSize: Typography.size.lg,
-      fontWeight: Typography.weight.bold,
-    },
-    progressHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      gap: Spacing.md,
-      marginBottom: Spacing.md,
-    },
-    progressSubtext: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-      marginTop: 4,
-    },
-    inlineActionBtn: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      borderRadius: Radius.full,
-      backgroundColor: colors.accentMuted,
-      borderWidth: 1,
-      borderColor: `${colors.accent}55`,
-    },
-    inlineActionText: {
-      color: colors.accent,
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.semibold,
-    },
-    progressHighlights: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
-      marginBottom: Spacing.lg,
-    },
-    progressHighlight: {
-      flex: 1,
-      backgroundColor: colors.surface,
-      borderRadius: Radius.lg,
-      padding: Spacing.md,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    progressHighlightLabel: {
-      color: colors.muted,
-      fontSize: Typography.size.xs,
-      marginBottom: 4,
-    },
-    progressHighlightValue: {
-      color: colors.text,
-      fontSize: Typography.size.lg,
-      fontWeight: Typography.weight.bold,
-    },
-    progressHighlightValueSmall: {
-      color: colors.text,
-      fontSize: Typography.size.sm,
-      fontWeight: Typography.weight.semibold,
-    },
-    progressHistoryList: { gap: Spacing.sm },
-    progressHistoryRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: Spacing.sm,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    progressHistoryWeight: {
-      color: colors.text,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.bold,
-    },
-    progressHistoryDate: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-      marginTop: 2,
-    },
-    progressHistoryTag: {
-      color: colors.accent,
-      fontSize: Typography.size.xs,
-      fontWeight: Typography.weight.semibold,
-      textTransform: 'uppercase',
-      letterSpacing: 0.8,
-    },
-    progressEmptyText: {
-      color: colors.muted,
-      fontSize: Typography.size.sm,
-      lineHeight: 20,
-    },
-
-    setupList: {
-      marginHorizontal: Spacing.xl,
-      backgroundColor: colors.card,
-      borderRadius: Radius.xl,
-      borderWidth: 1,
-      borderColor: colors.border,
-      paddingHorizontal: Spacing.lg,
-      marginBottom: Spacing.xxl,
-    },
-    setupRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: Spacing.md,
-    },
-    setupLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-    setupIcon: { fontSize: 18 },
-    setupLabel: { color: colors.muted, fontSize: Typography.size.md },
-    setupValue: {
-      color: colors.text,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.semibold,
-      textTransform: 'capitalize',
-    },
-    rowDivider: { marginVertical: 0 },
-
-    actions: {
-      paddingHorizontal: Spacing.xl,
-      gap: Spacing.sm,
-    },
-    appearanceFooterCard: {
-      marginHorizontal: Spacing.xl,
-      marginTop: Spacing.xxl,
-    },
-    appearanceFooterText: {
-      color: colors.textSecondary,
-      fontSize: Typography.size.sm,
-      lineHeight: 20,
-      marginTop: Spacing.xs,
-      marginBottom: Spacing.lg,
-    },
-    appearanceFooterToggle: {
-      alignSelf: 'flex-start',
-    },
-    actionBtn: {
-      backgroundColor: colors.card,
-      borderRadius: Radius.lg,
-      paddingVertical: Spacing.lg,
-      paddingHorizontal: Spacing.xl,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    actionBtnText: {
-      color: colors.text,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.medium,
-    },
-    signOutBtn: {
-      borderColor: `${colors.red}44`,
-      backgroundColor: colors.redMuted,
-      marginTop: Spacing.sm,
-    },
-    signOutText: {
-      color: colors.red,
-      fontSize: Typography.size.md,
-      fontWeight: Typography.weight.semibold,
-      textAlign: 'center',
-    },
-  });

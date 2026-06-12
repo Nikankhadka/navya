@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useWorkoutStore } from '@/store/useWorkoutStore';
@@ -257,12 +257,12 @@ export default function WorkoutScreen() {
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     screen: { flex: 1, backgroundColor: colors.background },
     header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'center' as const,
       paddingHorizontal: Spacing.xl,
       paddingBottom: Spacing.md,
       paddingTop: Spacing.md,
@@ -291,7 +291,7 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.sm,
     },
     tabRow: {
-      flexDirection: 'row',
+      flexDirection: 'row' as const,
       paddingHorizontal: Spacing.xl,
       gap: Spacing.sm,
       marginBottom: Spacing.md,
@@ -323,7 +323,7 @@ const createStyles = (colors: ThemeColors) =>
     todayCard: { marginBottom: Spacing.lg },
     todayCardTop: { marginBottom: Spacing.lg },
     todayBadge: {
-      alignSelf: 'flex-start',
+      alignSelf: 'flex-start' as const,
       paddingHorizontal: Spacing.sm,
       paddingVertical: 2,
       borderRadius: Radius.full,
@@ -347,8 +347,8 @@ const createStyles = (colors: ThemeColors) =>
     todayMeta: { color: colors.muted, fontSize: Typography.size.sm },
     exercisePreview: { gap: Spacing.sm, marginBottom: Spacing.lg },
     previewRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
       gap: Spacing.sm,
     },
     previewDot: {
@@ -368,7 +368,7 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.accent,
       borderRadius: Radius.lg,
       paddingVertical: 14,
-      alignItems: 'center',
+      alignItems: 'center' as const,
     },
     startBtnText: {
       color: Colors.white,
@@ -386,4 +386,4 @@ const createStyles = (colors: ThemeColors) =>
       marginBottom: 4,
     },
     planMeta: { color: colors.muted, fontSize: Typography.size.sm },
-  });
+  }) as const;

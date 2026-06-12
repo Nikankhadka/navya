@@ -3,14 +3,12 @@ import {
   View,
   Text,
   ScrollView,
-  StyleSheet,
   TouchableOpacity,
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { Colors, Spacing, Radius, Typography, useAppTheme } from '@/theme';
 
 export interface WeightCheckInModalProps {
   visible: boolean;
@@ -30,60 +28,7 @@ export function WeightCheckInModal({
   isPending,
 }: WeightCheckInModalProps) {
   const { colors } = useAppTheme();
-  const styles = createStyles(colors);
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <KeyboardAvoidingView
-        style={styles.modalScreen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          style={styles.modalScroll}
-          contentContainerStyle={styles.modalContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Log Weight Check-in</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={styles.modalClose}>Close</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.fieldLabel}>Weight (kg)</Text>
-          <TextInput
-            style={styles.input}
-            value={weight}
-            onChangeText={onWeightChange}
-            placeholder="79.4"
-            placeholderTextColor={colors.inputPlaceholder}
-            keyboardType="numeric"
-          />
-
-          <Text style={styles.progressModalHint}>
-            This saves a timestamped check-in and updates your current profile weight.
-          </Text>
-
-          <TouchableOpacity
-            style={[styles.saveBtn, isPending && styles.saveBtnDisabled]}
-            onPress={onLog}
-            disabled={isPending || !weight.trim()}
-          >
-            <Text style={styles.saveBtnText}>{isPending ? 'Saving...' : 'Save Check-in'}</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-}
-
-const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  const styles = {
     modalScreen: {
       flex: 1,
       backgroundColor: colors.background,
@@ -150,4 +95,54 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.md,
       fontWeight: Typography.weight.bold,
     },
-  });
+  } as const;
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView
+        style={styles.modalScreen}
+        behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          style={styles.modalScroll}
+          contentContainerStyle={styles.modalContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Log Weight Check-in</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Text style={styles.modalClose}>Close</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.fieldLabel}>Weight (kg)</Text>
+          <TextInput
+            style={styles.input}
+            value={weight}
+            onChangeText={onWeightChange}
+            placeholder="79.4"
+            placeholderTextColor={colors.inputPlaceholder}
+            keyboardType="numeric"
+          />
+
+          <Text style={styles.progressModalHint}>
+            This saves a timestamped check-in and updates your current profile weight.
+          </Text>
+
+          <TouchableOpacity
+            style={[styles.saveBtn, isPending && styles.saveBtnDisabled]}
+            onPress={onLog}
+            disabled={isPending || !weight.trim()}
+          >
+            <Text style={styles.saveBtnText}>{isPending ? 'Saving...' : 'Save Check-in'}</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}

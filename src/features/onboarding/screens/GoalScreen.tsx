@@ -1,25 +1,23 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
-import { Ionicons } from '@expo/vector-icons';
 import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
 import type { GoalType } from '@/types/app';
-import type { ComponentProps } from 'react';
 
-type IoniconName = ComponentProps<typeof Ionicons>['name'];
-
-const GOALS: { id: GoalType; label: string; icon: IoniconName; description: string }[] = [
+const GOALS: { id: GoalType; label: string; icon: string; description: string }[] = [
   {
     id: 'lose_weight',
     label: 'Lose Weight',
-    icon: 'trending-down',
+    icon: 'chart.line.downtrend.xyaxis',
     description: 'Burn fat and get leaner',
   },
   {
     id: 'build_muscle',
     label: 'Build Muscle',
-    icon: 'barbell',
+    icon: 'dumbbell',
     description: 'Gain strength and mass',
   },
   {
@@ -31,13 +29,13 @@ const GOALS: { id: GoalType; label: string; icon: IoniconName; description: stri
   {
     id: 'general_fitness',
     label: 'General Fitness',
-    icon: 'pulse',
+    icon: 'waveform.path.ecg',
     description: 'Stay healthy and active',
   },
   {
     id: 'maintain',
     label: 'Maintain',
-    icon: 'checkmark-done',
+    icon: 'checkmark.seal',
     description: 'Keep your current physique',
   },
 ];
@@ -57,7 +55,11 @@ export default function GoalScreen() {
         }}
       >
         <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: Spacing.xxxl }}>
-          <Ionicons name="arrow-back" size={24} color={colors.muted} />
+          <Image
+            source="sf:chevron.left"
+            style={{ width: 24, height: 24 }}
+            tintColor={colors.muted}
+          />
         </TouchableOpacity>
 
         <Text
@@ -110,7 +112,11 @@ export default function GoalScreen() {
                   backgroundColor: isSelected ? colors.accent : colors.surface,
                 }}
               >
-                <Ionicons name={item.icon} size={24} color={Colors.white} />
+                <Image
+                  source={`sf:${item.icon}`}
+                  style={{ width: 24, height: 24 }}
+                  tintColor={Colors.white}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
@@ -131,7 +137,13 @@ export default function GoalScreen() {
                   {item.description}
                 </Text>
               </View>
-              {isSelected && <Ionicons name="checkmark-circle" size={24} color={colors.accent} />}
+              {isSelected && (
+                <Image
+                  source="sf:checkmark.circle.fill"
+                  style={{ width: 24, height: 24 }}
+                  tintColor={colors.accent}
+                />
+              )}
             </TouchableOpacity>
           );
         })}

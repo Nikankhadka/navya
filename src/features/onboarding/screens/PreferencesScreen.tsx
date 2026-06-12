@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
-import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
 import type { ActivityLevel, DietPreference, EquipmentType } from '@/types/app';
 
@@ -75,7 +76,11 @@ export default function PreferencesScreen() {
         }}
       >
         <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: Spacing.xxxl }}>
-          <Ionicons name="arrow-back" size={24} color={colors.muted} />
+          <Image
+            source="sf:chevron.left"
+            style={{ width: 24, height: 24 }}
+            tintColor={colors.muted}
+          />
         </TouchableOpacity>
 
         <Text
@@ -124,7 +129,7 @@ export default function PreferencesScreen() {
                 borderRadius: Radius.md,
               }}
             >
-              <Ionicons name="remove" size={24} color={Colors.white} />
+              <Image source="sf:minus" style={{ width: 24, height: 24 }} tintColor={Colors.white} />
             </TouchableOpacity>
             <Text
               style={{
@@ -146,7 +151,7 @@ export default function PreferencesScreen() {
                 borderRadius: Radius.md,
               }}
             >
-              <Ionicons name="add" size={24} color={Colors.white} />
+              <Image source="sf:plus" style={{ width: 24, height: 24 }} tintColor={Colors.white} />
             </TouchableOpacity>
           </View>
         </View>

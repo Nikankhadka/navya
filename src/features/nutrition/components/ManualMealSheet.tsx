@@ -1,5 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 import { Button, Card } from '@/components/ui';
 import type { MealTime } from '@/types/app';
 import { Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
@@ -207,7 +214,7 @@ export function ManualMealSheet({
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  makeStyles({
     modalSection: {
       paddingHorizontal: Spacing.xl,
     },
@@ -291,3 +298,8 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.accent,
     },
   });
+
+/** Preserves literal types for React Native style objects, replacing StyleSheet.create. */
+function makeStyles<T extends Record<string, ViewStyle | TextStyle>>(styles: T): T {
+  return styles;
+}

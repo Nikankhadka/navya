@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, Text, TouchableOpacity } from 'react-native';
 import { Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 
 export interface QuickRepliesProps {
@@ -38,7 +38,7 @@ export function QuickReplies({ replies, onSelect, colors }: QuickRepliesProps) {
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     quickReplyScroll: { flexGrow: 0 },
     quickReplies: {
       paddingHorizontal: Spacing.xl,
@@ -54,4 +54,4 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.card,
     },
     quickReplyText: { color: colors.muted, fontSize: Typography.size.sm },
-  });
+  }) as const;

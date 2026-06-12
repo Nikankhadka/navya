@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Radius, Spacing, Typography, useAppTheme, type ThemeName } from '@/theme';
 
 interface ThemeModeToggleProps {
@@ -13,20 +13,20 @@ interface ThemeModeToggleProps {
 const OPTIONS: {
   id: ThemeName;
   label: string;
-  icon: 'sunny-outline' | 'moon-outline';
-  activeIcon: 'sunny' | 'moon';
+  icon: string;
+  activeIcon: string;
 }[] = [
   {
     id: 'light',
     label: 'Light',
-    icon: 'sunny-outline',
-    activeIcon: 'sunny',
+    icon: 'sun.max',
+    activeIcon: 'sun.max.fill',
   },
   {
     id: 'dark',
     label: 'Dark',
-    icon: 'moon-outline',
-    activeIcon: 'moon',
+    icon: 'moon',
+    activeIcon: 'moon.fill',
   },
 ];
 
@@ -52,6 +52,7 @@ export function ThemeModeToggle({
     >
       {OPTIONS.map((option) => {
         const selected = resolvedTheme === option.id;
+        const iconSize = compact ? 16 : 18;
 
         return (
           <TouchableOpacity
@@ -73,10 +74,10 @@ export function ThemeModeToggle({
             ]}
             testID={`${testIDPrefix}-${option.id}`}
           >
-            <Ionicons
-              name={selected ? option.activeIcon : option.icon}
-              size={compact ? 16 : 18}
-              color={selected ? colors.accent : colors.textSecondary}
+            <Image
+              source={`sf:${selected ? option.activeIcon : option.icon}`}
+              style={{ width: iconSize, height: iconSize }}
+              tintColor={selected ? colors.accent : colors.textSecondary}
             />
             <Text
               style={[
@@ -96,7 +97,7 @@ export function ThemeModeToggle({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -135,4 +136,4 @@ const styles = StyleSheet.create({
   labelCompact: {
     fontSize: 12,
   },
-});
+} as const;

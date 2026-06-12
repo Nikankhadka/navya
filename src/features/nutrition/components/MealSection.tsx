@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, type TextStyle, type ViewStyle } from 'react-native';
 import type { FoodLog, MealTime } from '@/types/app';
 import { Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { formatTime, mealTimeLabel } from '@/utils/helpers';
@@ -59,7 +59,7 @@ export function MealSection({ mealTime, meals, onDeleteMeal }: MealSectionProps)
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  makeStyles({
     mealSection: {
       marginBottom: Spacing.xl,
     },
@@ -137,3 +137,8 @@ const createStyles = (colors: ThemeColors) =>
       marginTop: 4,
     },
   });
+
+/** Preserves literal types for React Native style objects, replacing StyleSheet.create. */
+function makeStyles<T extends Record<string, ViewStyle | TextStyle>>(styles: T): T {
+  return styles;
+}

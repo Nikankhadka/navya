@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import type { Session } from '@supabase/supabase-js';
@@ -13,12 +13,12 @@ import { AuthStateHandler, type AlertData } from '@/features/auth/screens/AuthSt
 // ── Styles (container only — sub-component styles live in AuthStateHandler) ───
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
-  });
+  }) as const;
 
 // ── Screen ───────────────────────────────────────────────────────────────────
 
@@ -43,7 +43,7 @@ export default function AuthCallbackScreen() {
   }, []);
 
   const scheduleRedirect = useCallback(
-    (destination: '/(tabs)' | '/(onboarding)/welcome', seconds: number) => {
+    (destination: '/(tabs)/(home)' | '/(onboarding)/welcome', seconds: number) => {
       cleanup();
       setCountdown(seconds);
       redirectTimerRef.current = setTimeout(() => {
@@ -80,14 +80,14 @@ export default function AuthCallbackScreen() {
           label: 'Continue',
           onPress: () => {
             cleanup();
-            router.replace(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome');
+            router.replace(onboardingComplete ? '/(tabs)/(home)' : '/(onboarding)/welcome');
           },
         },
       });
 
       setLoading(false);
 
-      scheduleRedirect(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome', 4);
+      scheduleRedirect(onboardingComplete ? '/(tabs)/(home)' : '/(onboarding)/welcome', 4);
     },
     [cleanup, refreshProfile, scheduleRedirect, router],
   );
@@ -240,7 +240,7 @@ export default function AuthCallbackScreen() {
         router.replace('/(auth)/login');
       } else {
         const isAuthenticated = useAuthStore.getState().isAuthenticated;
-        router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
+        router.replace(isAuthenticated ? '/(tabs)/(profile)' : '/(auth)/login');
       }
     }
   }
@@ -248,7 +248,7 @@ export default function AuthCallbackScreen() {
   function handleContinue() {
     cleanup();
     const isAuthenticated = useAuthStore.getState().isAuthenticated;
-    router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
+    router.replace(isAuthenticated ? '/(tabs)/(profile)' : '/(auth)/login');
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

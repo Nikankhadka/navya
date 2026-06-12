@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Colors, Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import type { SessionExercise } from '@/features/workout/types';
 
@@ -68,7 +68,7 @@ export function ExerciseRow({ exercise, isActive, onComplete, onSkip }: Exercise
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     exerciseRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -159,4 +159,4 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.dim,
       fontSize: Typography.size.xs,
     },
-  });
+  }) as const;

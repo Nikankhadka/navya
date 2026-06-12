@@ -5,7 +5,6 @@
  * This module exports the public API: isNutritionLocalDatabaseSupported,
  * getNutritionDatabaseAsync, and the SQLiteDatabase type (re-exported).
  */
-import { Platform } from 'react-native';
 import { initializeNutritionDatabaseAsync, type SQLiteDatabase } from './nutritionDatabase.init';
 
 // Re-export the database interface for consumers that import from this module.
@@ -14,7 +13,7 @@ export type { SQLiteDatabase };
 let databasePromise: Promise<SQLiteDatabase | null> | null = null;
 
 export function isNutritionLocalDatabaseSupported(): boolean {
-  return Platform.OS !== 'web';
+  return process.env.EXPO_OS !== 'web';
 }
 
 export async function getNutritionDatabaseAsync(): Promise<SQLiteDatabase | null> {

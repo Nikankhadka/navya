@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 import { Card } from '@/components/ui';
 import type { UserProfile, WeightProgressSummary, WorkoutHistorySummary } from '@/types/app';
@@ -71,7 +71,7 @@ export function ProgressCard({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   progressCard: {
     marginBottom: Spacing.xxl,
     gap: Spacing.lg,
@@ -112,4 +112,4 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
-});
+} as const;

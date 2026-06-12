@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { Alert, Button } from '@/components/ui';
 import { Spacing, Typography, type ThemeColors } from '@/theme';
 
@@ -96,15 +96,15 @@ export function AuthStateHandler({
 // ── Styles ───────────────────────────────────────────────────────────────────
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     loadingContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
     },
     buttonContainer: {
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
       gap: Spacing.md,
       paddingHorizontal: Spacing.xl,
       paddingBottom: Spacing.xxl,
@@ -113,15 +113,15 @@ const createStyles = (colors: ThemeColors) =>
       color: colors.text,
       fontSize: 20,
       fontWeight: Typography.weight.bold,
-      textAlign: 'center',
+      textAlign: 'center' as const,
       marginBottom: Spacing.md,
     },
     button: {
-      width: '100%',
+      width: '100%' as const,
     },
     redirectNotice: {
       color: colors.muted,
       fontSize: 12,
-      textAlign: 'center',
+      textAlign: 'center' as const,
     },
-  });
+  }) as const;

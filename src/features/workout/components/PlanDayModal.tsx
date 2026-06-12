@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { Card } from '@/components/ui';
@@ -124,7 +124,7 @@ export function PlanDayModal({ visible, planDayDetail, onClose }: PlanDayModalPr
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     modalScreen: {
       flex: 1,
       backgroundColor: colors.background,
@@ -294,4 +294,4 @@ const createStyles = (colors: ThemeColors) =>
       lineHeight: 20,
       marginTop: Spacing.md,
     },
-  });
+  }) as const;

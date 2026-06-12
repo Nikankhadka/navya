@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import type { WorkoutPlanDay } from '@/features/workout/types';
 
@@ -11,7 +11,9 @@ interface PlanDayCardProps {
 export function PlanDayCard({ day, onPress, isToday }: PlanDayCardProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
-  const muscleGroups = [...new Set(day.plan_exercises.flatMap((pe) => pe.exercise.muscle_groups))].slice(0, 3);
+  const muscleGroups = [
+    ...new Set(day.plan_exercises.flatMap((pe) => pe.exercise.muscle_groups)),
+  ].slice(0, 3);
 
   return (
     <TouchableOpacity
@@ -49,7 +51,7 @@ export function PlanDayCard({ day, onPress, isToday }: PlanDayCardProps) {
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     planCard: {
       backgroundColor: colors.card,
       borderRadius: Radius.xl,
@@ -117,4 +119,4 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.xs,
       textTransform: 'capitalize',
     },
-  });
+  }) as const;

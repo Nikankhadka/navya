@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { View, Text } from 'react-native';
+import { Spacing, Typography, useAppTheme } from '@/theme';
 import { Badge } from '@/components/ui';
 import { goalLabel } from '@/utils/helpers';
 import type { GoalType } from '@/types/app';
@@ -21,26 +21,7 @@ export function ProfileHeader({
   isDemoSession,
 }: ProfileHeaderProps) {
   const { colors } = useAppTheme();
-  const styles = createStyles(colors);
-
-  return (
-    <View style={styles.hero}>
-      <View style={styles.avatarContainer}>
-        <Text style={styles.avatarEmoji}>🧑‍💪</Text>
-      </View>
-      <Text style={styles.fullName}>{fullName ?? 'Navya User'}</Text>
-      <Text style={styles.email}>{email}</Text>
-      <View style={styles.badgeRow}>
-        {isDemoSession && <Badge label="Demo Session" color={colors.orange} />}
-        {goal && <Badge label={goalLabel(goal)} color={colors.accent} />}
-        {experienceLevel && <Badge label={experienceLevel} color={colors.green} />}
-      </View>
-    </View>
-  );
-}
-
-const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  const styles = {
     hero: {
       alignItems: 'center',
       paddingTop: Spacing.xxl,
@@ -72,4 +53,20 @@ const createStyles = (colors: ThemeColors) =>
       marginBottom: Spacing.md,
     },
     badgeRow: { flexDirection: 'row', gap: Spacing.sm },
-  });
+  } as const;
+
+  return (
+    <View style={styles.hero}>
+      <View style={styles.avatarContainer}>
+        <Text style={styles.avatarEmoji}>🧑‍💪</Text>
+      </View>
+      <Text style={styles.fullName}>{fullName ?? 'Navya User'}</Text>
+      <Text style={styles.email}>{email}</Text>
+      <View style={styles.badgeRow}>
+        {isDemoSession && <Badge label="Demo Session" color={colors.orange} />}
+        {goal && <Badge label={goalLabel(goal)} color={colors.accent} />}
+        {experienceLevel && <Badge label={experienceLevel} color={colors.green} />}
+      </View>
+    </View>
+  );
+}

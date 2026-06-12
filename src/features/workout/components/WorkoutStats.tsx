@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { Card } from '@/components/ui';
 import { formatDuration } from '@/utils/helpers';
@@ -73,7 +73,7 @@ export function WorkoutStats({ workoutHistory, weeklyTarget }: WorkoutStatsProps
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     historySummaryCard: {
       marginTop: Spacing.lg,
       gap: Spacing.lg,
@@ -155,4 +155,4 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.sm,
       lineHeight: 20,
     },
-  });
+  }) as const;

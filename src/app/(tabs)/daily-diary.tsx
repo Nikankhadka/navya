@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text as RNText, StyleSheet, ScrollView } from 'react-native';
+import { View, Text as RNText, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
@@ -102,19 +102,19 @@ export default function DailyDiaryScreen() {
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     screen: { flex: 1, backgroundColor: colors.background },
     content: { padding: Spacing.xl, paddingBottom: 40 },
     header: { marginBottom: Spacing.xl },
     headerTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
     },
-    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+    headerLeft: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: Spacing.sm },
     dot: { width: 8, height: 8, borderRadius: 4 },
     headerTitle: {
       fontSize: Typography.size.xxl,
       fontWeight: Typography.weight.extrabold,
     },
-  });
+  }) as const;

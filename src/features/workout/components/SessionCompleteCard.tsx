@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { formatDuration } from '@/utils/helpers';
 import type { WorkoutSession } from '@/types/app';
@@ -35,7 +35,7 @@ export function SessionCompleteCard({ activeSession, elapsedSeconds }: SessionCo
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     completeCard: {
       alignItems: 'center',
       paddingVertical: 48,
@@ -65,4 +65,4 @@ const createStyles = (colors: ThemeColors) =>
       fontWeight: Typography.weight.extrabold,
     },
     completeStatLabel: { color: colors.muted, fontSize: Typography.size.sm },
-  });
+  }) as const;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
@@ -21,7 +21,7 @@ export default function CoachScreen() {
 
   useEffect(() => {
     if (!isCoachEnabled) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(home)');
     }
   }, [router]);
   const { data: initialMessages } = useCoachMessages(user?.id);
@@ -79,7 +79,7 @@ export default function CoachScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         {/* ── Header ─────────────────────────────────────────────── */}
@@ -142,26 +142,26 @@ export default function CoachScreen() {
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     screen: { flex: 1, backgroundColor: colors.background },
     header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'center' as const,
       paddingHorizontal: Spacing.xl,
       paddingVertical: Spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
       backgroundColor: colors.background,
     },
-    coachInfo: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+    coachInfo: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: Spacing.md },
     avatar: {
       width: 44,
       height: 44,
       borderRadius: Radius.lg,
       backgroundColor: colors.accent,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
     },
     avatarEmoji: { fontSize: 22, color: Colors.white },
     coachName: {
@@ -169,7 +169,12 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.lg,
       fontWeight: Typography.weight.bold,
     },
-    onlineRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
+    onlineRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 5,
+      marginTop: 2,
+    },
     onlineDot: {
       width: 7,
       height: 7,
@@ -189,4 +194,4 @@ const createStyles = (colors: ThemeColors) =>
 
     messageList: { flex: 1 },
     messageContent: { padding: Spacing.xl, paddingBottom: Spacing.md, gap: Spacing.md },
-  });
+  }) as const;

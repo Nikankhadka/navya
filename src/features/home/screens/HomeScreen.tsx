@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Animated } from 'react-native';
+import { View, Text, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
@@ -113,21 +113,21 @@ export default function HomeScreen() {
       <SectionHeader
         title="Today's Session"
         action="View Plan"
-        onAction={() => router.push('/(tabs)/workout')}
+        onAction={() => router.push('/(tabs)/(workout)')}
       />
       <TodaySessionCard colors={colors} session={todaySession ?? null} />
 
       <SectionHeader
         title="Nutrition Today"
         action="Log Food"
-        onAction={() => router.push('/(tabs)/nutrition')}
+        onAction={() => router.push('/(tabs)/(nutrition)')}
       />
       <NutritionCard colors={colors} dailyNutrition={dailyNutrition ?? null} />
 
       <SectionHeader
         title="Progress & Adherence"
         action="View Profile"
-        onAction={() => router.push('/(tabs)/profile')}
+        onAction={() => router.push('/(tabs)/(profile)')}
       />
       <ProgressCard
         colors={colors}
@@ -150,13 +150,13 @@ export default function HomeScreen() {
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     screen: { flex: 1, backgroundColor: colors.background },
     content: { padding: Spacing.xl, paddingBottom: 40 },
     header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'flex-start' as const,
       marginBottom: Spacing.xl,
     },
     greeting: { color: colors.muted, fontSize: Typography.size.sm },
@@ -168,8 +168,8 @@ const createStyles = (colors: ThemeColors) =>
       marginTop: 2,
     },
     streakChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
       gap: 4,
       borderRadius: Radius.lg,
       paddingHorizontal: 14,
@@ -179,10 +179,10 @@ const createStyles = (colors: ThemeColors) =>
     streakFire: { fontSize: 18 },
     streakCount: { fontWeight: Typography.weight.extrabold, fontSize: Typography.size.lg },
     streakLabel: { fontSize: Typography.size.xs },
-    weekRow: { flexDirection: 'row', gap: Spacing.xs, marginBottom: Spacing.xxl },
-    weekDay: { flex: 1, alignItems: 'center', gap: 4 },
+    weekRow: { flexDirection: 'row' as const, gap: Spacing.xs, marginBottom: Spacing.xxl },
+    weekDay: { flex: 1, alignItems: 'center' as const, gap: 4 },
     weekDot: {
-      width: '100%',
+      width: '100%' as const,
       aspectRatio: 1,
       borderRadius: Radius.sm,
       alignItems: 'center',
@@ -193,4 +193,4 @@ const createStyles = (colors: ThemeColors) =>
     weekDotEmpty: { backgroundColor: 'transparent' },
     weekCheck: { fontSize: 12 },
     weekLabel: { fontSize: 10 },
-  });
+  }) as const;

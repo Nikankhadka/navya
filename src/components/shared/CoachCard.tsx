@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 
@@ -12,7 +12,7 @@ export function CoachCard({ colors, coachPreview }: CoachCardProps) {
   const router = useRouter();
 
   return (
-    <TouchableOpacity activeOpacity={0.88} onPress={() => router.push('/(tabs)/coach')}>
+    <TouchableOpacity activeOpacity={0.88} onPress={() => router.push('/(tabs)/(coach)')}>
       <View style={[styles.card, { borderColor: `${colors.accent}44` }]}>
         <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
           <Text style={styles.avatarEmoji}>🤖</Text>
@@ -29,7 +29,7 @@ export function CoachCard({ colors, coachPreview }: CoachCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   card: {
     flexDirection: 'row',
     gap: Spacing.md,
@@ -69,4 +69,4 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },
-});
+} as const;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { MacroRing } from '@/components/shared/MacroRing';
 import { Card } from '@/components/ui';
 import { Radius, Spacing, Typography, useAppTheme } from '@/theme';
@@ -82,7 +82,7 @@ export function MacroSummaryHeader({
   );
 }
 
-const macroStyles = StyleSheet.create({
+const macroStyles = {
   macroCard: { marginBottom: Spacing.xxl },
   ringRow: {
     flexDirection: 'row',
@@ -98,4 +98,4 @@ const macroStyles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
     fontSize: Typography.size.sm,
   },
-});
+} as const;

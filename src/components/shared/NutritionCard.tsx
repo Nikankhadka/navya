@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 import { Card } from '@/components/ui';
 import { ProgressBar } from './MacroRing';
@@ -124,7 +124,7 @@ export function NutritionCard({ colors, dailyNutrition }: NutritionCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   calRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -191,4 +191,4 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
     textAlign: 'right',
   },
-});
+} as const;

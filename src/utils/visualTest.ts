@@ -1,9 +1,7 @@
-import { Platform } from 'react-native';
-
 export type VisualTestSessionMode = 'demo-tabs' | 'demo-onboarding';
 
 function readSearchParam(name: string): string | null {
-  if (Platform.OS !== 'web' || typeof window === 'undefined') {
+  if (process.env.EXPO_OS !== 'web' || typeof window === 'undefined') {
     return null;
   }
 

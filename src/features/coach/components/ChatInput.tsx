@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text } from 'react-native';
 import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 
 export interface ChatInputProps {
@@ -61,10 +61,10 @@ export function ChatInput({
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     inputBar: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
+      flexDirection: 'row' as const,
+      alignItems: 'flex-end' as const,
       paddingHorizontal: Spacing.xl,
       paddingTop: Spacing.sm,
       gap: Spacing.sm,
@@ -88,8 +88,8 @@ const createStyles = (colors: ThemeColors) =>
       width: 44,
       height: 44,
       borderRadius: Radius.lg,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
       flexShrink: 0,
     },
     sendBtnActive: { backgroundColor: colors.accent },
@@ -99,4 +99,4 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.lg,
       fontWeight: Typography.weight.bold,
     },
-  });
+  }) as const;

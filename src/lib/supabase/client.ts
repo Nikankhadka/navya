@@ -1,15 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
 import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from '@/config/env';
 import type { Database } from '@/types/database';
 
 const inMemoryStorage: Record<string, string> = {};
-const isBrowserWeb = Platform.OS === 'web' && typeof window !== 'undefined';
-const shouldAutoRefreshToken = Platform.OS !== 'web' || isBrowserWeb;
+const isBrowserWeb = process.env.EXPO_OS === 'web' && typeof window !== 'undefined';
+const shouldAutoRefreshToken = process.env.EXPO_OS !== 'web' || isBrowserWeb;
 
 function getWebStorage(): Storage | null {
-  if (Platform.OS !== 'web' || typeof window === 'undefined') {
+  if (process.env.EXPO_OS !== 'web' || typeof window === 'undefined') {
     return null;
   }
 
@@ -29,7 +28,7 @@ const SecureStoreAdapter = {
       return webStorage.getItem(key) ?? inMemoryStorage[key] ?? null;
     }
 
-    if (Platform.OS === 'web') {
+    if (process.env.EXPO_OS === 'web') {
       return inMemoryStorage[key] ?? null;
     }
 
@@ -44,7 +43,7 @@ const SecureStoreAdapter = {
       return;
     }
 
-    if (Platform.OS === 'web') {
+    if (process.env.EXPO_OS === 'web') {
       inMemoryStorage[key] = value;
       return;
     }
@@ -60,7 +59,7 @@ const SecureStoreAdapter = {
       return;
     }
 
-    if (Platform.OS === 'web') {
+    if (process.env.EXPO_OS === 'web') {
       delete inMemoryStorage[key];
       return;
     }
@@ -76,6 +75,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     storage: SecureStoreAdapter,
     autoRefreshToken: shouldAutoRefreshToken,
     persistSession: true,
-    detectSessionInUrl: Platform.OS === 'web',
+    detectSessionInUrl: process.env.EXPO_OS === 'web',
   },
 });

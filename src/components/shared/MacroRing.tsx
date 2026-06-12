@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Typography, useAppTheme } from '@/theme';
 
 interface MacroRingProps {
@@ -119,7 +119,7 @@ export function ProgressBar({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     alignItems: 'center',
     gap: 4,
@@ -175,4 +175,4 @@ const styles = StyleSheet.create({
   barFill: {
     borderRadius: 4,
   },
-});
+} as const;

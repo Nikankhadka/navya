@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
+import { View, Text } from 'react-native';
+import { Spacing, Radius, Typography, useAppTheme } from '@/theme';
 import { Card } from '@/components/ui';
 
 export interface ProfileStatsSectionProps {
@@ -11,53 +11,7 @@ export interface ProfileStatsSectionProps {
 
 export function ProfileStatsSection({ stats, weightKg, heightCm }: ProfileStatsSectionProps) {
   const { colors } = useAppTheme();
-  const styles = createStyles(colors);
-
-  return (
-    <>
-      <View style={styles.statsGrid}>
-        {stats.map((stat) => (
-          <View key={stat.label} style={styles.statCard}>
-            <Text style={styles.statValue}>{stat.value}</Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-            <Text style={styles.statSuffix}>{stat.suffix}</Text>
-          </View>
-        ))}
-      </View>
-
-      <Card style={styles.metricsCard}>
-        <Text style={styles.sectionTitle}>Body Metrics</Text>
-        <View style={styles.metricsRow}>
-          <View style={styles.metric}>
-            <Text style={styles.metricVal}>
-              {weightKg ?? '—'}
-              <Text style={styles.metricUnit}> kg</Text>
-            </Text>
-            <Text style={styles.metricLabel}>Weight</Text>
-          </View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metric}>
-            <Text style={styles.metricVal}>
-              {heightCm ?? '—'}
-              <Text style={styles.metricUnit}> cm</Text>
-            </Text>
-            <Text style={styles.metricLabel}>Height</Text>
-          </View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metric}>
-            <Text style={styles.metricVal}>
-              {weightKg && heightCm ? (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1) : '—'}
-            </Text>
-            <Text style={styles.metricLabel}>BMI</Text>
-          </View>
-        </View>
-      </Card>
-    </>
-  );
-}
-
-const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  const styles = {
     statsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -101,4 +55,47 @@ const createStyles = (colors: ThemeColors) =>
     metricUnit: { color: colors.muted, fontSize: Typography.size.sm },
     metricLabel: { color: colors.muted, fontSize: Typography.size.sm, marginTop: 2 },
     metricDivider: { width: 1, backgroundColor: colors.border },
-  });
+  } as const;
+
+  return (
+    <>
+      <View style={styles.statsGrid}>
+        {stats.map((stat) => (
+          <View key={stat.label} style={styles.statCard}>
+            <Text style={styles.statValue}>{stat.value}</Text>
+            <Text style={styles.statLabel}>{stat.label}</Text>
+            <Text style={styles.statSuffix}>{stat.suffix}</Text>
+          </View>
+        ))}
+      </View>
+
+      <Card style={styles.metricsCard}>
+        <Text style={styles.sectionTitle}>Body Metrics</Text>
+        <View style={styles.metricsRow}>
+          <View style={styles.metric}>
+            <Text style={styles.metricVal}>
+              {weightKg ?? '—'}
+              <Text style={styles.metricUnit}> kg</Text>
+            </Text>
+            <Text style={styles.metricLabel}>Weight</Text>
+          </View>
+          <View style={styles.metricDivider} />
+          <View style={styles.metric}>
+            <Text style={styles.metricVal}>
+              {heightCm ?? '—'}
+              <Text style={styles.metricUnit}> cm</Text>
+            </Text>
+            <Text style={styles.metricLabel}>Height</Text>
+          </View>
+          <View style={styles.metricDivider} />
+          <View style={styles.metric}>
+            <Text style={styles.metricVal}>
+              {weightKg && heightCm ? (weightKg / Math.pow(heightCm / 100, 2)).toFixed(1) : '—'}
+            </Text>
+            <Text style={styles.metricLabel}>BMI</Text>
+          </View>
+        </View>
+      </Card>
+    </>
+  );
+}

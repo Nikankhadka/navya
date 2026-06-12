@@ -2,12 +2,12 @@ import React, { startTransition, useDeferredValue, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
-  Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  type TextStyle,
+  type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card, SectionHeader } from '@/components/ui';
@@ -293,7 +293,7 @@ export default function NutritionScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
       <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -489,7 +489,7 @@ export default function NutritionScreen() {
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  makeStyles({
     screen: { flex: 1, backgroundColor: colors.background },
     header: {
       flexDirection: 'row',
@@ -603,3 +603,8 @@ const createStyles = (colors: ThemeColors) =>
       flex: 1,
     },
   });
+
+/** Preserves literal types for React Native style objects, replacing StyleSheet.create. */
+function makeStyles<T extends Record<string, ViewStyle | TextStyle>>(styles: T): T {
+  return styles;
+}

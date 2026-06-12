@@ -1,5 +1,12 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { Button, Card, EmptyState } from '@/components/ui';
 import type {
@@ -256,7 +263,7 @@ export function FoodSearchSheet({
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  makeStyles({
     modalSection: {
       paddingHorizontal: Spacing.xl,
     },
@@ -430,3 +437,8 @@ const createStyles = (colors: ThemeColors) =>
       marginTop: 4,
     },
   });
+
+/** Preserves literal types for React Native style objects, replacing StyleSheet.create. */
+function makeStyles<T extends Record<string, ViewStyle | TextStyle>>(styles: T): T {
+  return styles;
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 import { formatDayLabel, addDays, isToday, isFuture } from '@/utils/date';
@@ -58,18 +58,18 @@ export function DateNavBar({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     gap: Spacing.sm,
     marginBottom: Spacing.md,
   },
   navButton: {
     width: 32,
     height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     borderRadius: Radius.full,
   },
   navButtonDisabled: {
@@ -82,9 +82,9 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     gap: Spacing.xs,
     paddingVertical: Spacing.xs,
   },
@@ -106,4 +106,4 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.bold,
   },
-});
+} as const;

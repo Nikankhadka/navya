@@ -1,11 +1,10 @@
 import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
-import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase/client';
 import { siteUrl } from '@/config/env';
 
 export function getAuthRedirectUrl(): string {
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  if (process.env.EXPO_OS === 'web' && typeof window !== 'undefined') {
     const baseUrl = siteUrl ?? window.location.origin;
     return `${baseUrl}/callback`;
   }

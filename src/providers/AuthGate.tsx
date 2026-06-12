@@ -45,12 +45,12 @@ export function AuthGate() {
     }
 
     if ((onboardingComplete || inOnboardingGroup) && inAuthGroup) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(home)');
       return;
     }
 
     if (onboardingComplete && inOnboardingGroup) {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/(home)');
     }
   }, [isAuthenticated, isInitialized, isProfileReady, onboardingComplete, router, segments]);
 

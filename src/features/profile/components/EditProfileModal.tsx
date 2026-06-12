@@ -3,12 +3,10 @@ import {
   View,
   Text,
   ScrollView,
-  StyleSheet,
   TouchableOpacity,
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import type { GoalType } from '@/types/app';
@@ -60,7 +58,7 @@ export function EditProfileModal({
     >
       <KeyboardAvoidingView
         style={styles.modalScreen}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           style={styles.modalScroll}
@@ -160,7 +158,7 @@ export function EditProfileModal({
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     modalScreen: {
       flex: 1,
       backgroundColor: colors.background,
@@ -174,9 +172,9 @@ const createStyles = (colors: ThemeColors) =>
       paddingBottom: 48,
     },
     modalHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
       marginBottom: Spacing.xl,
     },
     modalTitle: {
@@ -207,15 +205,15 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.md,
     },
     inputRow: {
-      flexDirection: 'row',
+      flexDirection: 'row' as const,
       gap: Spacing.md,
     },
     inputCol: {
       flex: 1,
     },
     goalGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
       gap: Spacing.sm,
     },
     goalChip: {
@@ -243,7 +241,7 @@ const createStyles = (colors: ThemeColors) =>
       backgroundColor: colors.accent,
       borderRadius: Radius.lg,
       paddingVertical: Spacing.lg,
-      alignItems: 'center',
+      alignItems: 'center' as const,
     },
     saveBtnDisabled: {
       opacity: 0.6,
@@ -253,4 +251,4 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.md,
       fontWeight: Typography.weight.bold,
     },
-  });
+  }) as const;

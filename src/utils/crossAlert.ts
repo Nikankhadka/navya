@@ -1,4 +1,4 @@
-import { Platform, Alert } from 'react-native';
+import { Alert } from 'react-native';
 
 /**
  * Cross-platform alert that works on both native and web.
@@ -13,7 +13,7 @@ export function crossAlert(
     onPress?: () => void;
   }[],
 ): void {
-  if (Platform.OS === 'web') {
+  if (process.env.EXPO_OS === 'web') {
     // Web fallback
     const cancelBtn = buttons?.find((b) => b.style === 'cancel');
     const confirmBtn = buttons?.find((b) => b.style !== 'cancel');

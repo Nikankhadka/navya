@@ -1,41 +1,8 @@
 import { Tabs } from 'expo-router';
-import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Typography, useAppTheme } from '@/theme';
+import { useAppTheme } from '@/theme';
 import { isCoachEnabled } from '@/config/env';
-
-interface TabIconProps {
-  emoji: string;
-  label: string;
-  focused: boolean;
-}
-
-function TabIcon({ emoji, label, focused }: TabIconProps) {
-  const { colors } = useAppTheme();
-
-  return (
-    <View style={styles.tabIcon}>
-      <View
-        style={[
-          styles.tabIndicator,
-          { backgroundColor: colors.accent },
-          focused && styles.tabIndicatorActive,
-        ]}
-      />
-      <Text style={styles.tabEmoji}>{emoji}</Text>
-      <Text
-        style={[
-          styles.tabLabel,
-          { color: colors.dim },
-          focused && styles.tabLabelActive,
-          focused && { color: colors.accent },
-        ]}
-      >
-        {label}
-      </Text>
-    </View>
-  );
-}
+import { TabIcon } from '@/components/ui/TabIcon';
 
 export default function TabsLayout() {
   const { colors } = useAppTheme();
@@ -59,34 +26,74 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="(home)"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="⚡" label="Home" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              icon="home-outline"
+              iconFocused="home"
+              label="Home"
+              focused={focused}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="workout"
+        name="(workout)"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏋️" label="Workout" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              icon="barbell-outline"
+              iconFocused="barbell"
+              label="Workout"
+              focused={focused}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="nutrition"
+        name="(nutrition)"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🥗" label="Food" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              icon="restaurant-outline"
+              iconFocused="restaurant"
+              label="Food"
+              focused={focused}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="coach"
+        name="(coach)"
         options={{
           href: isCoachEnabled ? undefined : null,
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🤖" label="Coach" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              icon="chatbubbles-outline"
+              iconFocused="chatbubbles"
+              label="Coach"
+              focused={focused}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="(profile)"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="Profile" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              icon="person-outline"
+              iconFocused="person"
+              label="Profile"
+              focused={focused}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
@@ -98,33 +105,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tabIcon: {
-    alignItems: 'center',
-    gap: 3,
-    paddingTop: 4,
-  },
-  tabIndicator: {
-    width: 0,
-    height: 3,
-    borderRadius: 2,
-    marginBottom: 2,
-  },
-  tabIndicatorActive: {
-    width: 24,
-  },
-  tabEmoji: {
-    fontSize: 20,
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: Typography.weight.medium,
-  },
-  tabLabelActive: {
-    fontWeight: Typography.weight.bold,
-  },
-  platformPad: {
-    paddingBottom: Platform.select({ ios: 0, default: 0 }),
-  },
-});

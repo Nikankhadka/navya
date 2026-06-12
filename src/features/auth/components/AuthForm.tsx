@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Input, Button } from '@/components/ui';
 import { Spacing, Typography, type ThemeColors } from '@/theme';
 
@@ -68,7 +68,7 @@ export function AuthForm({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     marginBottom: Spacing.xxl,
   },
@@ -90,4 +90,4 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: Spacing.lg,
   },
-});
+} as const;

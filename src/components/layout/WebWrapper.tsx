@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, StyleSheet, View, type ViewStyle } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 import { useAppTheme } from '@/theme';
 
 interface WebWrapperProps {
@@ -14,7 +14,7 @@ interface WebWrapperProps {
 export function WebWrapper({ children, style }: WebWrapperProps) {
   const { colors } = useAppTheme();
 
-  if (Platform.OS !== 'web') {
+  if (process.env.EXPO_OS !== 'web') {
     return <>{children}</>;
   }
 
@@ -36,7 +36,7 @@ export function WebWrapper({ children, style }: WebWrapperProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   webRoot: {
     flex: 1,
     alignItems: 'center',
@@ -46,4 +46,4 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 430,
   },
-});
+} as const;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 import { formatTimeAgo } from '@/utils/helpers';
 import type { CoachMessage } from '@/types/app';
@@ -54,7 +54,7 @@ export function ChatBubble({ message, showTime, isTyping, colors }: ChatBubblePr
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     timeLabel: {
       textAlign: 'center',
       color: colors.dim,
@@ -73,7 +73,7 @@ const createStyles = (colors: ThemeColors) =>
       flexShrink: 0,
     },
     bubble: {
-      maxWidth: '78%',
+      maxWidth: '78%' as const,
       padding: Spacing.md,
       borderRadius: Radius.lg,
     },
@@ -94,4 +94,4 @@ const createStyles = (colors: ThemeColors) =>
       lineHeight: 20,
     },
     bubbleTextUser: { color: Colors.white },
-  });
+  }) as const;

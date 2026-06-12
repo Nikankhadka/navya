@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
 import { Badge } from '@/components/ui';
@@ -52,7 +52,7 @@ export function TodaySessionCard({ colors, session }: TodaySessionCardProps) {
       <TouchableOpacity
         style={[styles.startBtn, { backgroundColor: colors.accent }]}
         activeOpacity={0.85}
-        onPress={() => router.push('/(tabs)/workout')}
+        onPress={() => router.push('/(tabs)/(workout)')}
       >
         <Text style={[styles.startBtnText, { color: Colors.white }]}>
           {session
@@ -66,7 +66,7 @@ export function TodaySessionCard({ colors, session }: TodaySessionCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   card: {
     marginBottom: Spacing.xxl,
   },
@@ -100,4 +100,4 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.md,
     letterSpacing: 0.3,
   },
-});
+} as const;

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { profileService } from '@/features/profile/api/profile.service';
-import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { Colors, Radius, Spacing, Typography, useAppTheme } from '@/theme';
 
 export default function CompleteScreen() {
@@ -35,7 +36,7 @@ export default function CompleteScreen() {
 
         // Brief delay for visual confirmation
         setTimeout(() => {
-          router.replace('/(tabs)');
+          router.replace('/(tabs)/(home)');
         }, 2000);
       } catch (err) {
         console.error('Failed to save onboarding:', err);
@@ -97,7 +98,11 @@ export default function CompleteScreen() {
           {status === 'success' && (
             <>
               <View style={{ ...iconContainerStyle, backgroundColor: colors.green }}>
-                <Ionicons name="checkmark" size={40} color={Colors.white} />
+                <Image
+                  source="sf:checkmark"
+                  style={{ width: 40, height: 40 }}
+                  tintColor={Colors.white}
+                />
               </View>
               <Text
                 style={{
@@ -124,7 +129,11 @@ export default function CompleteScreen() {
           {status === 'error' && (
             <>
               <View style={{ ...iconContainerStyle, backgroundColor: colors.red }}>
-                <Ionicons name="alert" size={40} color={Colors.white} />
+                <Image
+                  source="sf:exclamationmark.triangle"
+                  style={{ width: 40, height: 40 }}
+                  tintColor={Colors.white}
+                />
               </View>
               <Text
                 style={{

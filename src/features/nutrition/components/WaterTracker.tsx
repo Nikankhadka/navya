@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, type TextStyle, type ViewStyle } from 'react-native';
 import { ProgressBar } from '@/components/shared/MacroRing';
 import { Card, SectionHeader } from '@/components/ui';
 import { Radius, Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
@@ -61,7 +61,7 @@ export function WaterTracker({ waterTotal, waterGoal, isAdding, onAddWater }: Wa
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  makeStyles({
     waterCard: {
       marginBottom: Spacing.xxl,
       gap: Spacing.md,
@@ -112,3 +112,8 @@ const createStyles = (colors: ThemeColors) =>
       fontWeight: Typography.weight.semibold,
     },
   });
+
+/** Preserves literal types for React Native style objects, replacing StyleSheet.create. */
+function makeStyles<T extends Record<string, ViewStyle | TextStyle>>(styles: T): T {
+  return styles;
+}

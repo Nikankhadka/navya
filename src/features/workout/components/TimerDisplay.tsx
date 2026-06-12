@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Spacing, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { Card } from '@/components/ui';
 import { ExerciseRow } from '@/features/workout/components';
@@ -57,7 +57,7 @@ export function TimerDisplay({
 }
 
 const createStyles = (colors: ThemeColors) =>
-  StyleSheet.create({
+  ({
     progressCard: { marginBottom: Spacing.lg, padding: Spacing.lg },
     progressRow: {
       flexDirection: 'row',
@@ -82,4 +82,4 @@ const createStyles = (colors: ThemeColors) =>
       borderRadius: 4,
     },
     exerciseList: { gap: Spacing.sm },
-  });
+  }) as const;
