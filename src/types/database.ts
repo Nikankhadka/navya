@@ -59,6 +59,7 @@ export type Database = {
           id: string;
           role: string;
           text: string;
+          updated_at: string;
           user_id: string;
         };
         Insert: {
@@ -67,6 +68,7 @@ export type Database = {
           id?: string;
           role: string;
           text: string;
+          updated_at?: string;
           user_id: string;
         };
         Update: {
@@ -75,6 +77,7 @@ export type Database = {
           id?: string;
           role?: string;
           text?: string;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -508,18 +511,21 @@ export type Database = {
           amount_ml: number;
           id: string;
           logged_at: string;
+          updated_at: string;
           user_id: string;
         };
         Insert: {
           amount_ml: number;
           id?: string;
           logged_at?: string;
+          updated_at?: string;
           user_id: string;
         };
         Update: {
           amount_ml?: number;
           id?: string;
           logged_at?: string;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [];
@@ -528,18 +534,21 @@ export type Database = {
         Row: {
           id: string;
           logged_at: string;
+          updated_at: string;
           user_id: string;
           weight_kg: number;
         };
         Insert: {
           id?: string;
           logged_at?: string;
+          updated_at?: string;
           user_id: string;
           weight_kg: number;
         };
         Update: {
           id?: string;
           logged_at?: string;
+          updated_at?: string;
           user_id?: string;
           weight_kg?: number;
         };
