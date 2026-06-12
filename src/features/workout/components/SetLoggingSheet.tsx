@@ -27,7 +27,9 @@ export interface SetLoggingSheetProps {
   defaultReps: number;
   previousWeight: number | null;
   previousReps: number | null;
+  editingSetIndex: number | null;
   onLogSet: (set: CompletedSet) => void;
+  onEditSet: (setIndex: number, set: CompletedSet) => void;
   onClose: () => void;
 }
 
@@ -38,15 +40,24 @@ export function SetLoggingSheet({
   defaultReps,
   previousWeight,
   previousReps,
+  editingSetIndex,
   onLogSet,
+  onEditSet,
   onClose,
 }: SetLoggingSheetProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
-  const [weight, setWeight] = useState(defaultWeight?.toString() ?? '');
-  const [reps, setReps] = useState(defaultReps.toString());
-  const [rpe, setRpe] = useState<number | null>(null);
+  const editingSet =
+    editingSetIndex !== null ? (exercise?.completed_sets[editingSetIndex] ?? null) : null;
+
+  const [weight, setWeight] = useState(
+    editingSet?.weight_kg?.toString() ?? defaultWeight?.toString() ?? '',
+  );
+  const [reps, setReps] = useState(
+    editingSet?.reps_completed?.toString() ?? defaultReps.toString(),
+  );
+  const [rpe, setRpe] = useState<number | null>(editingSet?.rpe ?? null);
 
   const adjustWeight = (delta: number) => {
     const current = parseFloat(weight) || 0;
@@ -56,23 +67,54 @@ export function SetLoggingSheet({
 
   const handleLog = () => {
     if (!exercise || !reps) return;
-    const setNumber = exercise.completed_sets.length + 1;
-    onLogSet({
+    const setNumber =
+      editingSetIndex !== null
+        ? exercise.completed_sets[editingSetIndex].set_number
+        : exercise.completed_sets.length + 1;
+    const set: CompletedSet = {
       set_number: setNumber,
       reps_completed: parseInt(reps, 10) || defaultReps,
       weight_kg: weight ? parseFloat(weight) : null,
       rpe,
-      rest_seconds: null,
-      completed_at: new Date().toISOString(),
-    });
+      rest_seconds: editingSet?.rest_seconds ?? null,
+      completed_at: editingSet?.completed_at ?? new Date().toISOString(),
+    };
+
+    if (editingSetIndex !== null) {
+      onEditSet(editingSetIndex, set);
+    } else {
+      onLogSet(set);
+    }
   };
 
-  const rpeLabels = ['Easy', 'Moderate', 'Hard', 'Max'] as const;
-  const rpeValues = [2, 5, 8, 10] as const;
+  const rpeLabels: Record<number, string> = {
+    1: 'Very Easy',
+    2: 'Easy',
+    3: 'Easy',
+    4: 'Moderate',
+    5: 'Moderate',
+    6: 'Moderate',
+    7: 'Hard',
+    8: 'Hard',
+    9: 'Very Hard',
+    10: 'Max',
+  };
+
+  const getRpeSegmentColor = (value: number, selected: boolean) => {
+    if (selected) return colors.accent;
+    if (value <= 3) return `${colors.green}44`;
+    if (value <= 6) return `${colors.orange}55`;
+    if (value <= 9) return `${colors.orange}88`;
+    return `${colors.red}88`;
+  };
 
   if (!visible || !exercise) return null;
 
-  const setNumber = exercise.completed_sets.length + 1;
+  const setNumber =
+    editingSetIndex !== null
+      ? exercise.completed_sets[editingSetIndex].set_number
+      : exercise.completed_sets.length + 1;
+  const isEditing = editingSetIndex !== null;
 
   return (
     <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -85,7 +127,9 @@ export function SetLoggingSheet({
             {/* Header */}
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>
-                Set {setNumber} of {exercise.planned_sets}
+                {isEditing
+                  ? `Edit Set ${setNumber}`
+                  : `Set ${setNumber} of ${exercise.planned_sets}`}
               </Text>
               <Text style={[styles.exerciseName, { color: colors.accent }]}>
                 {exercise.exercise_name}
@@ -143,39 +187,44 @@ export function SetLoggingSheet({
 
             {/* RPE */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>RPE (optional)</Text>
-              <View style={styles.rpeRow}>
-                {rpeValues.map((value, i) => (
+              <View style={styles.rpeHeader}>
+                <Text style={styles.fieldLabel}>RPE (optional)</Text>
+                {rpe !== null && (
+                  <Text style={styles.rpeValue}>
+                    {rpe} — {rpeLabels[rpe]}
+                  </Text>
+                )}
+              </View>
+              <View style={styles.rpeSliderRow}>
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((value) => (
                   <Pressable
                     key={value}
                     style={[
-                      styles.rpeBtn,
-                      rpe === value && {
-                        backgroundColor: colors.accent,
-                        borderColor: colors.accent,
+                      styles.rpeSegment,
+                      {
+                        backgroundColor: getRpeSegmentColor(value, rpe === value),
+                        borderColor: rpe === value ? colors.accent : colors.border,
+                        borderWidth: rpe === value ? 2 : 1,
                       },
-                      { borderColor: colors.border },
                     ]}
                     onPress={() => setRpe(rpe === value ? null : value)}
                   >
                     <Text
                       style={[
-                        styles.rpeBtnText,
-                        { color: rpe === value ? Colors.white : colors.textSecondary },
+                        styles.rpeSegmentText,
+                        { color: rpe === value ? Colors.white : colors.dim },
                       ]}
                     >
                       {value}
                     </Text>
-                    <Text
-                      style={[
-                        styles.rpeLabel,
-                        { color: rpe === value ? `${Colors.white}CC` : colors.dim },
-                      ]}
-                    >
-                      {rpeLabels[i]}
-                    </Text>
                   </Pressable>
                 ))}
+              </View>
+              <View style={styles.rpeLabelsRow}>
+                <Text style={styles.rpeRangeLabel}>Easy</Text>
+                <Text style={styles.rpeRangeLabel}>Moderate</Text>
+                <Text style={styles.rpeRangeLabel}>Hard</Text>
+                <Text style={styles.rpeRangeLabel}>Max</Text>
               </View>
             </View>
 
@@ -184,7 +233,7 @@ export function SetLoggingSheet({
               style={[styles.logBtn, { backgroundColor: colors.accent }]}
               onPress={handleLog}
             >
-              <Text style={styles.logBtnText}>Log Set</Text>
+              <Text style={styles.logBtnText}>{isEditing ? 'Save Set' : 'Log Set'}</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -265,24 +314,42 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.xs,
       marginTop: Spacing.xs,
     },
-    rpeRow: {
+    rpeHeader: {
       flexDirection: 'row' as const,
-      gap: Spacing.sm,
+      justifyContent: 'space-between' as const,
+      alignItems: 'center' as const,
+      marginBottom: Spacing.xs,
     },
-    rpeBtn: {
+    rpeValue: {
+      color: colors.accent,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+    },
+    rpeSliderRow: {
+      flexDirection: 'row' as const,
+      gap: 2,
+      marginBottom: Spacing.xs,
+    },
+    rpeSegment: {
       flex: 1,
       alignItems: 'center' as const,
-      paddingVertical: Spacing.sm,
-      borderRadius: Radius.md,
+      justifyContent: 'center' as const,
+      height: 36,
+      borderRadius: Radius.sm,
       borderWidth: 1,
     },
-    rpeBtnText: {
-      fontSize: Typography.size.lg,
+    rpeSegmentText: {
+      fontSize: 11,
       fontWeight: Typography.weight.bold,
     },
-    rpeLabel: {
+    rpeLabelsRow: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      paddingHorizontal: 2,
+    },
+    rpeRangeLabel: {
+      color: colors.dim,
       fontSize: 9,
-      marginTop: 2,
     },
     logBtn: {
       borderRadius: Radius.lg,

@@ -16,6 +16,7 @@ export interface TimerDisplayProps {
   onCompleteSet: (exerciseId: string) => void;
   onSkipExercise: (exerciseId: string) => void;
   onPressExercise: (exerciseId: string) => void;
+  onPressCompletedSet: (exerciseId: string, setIndex: number) => void;
   onPauseRest: () => void;
   onResumeRest: () => void;
   onSkipRest: () => void;
@@ -34,6 +35,7 @@ export function TimerDisplay({
   onCompleteSet,
   onSkipExercise,
   onPressExercise,
+  onPressCompletedSet,
   onPauseRest,
   onResumeRest,
   onSkipRest,
@@ -167,6 +169,9 @@ export function TimerDisplay({
               onPressExercise={() => onPressExercise(exercise.exercise_id)}
               onCompleteSet={() => onCompleteSet(exercise.exercise_id)}
               onSkip={() => onSkipExercise(exercise.exercise_id)}
+              onPressCompletedSet={(setIndex) =>
+                onPressCompletedSet(exercise.exercise_id, setIndex)
+              }
             />
           );
         })}

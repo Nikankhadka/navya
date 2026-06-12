@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Vibration } from 'react-native';
 import type { WorkoutSession, SessionExercise, CompletedSet } from '@/types/app';
 
 interface WorkoutStore {
@@ -13,11 +14,13 @@ interface WorkoutStore {
   restPausedRemaining: number | null;
   restExerciseName: string | null;
   nextExerciseName: string | null;
+  restRemaining: number;
 
   // Actions
   startSession: (session: WorkoutSession) => void;
   endSession: () => void;
   logSet: (exerciseId: string, set: CompletedSet, restSeconds: number) => void;
+  editSet: (exerciseId: string, setIndex: number, set: CompletedSet) => void;
   skipExercise: (exerciseId: string) => void;
   tickTimer: () => void;
   setTimerActive: (active: boolean) => void;
@@ -33,7 +36,11 @@ interface WorkoutStore {
   // Helpers
   computeRestRemaining: () => number;
   computeNextExerciseName: (exerciseId: string) => string | null;
+  startRestPolling: () => void;
+  stopRestPolling: () => void;
 }
+
+let restPollingInterval: ReturnType<typeof setInterval> | null = null;
 
 export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   activeSession: null,
@@ -46,6 +53,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   restPausedRemaining: null,
   restExerciseName: null,
   nextExerciseName: null,
+  restRemaining: 0,
 
   startSession: (session) => set({ activeSession: session, elapsedSeconds: 0, timerActive: true }),
 
@@ -61,6 +69,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         : null,
       timerActive: false,
       restActive: false,
+      restRemaining: 0,
       restEndTimestamp: null,
       restPausedRemaining: null,
     })),
@@ -85,11 +94,34 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         restEndTimestamp,
         restDuration: restSeconds,
         restActive: true,
+        restRemaining: restSeconds,
         restPausedRemaining: null,
         restExerciseName:
           state.activeSession.session_exercises.find((e) => e.exercise_id === exerciseId)
             ?.exercise_name ?? null,
         nextExerciseName: nextName,
+      };
+    }),
+
+  editSet: (exerciseId, setIndex, completedSet) =>
+    set((state) => {
+      if (!state.activeSession) return state;
+      return {
+        activeSession: {
+          ...state.activeSession,
+          session_exercises: state.activeSession.session_exercises.map(
+            (ex): SessionExercise =>
+              ex.exercise_id === exerciseId
+                ? {
+                    ...ex,
+                    completed_sets: ex.completed_sets.map(
+                      (s, i): CompletedSet =>
+                        i === setIndex ? { ...completedSet, set_number: s.set_number } : s,
+                    ),
+                  }
+                : ex,
+          ),
+        },
       };
     }),
 
@@ -117,6 +149,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
       elapsedSeconds: 0,
       timerActive: false,
       restEndTimestamp: null,
+      restRemaining: 0,
       restDuration: 0,
       restActive: false,
       restPausedRemaining: null,
@@ -146,6 +179,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   skipRest: () =>
     set({
       restActive: false,
+      restRemaining: 0,
       restEndTimestamp: null,
       restPausedRemaining: null,
       restExerciseName: null,
@@ -166,12 +200,13 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
       if (remaining <= 0) {
         return {
           restActive: false,
+          restRemaining: 0,
           restEndTimestamp: null,
           restExerciseName: null,
           nextExerciseName: null,
         };
       }
-      return state;
+      return { restRemaining: remaining };
     }),
 
   computeRestRemaining: () => {
@@ -196,5 +231,48 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
       if (!isDone) return ex.exercise_name;
     }
     return null;
+  },
+
+  startRestPolling: () => {
+    if (restPollingInterval) return;
+    let hasVibrated = false;
+    restPollingInterval = setInterval(() => {
+      const state = get();
+      if (!state.restActive) {
+        if (restPollingInterval) {
+          clearInterval(restPollingInterval);
+          restPollingInterval = null;
+        }
+        return;
+      }
+      if (state.restEndTimestamp) {
+        const remaining = Math.max(0, Math.ceil((state.restEndTimestamp - Date.now()) / 1000));
+        set({ restRemaining: remaining });
+        if (remaining <= 0) {
+          if (!hasVibrated) {
+            hasVibrated = true;
+            Vibration.vibrate(500);
+          }
+          set({
+            restActive: false,
+            restRemaining: 0,
+            restEndTimestamp: null,
+            restExerciseName: null,
+            nextExerciseName: null,
+          });
+          if (restPollingInterval) {
+            clearInterval(restPollingInterval);
+            restPollingInterval = null;
+          }
+        }
+      }
+    }, 200);
+  },
+
+  stopRestPolling: () => {
+    if (restPollingInterval) {
+      clearInterval(restPollingInterval);
+      restPollingInterval = null;
+    }
   },
 }));

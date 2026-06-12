@@ -56,26 +56,28 @@ export default function WorkoutScreen() {
     endSession,
     skipExercise,
     logSet,
+    editSet,
     tickTimer,
     pauseRest,
     resumeRest,
     skipRest,
     extendRest,
     syncRestTimer,
+    restRemaining,
+    startRestPolling,
+    stopRestPolling,
   } = useWorkoutStore();
 
   const [tab, setTab] = useState<'today' | 'plan'>('today');
   const [selectedPlanDay, setSelectedPlanDay] = useState<WorkoutPlanDay | null>(null);
   const [sheetExercise, setSheetExercise] = useState<SessionExercise | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [restRemaining, setRestRemaining] = useState(0);
-  const [isRestPaused, setIsRestPaused] = useState(false);
+  const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null);
   const selectedSession = selectedSessionId
     ? (workoutHistory?.recent_sessions?.find((s) => s.id === selectedSessionId) ?? null)
     : null;
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const restTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const appStateRef = useRef<AppStateStatus>('active');
   const todayDayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
     .format(new Date())
@@ -98,34 +100,17 @@ export default function WorkoutScreen() {
     };
   }, [timerActive, tickTimer]);
 
-  // Rest timer polling (every 200ms for smooth countdown)
+  // Rest timer polling via global store interval (survives tab switches)
   useEffect(() => {
     if (restActive) {
-      restTimerRef.current = setInterval(() => {
-        const store = useWorkoutStore.getState();
-        if (store.restEndTimestamp) {
-          const remaining = Math.max(0, Math.ceil((store.restEndTimestamp - Date.now()) / 1000));
-          setRestRemaining(remaining);
-          if (remaining <= 0) {
-            store.skipRest();
-          }
-        } else {
-          setRestRemaining(store.restPausedRemaining ?? 0);
-        }
-      }, 200);
+      startRestPolling();
     } else {
-      if (restTimerRef.current) clearInterval(restTimerRef.current);
-      setRestRemaining(0);
+      stopRestPolling();
     }
     return () => {
-      if (restTimerRef.current) clearInterval(restTimerRef.current);
+      stopRestPolling();
     };
-  }, [restActive]);
-
-  // Sync isRestPaused from store
-  useEffect(() => {
-    setIsRestPaused(restActive && restPausedRemaining !== null);
-  }, [restActive, restPausedRemaining]);
+  }, [restActive, startRestPolling, stopRestPolling]);
 
   // AppState listener — sync rest timer on foreground
   useEffect(() => {
@@ -156,7 +141,23 @@ export default function WorkoutScreen() {
     if (!exercise || exercise.is_skipped) return;
     const isDone = exercise.completed_sets.length >= exercise.planned_sets;
     if (isDone) return;
+    setEditingSetIndex(null);
     setSheetExercise(exercise);
+  };
+
+  const handlePressCompletedSet = (exerciseId: string, setIndex: number) => {
+    if (!activeSession) return;
+    const exercise = activeSession.session_exercises.find((e) => e.exercise_id === exerciseId);
+    if (!exercise) return;
+    setEditingSetIndex(setIndex);
+    setSheetExercise(exercise);
+  };
+
+  const handleEditSet = (setIndex: number, set: CompletedSet) => {
+    if (!sheetExercise) return;
+    editSet(sheetExercise.exercise_id, setIndex, set);
+    setSheetExercise(null);
+    setEditingSetIndex(null);
   };
 
   const handleQuickLogSet = useCallback(
@@ -192,6 +193,7 @@ export default function WorkoutScreen() {
     const restSeconds = planEx?.rest_seconds ?? 90;
     logSet(sheetExercise.exercise_id, set, restSeconds);
     setSheetExercise(null);
+    setEditingSetIndex(null);
   };
 
   const handleFinishWorkout = () => {
@@ -289,10 +291,11 @@ export default function WorkoutScreen() {
                 restDuration={restDuration}
                 restExerciseName={restExerciseName}
                 nextExerciseName={nextExerciseName}
-                isRestPaused={isRestPaused}
+                isRestPaused={restActive && restPausedRemaining !== null}
                 onCompleteSet={handleQuickLogSet}
                 onSkipExercise={skipExercise}
                 onPressExercise={handlePressExercise}
+                onPressCompletedSet={handlePressCompletedSet}
                 onPauseRest={pauseRest}
                 onResumeRest={resumeRest}
                 onSkipRest={skipRest}
@@ -419,8 +422,13 @@ export default function WorkoutScreen() {
         }
         previousWeight={prevWeight}
         previousReps={prevReps}
+        editingSetIndex={editingSetIndex}
         onLogSet={handleLogSet}
-        onClose={() => setSheetExercise(null)}
+        onEditSet={handleEditSet}
+        onClose={() => {
+          setSheetExercise(null);
+          setEditingSetIndex(null);
+        }}
       />
     </View>
   );

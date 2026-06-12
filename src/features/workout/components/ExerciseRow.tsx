@@ -8,6 +8,7 @@ interface ExerciseRowProps {
   onPressExercise: () => void;
   onCompleteSet: () => void;
   onSkip: () => void;
+  onPressCompletedSet?: (setIndex: number) => void;
   restActive: boolean;
 }
 
@@ -17,6 +18,7 @@ export function ExerciseRow({
   onPressExercise,
   onCompleteSet,
   onSkip,
+  onPressCompletedSet,
   restActive,
 }: ExerciseRowProps) {
   const { colors } = useAppTheme();
@@ -24,13 +26,10 @@ export function ExerciseRow({
   const isDone = exercise.completed_sets.length >= exercise.planned_sets;
   const isSkipped = exercise.is_skipped;
 
-  const completedSetSummary = exercise.completed_sets
-    .map((s) => {
-      const w = s.weight_kg ? `${s.weight_kg}kg` : '';
-      const r = `${s.reps_completed}`;
-      return w ? `${w} × ${r}` : r;
-    })
-    .join(', ');
+  const totalVolume = exercise.completed_sets.reduce(
+    (sum, s) => sum + (s.weight_kg ?? 0) * s.reps_completed,
+    0,
+  );
 
   return (
     <View
@@ -67,10 +66,27 @@ export function ExerciseRow({
           <Text style={styles.exerciseMeta}>
             {exercise.planned_sets} sets × {exercise.planned_reps}
           </Text>
-          {completedSetSummary ? (
-            <Text style={styles.completedSets} numberOfLines={1}>
-              {completedSetSummary}
-            </Text>
+          {exercise.completed_sets.length > 0 ? (
+            <View style={styles.completedSetsRow}>
+              {exercise.completed_sets.map((s, idx) => {
+                const w = s.weight_kg ? `${s.weight_kg}kg` : '';
+                const r = `${s.reps_completed}`;
+                const label = w ? `${w} × ${r}` : r;
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.setChip}
+                    onPress={() => onPressCompletedSet?.(idx)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.setChipText}>{label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : null}
+          {exercise.completed_sets.length > 0 && totalVolume > 0 ? (
+            <Text style={styles.volumeText}>{totalVolume.toLocaleString()} kg · total</Text>
           ) : null}
           {isActive && !isDone && !restActive ? (
             <Text style={styles.setProgress}>
@@ -175,9 +191,28 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.sm,
       marginTop: 2,
     },
-    completedSets: {
+    completedSetsRow: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      gap: 4,
+      marginTop: 4,
+    },
+    setChip: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: Radius.sm,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    setChipText: {
       color: colors.textSecondary,
-      fontSize: Typography.size.xs,
+      fontSize: 10,
+      fontWeight: Typography.weight.semibold,
+    },
+    volumeText: {
+      color: colors.dim,
+      fontSize: 9,
       marginTop: 3,
     },
     setProgress: {
