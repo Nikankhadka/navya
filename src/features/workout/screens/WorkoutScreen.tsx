@@ -18,6 +18,7 @@ import {
   SessionCompleteCard,
   WorkoutStats,
   SetLoggingSheet,
+  SessionDetailModal,
 } from '@/features/workout/components';
 import { formatDuration, sessionProgress } from '@/utils/helpers';
 import { crossAlert } from '@/utils/crossAlert';
@@ -66,8 +67,12 @@ export default function WorkoutScreen() {
   const [tab, setTab] = useState<'today' | 'plan'>('today');
   const [selectedPlanDay, setSelectedPlanDay] = useState<WorkoutPlanDay | null>(null);
   const [sheetExercise, setSheetExercise] = useState<SessionExercise | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [restRemaining, setRestRemaining] = useState(0);
   const [isRestPaused, setIsRestPaused] = useState(false);
+  const selectedSession = selectedSessionId
+    ? (workoutHistory?.recent_sessions?.find((s) => s.id === selectedSessionId) ?? null)
+    : null;
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const restTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -378,9 +383,19 @@ export default function WorkoutScreen() {
           </>
         )}
 
-        <WorkoutStats workoutHistory={workoutHistory} weeklyTarget={weeklyTarget} />
+        <WorkoutStats
+          workoutHistory={workoutHistory}
+          weeklyTarget={weeklyTarget}
+          onSessionPress={setSelectedSessionId}
+        />
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <SessionDetailModal
+        visible={selectedSessionId !== null}
+        session={selectedSession}
+        onClose={() => setSelectedSessionId(null)}
+      />
 
       <PlanDayModal
         visible={Boolean(planDayDetail)}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { Card } from '@/components/ui';
 import { formatDuration } from '@/utils/helpers';
@@ -8,9 +8,10 @@ import type { WorkoutHistorySummary } from '@/types/app';
 export interface WorkoutStatsProps {
   workoutHistory: WorkoutHistorySummary | undefined;
   weeklyTarget: number;
+  onSessionPress?: (sessionId: string) => void;
 }
 
-export function WorkoutStats({ workoutHistory, weeklyTarget }: WorkoutStatsProps) {
+export function WorkoutStats({ workoutHistory, weeklyTarget, onSessionPress }: WorkoutStatsProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
 
@@ -33,7 +34,12 @@ export function WorkoutStats({ workoutHistory, weeklyTarget }: WorkoutStatsProps
       {workoutHistory?.recent_sessions.length ? (
         <View style={styles.historyList}>
           {workoutHistory.recent_sessions.slice(0, 3).map((session) => (
-            <View key={session.id} style={styles.historyRow}>
+            <TouchableOpacity
+              key={session.id}
+              style={styles.historyRow}
+              onPress={() => onSessionPress?.(session.id)}
+              activeOpacity={0.7}
+            >
               <View style={styles.historyRowText}>
                 <Text style={styles.historyDay}>{session.day_name}</Text>
                 <Text style={styles.historyMeta}>
@@ -59,8 +65,9 @@ export function WorkoutStats({ workoutHistory, weeklyTarget }: WorkoutStatsProps
                     ? formatDuration(session.duration_seconds)
                     : 'Tracked'}
                 </Text>
+                <Text style={[styles.tapHint, { color: colors.accent }]}>Tap for details</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       ) : (
@@ -79,10 +86,10 @@ const createStyles = (colors: ThemeColors) =>
       gap: Spacing.lg,
     },
     historySummaryHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
       gap: Spacing.md,
-      alignItems: 'flex-start',
+      alignItems: 'flex-start' as const,
     },
     historySummaryTitle: {
       color: colors.text,
@@ -99,7 +106,7 @@ const createStyles = (colors: ThemeColors) =>
       borderRadius: Radius.lg,
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm,
-      alignItems: 'center',
+      alignItems: 'center' as const,
       borderWidth: 1,
       borderColor: `${colors.accent}55`,
     },
@@ -117,9 +124,9 @@ const createStyles = (colors: ThemeColors) =>
       gap: Spacing.sm,
     },
     historyRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'center' as const,
       borderTopWidth: 1,
       borderTopColor: colors.border,
       paddingTop: Spacing.sm,
@@ -138,7 +145,7 @@ const createStyles = (colors: ThemeColors) =>
       marginTop: 2,
     },
     historyRowStats: {
-      alignItems: 'flex-end',
+      alignItems: 'flex-end' as const,
       gap: 2,
     },
     historyStatPrimary: {
@@ -149,6 +156,10 @@ const createStyles = (colors: ThemeColors) =>
     historyStatSecondary: {
       color: colors.dim,
       fontSize: Typography.size.xs,
+    },
+    tapHint: {
+      fontSize: 9,
+      fontWeight: Typography.weight.semibold,
     },
     historyEmptyText: {
       color: colors.muted,

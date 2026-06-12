@@ -71,3 +71,7 @@ export function sessionProgress(session: {
   ).length;
   return Math.round((done / total) * 100);
 }
+
+export function formatWeight(weightKg: number): string {
+  return `${weightKg} kg`;
+}
