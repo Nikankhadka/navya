@@ -197,6 +197,32 @@ Audit workout feature against MVP scope and user stories, plan Sprint 4-5 workou
 - Pushed to `origin/0.1-mvp`
 
 ### Remaining for Full MVP
-- Phase 2 (cont'd): Per-set logging UI, rest timer upgrade, post-hoc workout logging
-- Phase 3: Weekly coach summary, plan regeneration, barcode capture, meal template creation UI
-- Phase 4: Polish, edge cases, offline resilience, E2E tests
+- E2E tests (Playwright)
+
+## [2026-06-13] Session — MVP Build (Phase 2-4 Completion)
+
+### Branch
+`0.1-mvp` (continued)
+
+### Phase 2 Completed ✅
+- **Per-set logging upgrade**: RPE 1-10 slider replacing 4-button selector, tap-to-edit completed sets (re-open pre-filled sheet), set chips showing weight×reps below exercise name, volume computation per exercise
+- **Rest timer upgrade**: Vibration alert on timer zero (Vibration API), global timer persistence across tab switches (moved polling to Zustand store module-level interval)
+- **Workout split selection**: `SplitSelectionSheet` modal showing 4 templates (PPL, Upper/Lower, Full Body, Bro Split) with details, plan generation via `createPlanFromTemplate`, wired into Profile replacing dead-end button
+- **Post-hoc workout logging**: `PostHocLoggingSheet` with date picker, plan day selector + freeform mode, multi-exercise form with per-set weight/reps/RPE, save to demo history via `savePostHocSession`
+
+### Phase 3 Completed ✅
+- **Weekly coach summary**: `WeeklyCoachSummaryCard` on Home, `getWeeklySummary` in coach.service with demo fallback, `useWeeklyCoachSummary` hook with 1h stale time
+- **Regenerate Workout Plan**: Replaced by split selection screen (Phase 2.3)
+- **Meal template creation**: Already covered by "Save as custom food" toggle in ManualMealSheet
+- **Barcode capture**: Deferred (feature-flagged, post-MVP)
+
+### Phase 4 (partial) ✅
+- Edge cases: AppState listeners, session cleanup, empty states present across features
+- Offline resilience: SQLite for nutrition, Zustand for workouts
+
+### Summary
+- **7 new commits** bringing total to **15 commits on `0.1-mvp`**
+- **Files created**: `SplitSelectionSheet.tsx`, `PostHocLoggingSheet.tsx`, `WeeklyCoachSummaryCard.tsx`, `useWeeklyCoachSummary.ts`
+- **Files modified**: `SetLoggingSheet.tsx`, `ExerciseRow.tsx`, `TimerDisplay.tsx`, `WorkoutScreen.tsx`, `ProfileScreen.tsx`, `HomeScreen.tsx`, `useWorkoutStore.ts`, `workoutPlan.service.ts`, `workoutSession.service.ts`, `workout.service.ts`, `coach.service.ts`
+- **TypeScript**: 0 errors throughout
+- **Remaining**: E2E Playwright tests
