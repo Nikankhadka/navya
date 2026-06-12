@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, ScrollView, Animated } from 'react-native';
+import { View, Text, ScrollView, Animated, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
@@ -24,6 +24,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
+  const onboardingComplete = user?.onboarding_complete;
   const userId = user?.id;
   const { selectedDate, setSelectedDate, resetToToday } = useDateStore();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -91,6 +92,28 @@ export default function HomeScreen() {
         onResetToday={resetToToday}
         colors={colors}
       />
+
+      {!onboardingComplete && (
+        <Animated.View style={[styles.onboardingBanner, { opacity: fadeAnim }]}>
+          <View style={styles.onboardingBannerContent}>
+            <Text style={[styles.onboardingBannerTitle, { color: colors.text }]}>
+              Complete your profile setup
+            </Text>
+            <Text style={[styles.onboardingBannerText, { color: colors.muted }]}>
+              Finish setting up your fitness profile to unlock personalized recommendations and
+              workout plans.
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => router.replace('/(onboarding)/welcome')}
+            style={[styles.onboardingBannerButton, { backgroundColor: colors.accent }]}
+            activeOpacity={0.8}
+            testID="complete-onboarding-banner"
+          >
+            <Text style={styles.onboardingBannerButtonText}>Continue Setup</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
 
       <Animated.View style={[styles.weekRow, { opacity: fadeAnim }]}>
         {weeklyActivity.map((done, i) => (
@@ -193,4 +216,35 @@ const createStyles = (colors: ThemeColors) =>
     weekDotEmpty: { backgroundColor: 'transparent' },
     weekCheck: { fontSize: 12 },
     weekLabel: { fontSize: 10 },
+    onboardingBanner: {
+      backgroundColor: 'rgba(255,255,255,0.06)',
+      borderRadius: Radius.lg,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.1)',
+      padding: Spacing.lg,
+      marginBottom: Spacing.xl,
+      gap: Spacing.md,
+    },
+    onboardingBannerContent: {
+      gap: 4,
+    },
+    onboardingBannerTitle: {
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    onboardingBannerText: {
+      fontSize: Typography.size.sm,
+      lineHeight: 18,
+    },
+    onboardingBannerButton: {
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: Spacing.sm,
+      borderRadius: Radius.md,
+      alignSelf: 'flex-start',
+    },
+    onboardingBannerButtonText: {
+      color: '#FFFFFF',
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
   }) as const;

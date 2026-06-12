@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import type { UserProfile } from '@/types/app';
 import { MOCK_PROFILE } from '@/features/demo/mockData';
+import { logger } from '@/lib/logger';
 
 function shouldUseDemoProfile(userId: string): boolean {
   return userId === MOCK_PROFILE.id || !isSupabaseConfigured;
@@ -26,7 +27,7 @@ export const profileService = {
         // Record not found
         return null;
       }
-      console.error('Error fetching profile:', error);
+      logger.error('Error fetching profile', error);
       throw error;
     }
 
@@ -41,18 +42,14 @@ export const profileService = {
       return;
     }
 
-    const { error } = await supabase
-      .from('user_profiles')
-      .upsert(
-        {
-          id: userId,
-          ...profile,
-          updated_at: new Date().toISOString(),
-        } as unknown as never
-      );
+    const { error } = await supabase.from('user_profiles').upsert({
+      id: userId,
+      ...profile,
+      updated_at: new Date().toISOString(),
+    } as unknown as never);
 
     if (error) {
-      console.error('Error upserting profile:', error);
+      logger.error('Error upserting profile', error);
       throw error;
     }
   },

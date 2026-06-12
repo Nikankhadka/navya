@@ -65,20 +65,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    const profile = await profileService.getProfile(session.user.id);
+    set({ isProfileReady: false });
 
-    if (profile) {
-      set({ user: { ...profile, email: session.user.email, id: session.user.id } });
-      return;
+    try {
+      const profile = await profileService.getProfile(session.user.id);
+
+      if (profile) {
+        set({ user: { ...profile, email: session.user.email, id: session.user.id } });
+        return;
+      }
+
+      set({
+        user: {
+          id: session.user.id,
+          email: session.user.email,
+          onboarding_complete: false,
+        },
+      });
+    } finally {
+      set({ isProfileReady: true });
     }
-
-    set({
-      user: {
-        id: session.user.id,
-        email: session.user.email,
-        onboarding_complete: false,
-      },
-    });
   },
 
   initializeAuth: async () => {

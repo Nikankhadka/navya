@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { profileService } from '@/features/profile/api/profile.service';
 import { workoutService } from '@/features/workout/api/workout.service';
 import { Image } from 'expo-image';
+import { logger } from '@/lib/logger';
 import { Colors, Radius, Spacing, Typography, useAppTheme } from '@/theme';
 
 export default function CompleteScreen() {
@@ -33,7 +34,7 @@ export default function CompleteScreen() {
         // immediately usable. Failure is non-blocking — profile saves
         // regardless of plan creation.
         workoutService.createDefaultPlan(session.user.id).catch((planErr) => {
-          console.error('Failed to create default workout plan:', planErr);
+          logger.error('Failed to create default workout plan', planErr);
         });
 
         // Update local auth store so layout redirects to tabs
@@ -47,7 +48,7 @@ export default function CompleteScreen() {
           router.replace('/(tabs)');
         }, 2000);
       } catch (err) {
-        console.error('Failed to save onboarding:', err);
+        logger.error('Failed to save onboarding', err);
         setStatus('error');
         setError('Something went wrong while building your plan. Please try again.');
       }

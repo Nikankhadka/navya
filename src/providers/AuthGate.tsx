@@ -1,16 +1,16 @@
-import { useEffect } from 'react';
-import { useRouter, useSegments } from 'expo-router';
+import { useEffect, type PropsWithChildren } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { useRouter, useSegments } from 'expo-router';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useAppTheme } from '@/theme';
 
-export function AuthGate() {
+export function AuthGate({ children }: PropsWithChildren) {
   const { colors } = useAppTheme();
-  const initializeAuth = useAuthStore((state) => state.initializeAuth);
-  const isInitialized = useAuthStore((state) => state.isInitialized);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const isProfileReady = useAuthStore((state) => state.isProfileReady);
-  const onboardingComplete = useAuthStore((state) => state.user?.onboarding_complete);
+  const initializeAuth = useAuthStore((s) => s.initializeAuth);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
+  const isProfileReady = useAuthStore((s) => s.isProfileReady);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const onboardingComplete = useAuthStore((s) => s.user?.onboarding_complete);
   const segments = useSegments();
   const router = useRouter();
 
@@ -19,13 +19,7 @@ export function AuthGate() {
   }, [initializeAuth]);
 
   useEffect(() => {
-    if (!isInitialized) {
-      return;
-    }
-
-    if (!isProfileReady) {
-      return;
-    }
+    if (!isInitialized || !isProfileReady) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
@@ -35,16 +29,14 @@ export function AuthGate() {
       return;
     }
 
-    if (!isAuthenticated) {
-      return;
-    }
+    if (!isAuthenticated) return;
 
     if (!onboardingComplete && !inOnboardingGroup) {
       router.replace('/(onboarding)/welcome');
       return;
     }
 
-    if ((onboardingComplete || inOnboardingGroup) && inAuthGroup) {
+    if (onboardingComplete && inAuthGroup) {
       router.replace('/(tabs)');
       return;
     }
@@ -54,20 +46,20 @@ export function AuthGate() {
     }
   }, [isAuthenticated, isInitialized, isProfileReady, onboardingComplete, router, segments]);
 
-  if (isInitialized) {
-    return null;
+  if (!isInitialized) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.text} />
+      </View>
+    );
   }
 
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: colors.background,
-      }}
-    >
-      <ActivityIndicator size="large" color={colors.text} />
-    </View>
-  );
+  return <>{children}</>;
 }

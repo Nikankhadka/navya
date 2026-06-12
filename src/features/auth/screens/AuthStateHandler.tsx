@@ -1,6 +1,6 @@
 import { ActivityIndicator, Text, View } from 'react-native';
-import { Alert, Button } from '@/components/ui';
-import { Spacing, Typography, type ThemeColors } from '@/theme';
+import { Alert } from '@/components/ui';
+import { Spacing, type ThemeColors } from '@/theme';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,37 +18,28 @@ export interface AuthStateHandlerProps {
   loading: boolean;
   /** Current alert state (null when no alert should show) */
   alertState: AlertData | null;
-  /** Countdown seconds until auto-redirect (displayed in success state) */
-  countdown: number;
   /** Theme colors for styling */
   colors: ThemeColors;
   /** Called when the alert's open state changes */
   onAlertOpenChange: (open: boolean) => void;
-  /** Called when the user presses "Continue" in the success state */
-  onContinue: () => void;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
 
 /**
- * Renders the loading, error, and success states for the auth callback flow.
- * Pure presentational component — all logic lives in AuthCallbackScreen.
+ * Renders the loading and alert states for the auth callback flow.
+ * AuthGate handles routing — this component only shows feedback.
  */
 export function AuthStateHandler({
   loading,
   alertState,
-  countdown,
   colors,
   onAlertOpenChange,
-  onContinue,
 }: AuthStateHandlerProps) {
-  const styles = createStyles(colors);
-
   return (
     <>
-      {/* Loading state */}
       {loading && (
-        <View style={styles.loadingContainer}>
+        <View style={loadingStyles}>
           <ActivityIndicator size="large" color={colors.text} />
           <Text
             style={{
@@ -63,7 +54,6 @@ export function AuthStateHandler({
         </View>
       )}
 
-      {/* Error / success alert */}
       {alertState && (
         <Alert
           open={alertState.open}
@@ -75,53 +65,14 @@ export function AuthStateHandler({
           cancel={alertState.cancel}
         />
       )}
-
-      {/* Success state (after alert dismissed) */}
-      {!loading && alertState?.variant === 'default' && !alertState.open && (
-        <View style={styles.buttonContainer}>
-          <Text style={styles.continueTitle}>Sign-in complete</Text>
-          <Button
-            label="Continue to Profile"
-            onPress={onContinue}
-            fullWidth
-            style={styles.button}
-          />
-          <Text style={styles.redirectNotice}>Redirecting in {countdown}s...</Text>
-        </View>
-      )}
     </>
   );
 }
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
-const createStyles = (colors: ThemeColors) =>
-  ({
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center' as const,
-      alignItems: 'center' as const,
-    },
-    buttonContainer: {
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      gap: Spacing.md,
-      paddingHorizontal: Spacing.xl,
-      paddingBottom: Spacing.xxl,
-    },
-    continueTitle: {
-      color: colors.text,
-      fontSize: 20,
-      fontWeight: Typography.weight.bold,
-      textAlign: 'center' as const,
-      marginBottom: Spacing.md,
-    },
-    button: {
-      width: '100%' as const,
-    },
-    redirectNotice: {
-      color: colors.muted,
-      fontSize: 12,
-      textAlign: 'center' as const,
-    },
-  }) as const;
+const loadingStyles = {
+  flex: 1,
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const,
+};

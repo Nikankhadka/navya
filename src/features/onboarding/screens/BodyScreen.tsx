@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
 import type { ExperienceLevel } from '@/types/app';
@@ -14,11 +15,16 @@ const EXPERIENCE_LEVELS: { id: ExperienceLevel; label: string }[] = [
 ];
 
 export default function BodyScreen() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const { colors } = useAppTheme();
   const { weight_kg, height_cm, experience_level, setField } = useOnboardingStore();
   const [weightFocused, setWeightFocused] = useState(false);
   const [heightFocused, setHeightFocused] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const isComplete = !!weight_kg && !!height_cm && !!experience_level;
 

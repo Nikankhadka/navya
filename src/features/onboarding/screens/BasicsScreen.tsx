@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
 
@@ -24,10 +25,15 @@ type GenderId = (typeof GENDERS)[number]['id'];
 type CountryId = (typeof COUNTRIES)[number]['id'];
 
 export default function BasicsScreen() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const { colors } = useAppTheme();
   const { full_name, glow_focus, country, age_range, gender, setField } = useOnboardingStore();
   const [nameFocused, setNameFocused] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const isComplete =
     (full_name?.trim()?.length ?? 0) > 0 && !!glow_focus && !!country && !!age_range && !!gender;

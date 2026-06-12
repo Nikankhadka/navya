@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
 import type { GoalType } from '@/types/app';
@@ -41,9 +42,14 @@ const GOALS: { id: GoalType; label: string; icon: string; description: string }[
 ];
 
 export default function GoalScreen() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const { colors } = useAppTheme();
   const { goal, setField } = useOnboardingStore();
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>

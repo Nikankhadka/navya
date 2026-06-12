@@ -10,7 +10,7 @@ import { logger } from '@/lib/logger';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AuthStateHandler, type AlertData } from '@/features/auth/screens/AuthStateHandler';
 
-// ── Styles (container only — sub-component styles live in AuthStateHandler) ───
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const createStyles = (colors: ThemeColors) =>
   ({
@@ -29,29 +29,9 @@ export default function AuthCallbackScreen() {
   const incomingUrl = Linking.useURL();
   const refreshProfile = useAuthStore((state) => state.refreshProfile);
   const hasHandledUrlRef = useRef<string | null>(null);
-  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [alertState, setAlertState] = useState<AlertData | null>(null);
-  const [countdown, setCountdown] = useState(4);
-
-  const cleanup = useCallback(() => {
-    if (redirectTimerRef.current) {
-      clearTimeout(redirectTimerRef.current);
-      redirectTimerRef.current = null;
-    }
-  }, []);
-
-  const scheduleRedirect = useCallback(
-    (destination: '/(tabs)' | '/(onboarding)/welcome', seconds: number) => {
-      cleanup();
-      setCountdown(seconds);
-      redirectTimerRef.current = setTimeout(() => {
-        router.replace(destination);
-      }, seconds * 1000);
-    },
-    [cleanup, router],
-  );
 
   const handleAuthSuccess = useCallback(
     async (session: Session) => {
@@ -67,29 +47,16 @@ export default function AuthCallbackScreen() {
 
       await refreshProfile();
 
-      const onboardingComplete = useAuthStore.getState().user?.onboarding_complete;
-
       setAlertState({
         open: true,
         title: 'Signed in successfully',
-        message: onboardingComplete
-          ? 'Redirecting to your dashboard...'
-          : 'Account ready. Setting up your profile...',
+        message: 'You are signed in. Redirecting...',
         variant: 'default',
-        action: {
-          label: 'Continue',
-          onPress: () => {
-            cleanup();
-            router.replace(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome');
-          },
-        },
       });
 
       setLoading(false);
-
-      scheduleRedirect(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome', 4);
     },
-    [cleanup, refreshProfile, scheduleRedirect, router],
+    [refreshProfile],
   );
 
   const handleCallback = useCallback(async () => {
@@ -98,7 +65,6 @@ export default function AuthCallbackScreen() {
     if (hasHandledUrlRef.current === url) return;
     hasHandledUrlRef.current = url;
 
-    cleanup();
     setLoading(true);
 
     const authCallbackError = getAuthCallbackError(url);
@@ -176,7 +142,7 @@ export default function AuthCallbackScreen() {
       });
       setLoading(false);
     }
-  }, [incomingUrl, cleanup, handleAuthSuccess, router]);
+  }, [incomingUrl, handleAuthSuccess, router]);
 
   useEffect(() => {
     if (incomingUrl) {
@@ -194,7 +160,6 @@ export default function AuthCallbackScreen() {
       if (cancelled || !data.session?.user?.id) return;
 
       hasHandledUrlRef.current = 'auto-detected';
-      cleanup();
       await handleAuthSuccess(data.session);
     }
 
@@ -229,26 +194,12 @@ export default function AuthCallbackScreen() {
     }
   }, [incomingUrl, loading, router]);
 
-  useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
-
   function handleAlertOpenChange(open: boolean) {
     if (!open && alertState) {
-      cleanup();
       if (alertState.variant === 'destructive') {
         router.replace('/(auth)/login');
-      } else {
-        const isAuthenticated = useAuthStore.getState().isAuthenticated;
-        router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
       }
     }
-  }
-
-  function handleContinue() {
-    cleanup();
-    const isAuthenticated = useAuthStore.getState().isAuthenticated;
-    router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -260,10 +211,8 @@ export default function AuthCallbackScreen() {
       <AuthStateHandler
         loading={loading}
         alertState={alertState}
-        countdown={countdown}
         colors={colors}
         onAlertOpenChange={handleAlertOpenChange}
-        onContinue={handleContinue}
       />
     </View>
   );

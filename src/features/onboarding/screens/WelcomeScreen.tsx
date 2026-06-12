@@ -1,13 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Radius, Shadow, Spacing, Typography, useAppTheme, Colors } from '@/theme';
 
 export default function WelcomeScreen() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const { colors } = useAppTheme();
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   return (
     <LinearGradient colors={Colors.gradientDark} style={{ flex: 1 }}>

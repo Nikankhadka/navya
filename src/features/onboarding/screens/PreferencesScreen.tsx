@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { Image } from 'expo-image';
 import { Radius, Spacing, Typography, useAppTheme, Colors } from '@/theme';
@@ -34,10 +35,15 @@ const EQUIPMENT: { id: EquipmentType; label: string }[] = [
 ];
 
 export default function PreferencesScreen() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const router = useRouter();
   const { colors } = useAppTheme();
   const { activity_level, diet_preference, equipment, workouts_per_week, setField } =
     useOnboardingStore();
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const toggleEquipment = (id: EquipmentType) => {
     const current = equipment || [];
