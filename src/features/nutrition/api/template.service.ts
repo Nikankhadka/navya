@@ -6,6 +6,7 @@ import type {
   CreateFoodLogInput,
 } from '@/types/app';
 import { MOCK_MEAL_TEMPLATES } from '@/features/demo/mockNutrition';
+import { MOCK_PROFILE } from '@/features/demo/mockProfile';
 
 interface RawTemplateRow {
   id: string;
@@ -39,7 +40,7 @@ function mapTemplateRow(row: RawTemplateRow): MealTemplate {
 }
 
 function shouldUseDemoTemplates(userId: string): boolean {
-  return userId === '00000000-0000-0000-0000-000000000000' || !isSupabaseConfigured;
+  return userId === MOCK_PROFILE.id || !isSupabaseConfigured;
 }
 
 export const templateService = {
