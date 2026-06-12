@@ -12,7 +12,7 @@ export function CoachCard({ colors, coachPreview }: CoachCardProps) {
   const router = useRouter();
 
   return (
-    <TouchableOpacity activeOpacity={0.88} onPress={() => router.push('/(tabs)/(coach)')}>
+    <TouchableOpacity activeOpacity={0.88} onPress={() => router.push('/(tabs)/coach')}>
       <View style={[styles.card, { borderColor: `${colors.accent}44` }]}>
         <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
           <Text style={styles.avatarEmoji}>🤖</Text>

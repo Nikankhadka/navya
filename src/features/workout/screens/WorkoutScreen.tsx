@@ -1,5 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  AppState,
+  type AppStateStatus,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useWorkoutStore } from '@/store/useWorkoutStore';
@@ -10,6 +17,7 @@ import {
   TimerDisplay,
   SessionCompleteCard,
   WorkoutStats,
+  SetLoggingSheet,
 } from '@/features/workout/components';
 import { formatDuration, sessionProgress } from '@/utils/helpers';
 import { crossAlert } from '@/utils/crossAlert';
@@ -18,7 +26,7 @@ import { useActivePlan } from '@/features/workout/hooks/useActivePlan';
 import { useTodaySession } from '@/features/workout/hooks/useTodaySession';
 import { useWorkoutHistory } from '@/features/workout/hooks/useWorkoutHistory';
 import { useWorkoutActions } from '@/features/workout/hooks/useWorkoutActions';
-import type { WorkoutPlanDay } from '@/types/app';
+import type { WorkoutPlanDay, SessionExercise, CompletedSet } from '@/types/app';
 import { isVisualTestScenario } from '@/utils/visualTest';
 import { MOCK_PLAN } from '@/features/demo/mockData';
 
@@ -33,19 +41,37 @@ export default function WorkoutScreen() {
   const weeklyTarget = user?.workouts_per_week ?? 3;
   const { data: workoutHistory } = useWorkoutHistory(userId, weeklyTarget);
   const { startSession: startSessionMutation, saveSession } = useWorkoutActions(userId);
+
   const {
     activeSession,
     elapsedSeconds,
     timerActive,
+    restActive,
+    restDuration,
+    restPausedRemaining,
+    restExerciseName,
+    nextExerciseName,
     startSession,
     endSession,
     skipExercise,
-    markExerciseDone,
+    logSet,
     tickTimer,
+    pauseRest,
+    resumeRest,
+    skipRest,
+    extendRest,
+    syncRestTimer,
   } = useWorkoutStore();
+
   const [tab, setTab] = useState<'today' | 'plan'>('today');
   const [selectedPlanDay, setSelectedPlanDay] = useState<WorkoutPlanDay | null>(null);
+  const [sheetExercise, setSheetExercise] = useState<SessionExercise | null>(null);
+  const [restRemaining, setRestRemaining] = useState(0);
+  const [isRestPaused, setIsRestPaused] = useState(false);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const restTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const appStateRef = useRef<AppStateStatus>('active');
   const todayDayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
     .format(new Date())
     .toLowerCase();
@@ -55,7 +81,7 @@ export default function WorkoutScreen() {
   const activeTab = visualPlanDay ? 'plan' : tab;
   const planDayDetail = visualPlanDay ?? selectedPlanDay;
 
-  // Timer
+  // Session elapsed timer
   useEffect(() => {
     if (timerActive) {
       timerRef.current = setInterval(() => tickTimer(), 1000);
@@ -67,31 +93,107 @@ export default function WorkoutScreen() {
     };
   }, [timerActive, tickTimer]);
 
+  // Rest timer polling (every 200ms for smooth countdown)
+  useEffect(() => {
+    if (restActive) {
+      restTimerRef.current = setInterval(() => {
+        const store = useWorkoutStore.getState();
+        if (store.restEndTimestamp) {
+          const remaining = Math.max(0, Math.ceil((store.restEndTimestamp - Date.now()) / 1000));
+          setRestRemaining(remaining);
+          if (remaining <= 0) {
+            store.skipRest();
+          }
+        } else {
+          setRestRemaining(store.restPausedRemaining ?? 0);
+        }
+      }, 200);
+    } else {
+      if (restTimerRef.current) clearInterval(restTimerRef.current);
+      setRestRemaining(0);
+    }
+    return () => {
+      if (restTimerRef.current) clearInterval(restTimerRef.current);
+    };
+  }, [restActive]);
+
+  // Sync isRestPaused from store
+  useEffect(() => {
+    setIsRestPaused(restActive && restPausedRemaining !== null);
+  }, [restActive, restPausedRemaining]);
+
+  // AppState listener — sync rest timer on foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+        syncRestTimer();
+      }
+      if (nextState.match(/inactive|background/)) {
+        if (useWorkoutStore.getState().restActive) {
+          pauseRest();
+        }
+      }
+      appStateRef.current = nextState;
+    });
+    return () => sub.remove();
+  }, [syncRestTimer, pauseRest]);
+
   const handleStartSession = async () => {
     const session = await startSessionMutation.mutateAsync(activePlan ?? null);
-
     if (session) {
       startSession(session);
     }
   };
 
-  const handleCompleteSet = (exerciseId: string) => {
+  const handlePressExercise = (exerciseId: string) => {
     if (!activeSession) return;
-    const ex = activeSession.session_exercises.find((e) => e.exercise_id === exerciseId);
-    if (!ex) return;
-    markExerciseDone(exerciseId, {
-      set_number: ex.completed_sets.length + 1,
-      reps_completed: parseInt(ex.planned_reps.split('-')[0] ?? '8'),
-      weight_kg: null,
-      completed_at: new Date().toISOString(),
-    });
+    const exercise = activeSession.session_exercises.find((e) => e.exercise_id === exerciseId);
+    if (!exercise || exercise.is_skipped) return;
+    const isDone = exercise.completed_sets.length >= exercise.planned_sets;
+    if (isDone) return;
+    setSheetExercise(exercise);
+  };
+
+  const handleQuickLogSet = useCallback(
+    (exerciseId: string) => {
+      if (!activeSession) return;
+      const ex = activeSession.session_exercises.find((e) => e.exercise_id === exerciseId);
+      if (!ex) return;
+      const planEx = activePlan?.workout_plan_days
+        .flatMap((d) => d.plan_exercises)
+        .find((pe) => pe.exercise_id === exerciseId);
+      const restSeconds = planEx?.rest_seconds ?? 90;
+      logSet(
+        exerciseId,
+        {
+          set_number: ex.completed_sets.length + 1,
+          reps_completed: parseInt(ex.planned_reps.split('-')[0] ?? '8', 10),
+          weight_kg: null,
+          rpe: null,
+          rest_seconds: null,
+          completed_at: new Date().toISOString(),
+        },
+        restSeconds,
+      );
+    },
+    [activeSession, activePlan, logSet],
+  );
+
+  const handleLogSet = (set: CompletedSet) => {
+    if (!sheetExercise) return;
+    const planEx = activePlan?.workout_plan_days
+      .flatMap((d) => d.plan_exercises)
+      .find((pe) => pe.exercise_id === sheetExercise.exercise_id);
+    const restSeconds = planEx?.rest_seconds ?? 90;
+    logSet(sheetExercise.exercise_id, set, restSeconds);
+    setSheetExercise(null);
   };
 
   const handleFinishWorkout = () => {
     crossAlert('Finish Workout?', 'Great job! Mark this session as complete.', [
       { text: 'Keep Going', style: 'cancel' },
       {
-        text: 'Finish 🎉',
+        text: 'Finish',
         onPress: async () => {
           endSession();
           const updatedSession = useWorkoutStore.getState().activeSession;
@@ -105,6 +207,29 @@ export default function WorkoutScreen() {
       },
     ]);
   };
+
+  // Get previous session's weight/reps for current sheet exercise
+  const prevWeight =
+    sheetExercise && workoutHistory
+      ? (workoutHistory.recent_sessions
+          .filter((s) => s.status === 'completed')
+          .flatMap((s) => s.session_exercises)
+          .filter((e) => e.exercise_id === sheetExercise.exercise_id)
+          .flatMap((e) => e.completed_sets)
+          .slice(-1)
+          .map((s) => s.weight_kg)[0] ?? null)
+      : null;
+
+  const prevReps =
+    sheetExercise && workoutHistory
+      ? (workoutHistory.recent_sessions
+          .filter((s) => s.status === 'completed')
+          .flatMap((s) => s.session_exercises)
+          .filter((e) => e.exercise_id === sheetExercise.exercise_id)
+          .flatMap((e) => e.completed_sets)
+          .slice(-1)
+          .map((s) => s.reps_completed)[0] ?? null)
+      : null;
 
   const progress = activeSession ? sessionProgress(activeSession) : 0;
   const isComplete = activeSession?.status === 'completed';
@@ -154,8 +279,19 @@ export default function WorkoutScreen() {
               <TimerDisplay
                 activeSession={activeSession}
                 progress={progress}
-                onCompleteSet={handleCompleteSet}
+                restActive={restActive}
+                restRemaining={restRemaining}
+                restDuration={restDuration}
+                restExerciseName={restExerciseName}
+                nextExerciseName={nextExerciseName}
+                isRestPaused={isRestPaused}
+                onCompleteSet={handleQuickLogSet}
                 onSkipExercise={skipExercise}
+                onPressExercise={handlePressExercise}
+                onPauseRest={pauseRest}
+                onResumeRest={resumeRest}
+                onSkipRest={skipRest}
+                onExtendRest={() => extendRest(30)}
               />
             ) : (
               <>
@@ -170,7 +306,7 @@ export default function WorkoutScreen() {
                     <Text style={styles.todayMeta}>
                       {todaySessionData
                         ? `${todaySessionData.session_exercises.length} exercises`
-                        : 'Connect your plan data to load today’s session'}
+                        : "Connect your plan data to load today's session"}
                     </Text>
                   </View>
 
@@ -198,7 +334,7 @@ export default function WorkoutScreen() {
                         onPress={handleStartSession}
                         activeOpacity={0.85}
                       >
-                        <Text style={styles.startBtnText}>Start Session →</Text>
+                        <Text style={styles.startBtnText}>Start Session</Text>
                       </TouchableOpacity>
                     </>
                   ) : (
@@ -213,7 +349,6 @@ export default function WorkoutScreen() {
             )}
           </>
         ) : (
-          /* ── Plan tab ──────────────────────────────────────────── */
           <>
             <Card style={styles.planHeaderCard}>
               <Text style={styles.planName}>{activePlan?.name ?? 'No active workout plan'}</Text>
@@ -251,6 +386,26 @@ export default function WorkoutScreen() {
         visible={Boolean(planDayDetail)}
         planDayDetail={planDayDetail}
         onClose={() => setSelectedPlanDay(null)}
+      />
+
+      <SetLoggingSheet
+        visible={sheetExercise !== null}
+        exercise={sheetExercise}
+        restSeconds={
+          sheetExercise
+            ? (activePlan?.workout_plan_days
+                .flatMap((d) => d.plan_exercises)
+                .find((pe) => pe.exercise_id === sheetExercise.exercise_id)?.rest_seconds ?? 90)
+            : 90
+        }
+        defaultWeight={null}
+        defaultReps={
+          sheetExercise ? parseInt(sheetExercise.planned_reps.split('-')[0] ?? '8', 10) : 8
+        }
+        previousWeight={prevWeight}
+        previousReps={prevReps}
+        onLogSet={handleLogSet}
+        onClose={() => setSheetExercise(null)}
       />
     </View>
   );
@@ -319,7 +474,6 @@ const createStyles = (colors: ThemeColors) =>
     scroll: { flex: 1 },
     content: { padding: Spacing.xl, paddingBottom: 40 },
 
-    // Today card
     todayCard: { marginBottom: Spacing.lg },
     todayCardTop: { marginBottom: Spacing.lg },
     todayBadge: {
@@ -377,7 +531,6 @@ const createStyles = (colors: ThemeColors) =>
       letterSpacing: 0.3,
     },
 
-    // Plan
     planHeaderCard: { marginBottom: Spacing.lg },
     planName: {
       color: colors.text,

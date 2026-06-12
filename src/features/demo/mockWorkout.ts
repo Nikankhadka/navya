@@ -220,6 +220,8 @@ export const MOCK_TODAY_SESSION: WorkoutSession = {
             set_number: j + 1,
             reps_completed: 8,
             weight_kg: 60,
+            rpe: null as number | null,
+            rest_seconds: null as number | null,
             completed_at: new Date().toISOString(),
           }))
         : [],

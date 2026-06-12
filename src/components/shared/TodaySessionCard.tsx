@@ -52,7 +52,7 @@ export function TodaySessionCard({ colors, session }: TodaySessionCardProps) {
       <TouchableOpacity
         style={[styles.startBtn, { backgroundColor: colors.accent }]}
         activeOpacity={0.85}
-        onPress={() => router.push('/(tabs)/(workout)')}
+        onPress={() => router.push('/(tabs)/workout')}
       >
         <Text style={[styles.startBtnText, { color: Colors.white }]}>
           {session

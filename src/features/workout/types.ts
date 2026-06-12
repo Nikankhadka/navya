@@ -68,6 +68,8 @@ export interface CompletedSet {
   set_number: number;
   reps_completed: number;
   weight_kg: number | null;
+  rpe: number | null;
+  rest_seconds: number | null;
   completed_at: string;
 }
 

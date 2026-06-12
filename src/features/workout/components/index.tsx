@@ -4,3 +4,4 @@ export { PlanDayModal } from './PlanDayModal';
 export { TimerDisplay } from './TimerDisplay';
 export { SessionCompleteCard } from './SessionCompleteCard';
 export { WorkoutStats } from './WorkoutStats';
+export { SetLoggingSheet } from './SetLoggingSheet';

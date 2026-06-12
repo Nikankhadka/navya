@@ -21,7 +21,7 @@ export default function CoachScreen() {
 
   useEffect(() => {
     if (!isCoachEnabled) {
-      router.replace('/(tabs)/(home)');
+      router.replace('/(tabs)');
     }
   }, [router]);
   const { data: initialMessages } = useCoachMessages(user?.id);

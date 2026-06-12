@@ -105,6 +105,10 @@ Make Nutrition and Home feel like a real daily habit product. A tester can log a
 | 3 | Workout history from completed sessions | M | List of past sessions with summary |
 | 4 | Weekly completion stats on Profile | S | Adherence %, days completed |
 | 5 | Wire stats to real data (remove placeholders) | M | Profile no longer uses mock data |
+| 6 | Workout plan selection (pre-built splits) | M | Bro Split, PPL, Upper/Lower, Arnold Split, Full Body |
+| 7 | Per-set logging UI (weight, reps, RPE) | M | Set Logging Sheet + previous session reference |
+| 8 | Rest timer upgrade (countdown ring, controls, vibration, background) | M | Global timer across tab switches |
+| 9 | Post-hoc workout logging (log past workout) | M | Any past date, freeform or plan-based
 
 ### Sprint 5 — Coach & Capture Speed
 
@@ -113,7 +117,8 @@ Make Nutrition and Home feel like a real daily habit product. A tester can log a
 | 1 | Weekly coach summary from real data | L | Edge function + Home card |
 | 2 | Meal templates for common meals | M | Breakfast/lunch/dinner/snack presets |
 | 3 | Barcode-assisted nutrition capture | L | Feature-flagged, camera + USDA lookup |
-| 4 | "Regenerate Workout Plan" real flow | M | Replace dead-end action with bounded AI call |
+| 4 | "Regenerate Workout Plan" real flow + Change Plan | M | Replace dead-end action with bounded AI call; also covers switching splits |
+| 5 | Custom plan builder (exercise-by-exercise wizard) | L | 3-step flow: name/days → exercises → review |
 
 ### Sprint 6 — Polish & Beta
 

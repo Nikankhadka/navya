@@ -43,7 +43,7 @@ export default function AuthCallbackScreen() {
   }, []);
 
   const scheduleRedirect = useCallback(
-    (destination: '/(tabs)/(home)' | '/(onboarding)/welcome', seconds: number) => {
+    (destination: '/(tabs)' | '/(onboarding)/welcome', seconds: number) => {
       cleanup();
       setCountdown(seconds);
       redirectTimerRef.current = setTimeout(() => {
@@ -80,14 +80,14 @@ export default function AuthCallbackScreen() {
           label: 'Continue',
           onPress: () => {
             cleanup();
-            router.replace(onboardingComplete ? '/(tabs)/(home)' : '/(onboarding)/welcome');
+            router.replace(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome');
           },
         },
       });
 
       setLoading(false);
 
-      scheduleRedirect(onboardingComplete ? '/(tabs)/(home)' : '/(onboarding)/welcome', 4);
+      scheduleRedirect(onboardingComplete ? '/(tabs)' : '/(onboarding)/welcome', 4);
     },
     [cleanup, refreshProfile, scheduleRedirect, router],
   );
@@ -240,7 +240,7 @@ export default function AuthCallbackScreen() {
         router.replace('/(auth)/login');
       } else {
         const isAuthenticated = useAuthStore.getState().isAuthenticated;
-        router.replace(isAuthenticated ? '/(tabs)/(profile)' : '/(auth)/login');
+        router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
       }
     }
   }
@@ -248,7 +248,7 @@ export default function AuthCallbackScreen() {
   function handleContinue() {
     cleanup();
     const isAuthenticated = useAuthStore.getState().isAuthenticated;
-    router.replace(isAuthenticated ? '/(tabs)/(profile)' : '/(auth)/login');
+    router.replace(isAuthenticated ? '/(tabs)/profile' : '/(auth)/login');
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

@@ -5,37 +5,60 @@ import type { SessionExercise } from '@/features/workout/types';
 interface ExerciseRowProps {
   exercise: SessionExercise;
   isActive: boolean;
-  onComplete: () => void;
+  onPressExercise: () => void;
+  onCompleteSet: () => void;
   onSkip: () => void;
+  restActive: boolean;
 }
 
-export function ExerciseRow({ exercise, isActive, onComplete, onSkip }: ExerciseRowProps) {
+export function ExerciseRow({
+  exercise,
+  isActive,
+  onPressExercise,
+  onCompleteSet,
+  onSkip,
+  restActive,
+}: ExerciseRowProps) {
   const { colors } = useAppTheme();
   const styles = createStyles(colors);
   const isDone = exercise.completed_sets.length >= exercise.planned_sets;
   const isSkipped = exercise.is_skipped;
 
+  const completedSetSummary = exercise.completed_sets
+    .map((s) => {
+      const w = s.weight_kg ? `${s.weight_kg}kg` : '';
+      const r = `${s.reps_completed}`;
+      return w ? `${w} × ${r}` : r;
+    })
+    .join(', ');
+
   return (
     <View
       style={[
         styles.exerciseRow,
-        isActive && styles.exerciseRowActive,
+        isActive && !restActive && styles.exerciseRowActive,
+        restActive && isActive && styles.exerciseRowResting,
         isDone && styles.exerciseRowDone,
         isSkipped && styles.exerciseRowSkipped,
       ]}
     >
-      <View style={styles.exerciseLeft}>
-        <TouchableOpacity
-          onPress={isDone ? undefined : onComplete}
+      <TouchableOpacity
+        style={styles.exerciseLeft}
+        onPress={isDone || isSkipped ? undefined : onPressExercise}
+        activeOpacity={isDone || isSkipped ? 1 : 0.7}
+      >
+        <View
           style={[
             styles.statusDot,
             isDone && { backgroundColor: colors.green },
-            isActive && !isDone && { backgroundColor: colors.accent },
+            isActive && !isDone && !restActive && { backgroundColor: colors.accent },
+            restActive && isActive && { backgroundColor: colors.orange },
           ]}
         >
           {isDone ? <Text style={styles.checkmark}>✓</Text> : null}
-          {isActive && !isDone ? <Text style={styles.activeDot}>●</Text> : null}
-        </TouchableOpacity>
+          {isActive && !isDone && !restActive ? <Text style={styles.activeDot}>●</Text> : null}
+          {restActive && isActive ? <Text style={styles.restDot}>⏳</Text> : null}
+        </View>
 
         <View style={styles.exerciseInfo}>
           <Text style={[styles.exerciseName, (isDone || isSkipped) && styles.exerciseNameDone]}>
@@ -44,25 +67,38 @@ export function ExerciseRow({ exercise, isActive, onComplete, onSkip }: Exercise
           <Text style={styles.exerciseMeta}>
             {exercise.planned_sets} sets × {exercise.planned_reps}
           </Text>
-          {isActive && !isDone ? (
-            <Text style={styles.setProgress}>
-              {exercise.completed_sets.length}/{exercise.planned_sets} sets done
+          {completedSetSummary ? (
+            <Text style={styles.completedSets} numberOfLines={1}>
+              {completedSetSummary}
             </Text>
           ) : null}
+          {isActive && !isDone && !restActive ? (
+            <Text style={styles.setProgress}>
+              {exercise.completed_sets.length}/{exercise.planned_sets} sets done — tap to log
+            </Text>
+          ) : null}
+          {restActive && isActive ? <Text style={styles.restingLabel}>Resting...</Text> : null}
         </View>
+      </TouchableOpacity>
+
+      <View style={styles.exerciseRight}>
+        {isActive && !isDone && !isSkipped && !restActive ? (
+          <>
+            <TouchableOpacity onPress={onCompleteSet} style={styles.quickLogBtn}>
+              <Text style={styles.quickLogBtnText}>Quick Log</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onSkip} style={styles.skipBtn}>
+              <Text style={styles.skipBtnText}>Skip</Text>
+            </TouchableOpacity>
+          </>
+        ) : null}
+
+        {isSkipped ? (
+          <View style={styles.skippedBadge}>
+            <Text style={styles.skippedText}>Skipped</Text>
+          </View>
+        ) : null}
       </View>
-
-      {isActive && !isDone && !isSkipped ? (
-        <TouchableOpacity onPress={onSkip} style={styles.skipBtn}>
-          <Text style={styles.skipBtnText}>Skip</Text>
-        </TouchableOpacity>
-      ) : null}
-
-      {isSkipped ? (
-        <View style={styles.skippedBadge}>
-          <Text style={styles.skippedText}>Skipped</Text>
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -82,6 +118,10 @@ const createStyles = (colors: ThemeColors) =>
     exerciseRowActive: {
       borderColor: colors.accent,
       backgroundColor: colors.accentMuted,
+    },
+    exerciseRowResting: {
+      borderColor: `${colors.orange}66`,
+      backgroundColor: colors.orangeMuted,
     },
     exerciseRowDone: {
       borderColor: `${colors.green}44`,
@@ -115,6 +155,9 @@ const createStyles = (colors: ThemeColors) =>
       color: Colors.white,
       fontSize: 10,
     },
+    restDot: {
+      fontSize: 12,
+    },
     exerciseInfo: {
       flex: 1,
     },
@@ -132,22 +175,52 @@ const createStyles = (colors: ThemeColors) =>
       fontSize: Typography.size.sm,
       marginTop: 2,
     },
+    completedSets: {
+      color: colors.textSecondary,
+      fontSize: Typography.size.xs,
+      marginTop: 3,
+    },
     setProgress: {
       color: colors.accent,
       fontSize: Typography.size.xs,
       marginTop: 3,
       fontWeight: Typography.weight.semibold,
     },
+    restingLabel: {
+      color: colors.orange,
+      fontSize: Typography.size.xs,
+      marginTop: 3,
+      fontWeight: Typography.weight.semibold,
+    },
+    exerciseRight: {
+      flexDirection: 'column' as const,
+      gap: Spacing.xs,
+      marginLeft: Spacing.sm,
+    },
+    quickLogBtn: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 6,
+      borderRadius: Radius.sm,
+      backgroundColor: colors.accentMuted,
+      borderWidth: 1,
+      borderColor: colors.accent,
+    },
+    quickLogBtnText: {
+      color: colors.accent,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+    },
     skipBtn: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      borderRadius: Radius.md,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 6,
+      borderRadius: Radius.sm,
       borderWidth: 1,
       borderColor: colors.border,
+      alignItems: 'center' as const,
     },
     skipBtnText: {
       color: colors.muted,
-      fontSize: Typography.size.sm,
+      fontSize: Typography.size.xs,
     },
     skippedBadge: {
       paddingHorizontal: Spacing.sm,

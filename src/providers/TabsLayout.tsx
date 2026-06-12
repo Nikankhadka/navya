@@ -26,7 +26,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="(home)"
+        name="index"
         options={{
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
@@ -40,7 +40,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="(workout)"
+        name="workout"
         options={{
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
@@ -54,7 +54,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="(nutrition)"
+        name="nutrition"
         options={{
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
@@ -68,7 +68,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="(coach)"
+        name="coach"
         options={{
           href: isCoachEnabled ? undefined : null,
           tabBarIcon: ({ focused, color }) => (
@@ -83,7 +83,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="(profile)"
+        name="profile"
         options={{
           tabBarIcon: ({ focused, color }) => (
             <TabIcon

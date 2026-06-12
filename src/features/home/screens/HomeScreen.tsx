@@ -113,21 +113,21 @@ export default function HomeScreen() {
       <SectionHeader
         title="Today's Session"
         action="View Plan"
-        onAction={() => router.push('/(tabs)/(workout)')}
+        onAction={() => router.push('/(tabs)/workout')}
       />
       <TodaySessionCard colors={colors} session={todaySession ?? null} />
 
       <SectionHeader
         title="Nutrition Today"
         action="Log Food"
-        onAction={() => router.push('/(tabs)/(nutrition)')}
+        onAction={() => router.push('/(tabs)/nutrition')}
       />
       <NutritionCard colors={colors} dailyNutrition={dailyNutrition ?? null} />
 
       <SectionHeader
         title="Progress & Adherence"
         action="View Profile"
-        onAction={() => router.push('/(tabs)/(profile)')}
+        onAction={() => router.push('/(tabs)/profile')}
       />
       <ProgressCard
         colors={colors}

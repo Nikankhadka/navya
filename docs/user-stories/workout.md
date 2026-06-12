@@ -37,46 +37,59 @@ As a fitness user, I want to view my workout plans, track sessions in real time,
 **I want** to start a live workout session and track exercises as I complete them  
 **So that** I can follow my plan in real time without paper or remembering
 
-**Status:** ✅ Built (Sprint 2)
+**Status:** 🚧 In Progress (core built Sprint 2, set logging Sprint 4)
 
 **Acceptance Criteria:**
-- [ ] "Start Workout" creates a session with current timestamp
-- [ ] Session shows current exercise with: name, target sets/reps/weight
-- [ ] Each set can be marked complete with: weight used, reps completed, RPE (optional)
-- [ ] Rest timer between sets (configurable, default 60–90s)
-- [ ] Progress bar shows overall session completion %
-- [ ] User can navigate between exercises (next / previous)
-- [ ] "Finish Workout" ends session, saves completion time
-- [ ] Partial sessions can be saved (user can continue later)
-- [ ] Session persists if app is backgrounded or crashes (state in store + DB)
+- [x] "Start Workout" creates a session with current timestamp
+- [x] Session shows exercise list with: name, target sets/reps/weight
+- [ ] Each set opens a logging sheet with: weight input (kg/lbs), reps input, RPE slider (1-10)
+- [ ] Previous session's weight/reps for same exercise pre-filled as reference
+- [ ] Weight quick-adjust buttons (+2.5, -2.5, +5)
+- [ ] Rest timer auto-starts when a set is logged (configurable per exercise)
+- [x] Progress bar shows overall session completion %
+- [ ] User can navigate between exercises (tap to jump, not locked sequential)
+- [x] "Finish Workout" ends session, saves completion time
+- [ ] Partial sessions can be saved and resumed later same day
+- [ ] Session persists if app is backgrounded (state in store + periodic DB flush)
+- [ ] User can re-open a logged set to edit reps/weight
 
 **Technical Notes:**
 - Session state in `useWorkoutStore` (Zustand) + writes to `workout_sessions` table
 - Individual exercise results stored in `workout_session_exercises`
 - `workout_sessions` schema: user_id, plan_id, started_at, completed_at, status (in_progress, completed, cancelled)
+- Per-set weight/reps/RPE/rest logged in `completed_sets` JSONB column on `session_exercises`
 
 ---
 
-### US-WORKOUT-3: Exercise Tracking (Sets, Reps, Weight)
+### US-WORKOUT-3: Per-Set Exercise Logging
 
 **As a** user  
-**I want** to log weight, reps, and sets for each exercise  
-**So that** I can track progressive overload and see my strength gains
+**I want** to log weight, reps, RPE, and rest for each set  
+**So that** I can track progressive overload in detail and see my strength gains
 
-**Status:** ✅ Built (Sprint 2)
+**Status:** 🚧 In Progress (basic complete built Sprint 2, full per-set Sprint 4)
 
 **Acceptance Criteria:**
-- [ ] Each exercise in a session shows target sets (e.g., 3 × 10)
-- [ ] User taps a checkbox or button to mark a set as done
-- [ ] User can enter weight used (lbs or kg, based on profile)
-- [ ] User can enter reps completed (numeric)
-- [ ] Optional RPE (rate of perceived exertion) input
-- [ ] Previous session's weights/reps shown as reference
-- [ ] Auto-populates weight from last session (user can override)
+- [x] Each exercise shows target sets (e.g., "4 × 8-10")
+- [ ] Tapping an exercise opens a Set Logging Sheet showing:
+  - Set number (e.g., "Set 2 of 4")
+  - Weight input field with unit from profile (kg/lbs toggle at top)
+  - Weight quick-adjust: +2.5, -2.5, +5 buttons
+  - Reps input field
+  - RPE slider (1-10, optional) with labels: "Easy" (1-3), "Moderate" (4-6), "Hard" (7-9), "Max" (10)
+  - "Log Set" button — saves and auto-starts rest timer
+  - Previous session's weight/reps shown as ghost/hint text
+- [ ] Completed sets shown below exercise name (e.g., "60kg × 8, 65kg × 8, 65kg × 7")
+- [ ] User can tap a completed set row to edit its values
+- [ ] Sets are auto-numbered starting at 1
+- [ ] RPE is optional (user can skip)
+- [ ] Volume computed per exercise: sum(weight × reps) shown after all sets done
+- [ ] Rest duration logged per set in session data
 
 **Technical Notes:**
-- `workout_session_exercises` table: session_id, exercise_name, set_number, weight, reps, rpe, completed
+- `session_exercises.completed_sets` JSONB column stores: set_number, reps_completed, weight_kg, rpe, rest_seconds, completed_at
 - Last session data queried from most recent completed session for same exercise
+- Weight unit from `profiles.weight_unit` (kg/lbs), display conversion on toggle
 
 ---
 
@@ -86,20 +99,26 @@ As a fitness user, I want to view my workout plans, track sessions in real time,
 **I want** an automatic rest timer between sets  
 **So that** I can maintain consistent rest intervals without watching a clock
 
-**Status:** ✅ Built (Sprint 2)
+**Status:** 🚧 In Progress (basic elapsed timer built Sprint 2, full timer Sprint 4)
 
 **Acceptance Criteria:**
-- [ ] Timer starts automatically when a set is marked complete
-- [ ] Default timer duration: 90s (configurable per exercise plan)
-- [ ] Timer shows countdown with visual progress ring
-- [ ] Timer notification/vibration when time is up
-- [ ] User can pause, skip, or extend the timer
-- [ ] Timer pauses if app goes to background (resumes on return)
-- [ ] Timer does not block navigation (user can review next exercise while resting)
+- [ ] Timer auto-starts when a set is logged via Set Logging Sheet
+- [ ] Default rest duration from plan (30s, 60s, 90s, 120s, 180s)
+- [ ] Visual countdown ring with remaining time in center
+- [ ] Timer shows current exercise name above ring (e.g., "Rest — Bench Press")
+- [ ] Next exercise name shown below (e.g., "Next: Incline DB Press")
+- [ ] Controls: Pause, Skip (+0s, starts next set), +30s extend
+- [ ] Vibration alert when timer hits 0 (Haptics API)
+- [ ] Timer pauses if app goes to background, resumes on foreground (AppState listener)
+- [ ] Timer runs globally — survives tab switch (e.g., user goes to Nutrition tab, timer keeps running)
+- [ ] Timer notification shown in header if on other tab ("Rest: 0:45 — Bench Press")
+- [ ] Rest duration logged per set in session data (`rest_seconds` in CompletedSet)
+- [ ] Timer uses `Date.now()` delta for accuracy, not `setInterval` increment
 
 **Technical Notes:**
-- Local notification or in-app sound/vibration for timer completion
-- Timer state managed in `useWorkoutStore`
+- In-app haptic vibration via `expo-haptics` (no push notification needed for MVP)
+- Timer state managed in `useWorkoutStore` with AppState listener
+- Timer read from `Date.now()` on foreground resume to compute actual elapsed time
 
 ---
 
@@ -125,25 +144,66 @@ As a fitness user, I want to view my workout plans, track sessions in real time,
 
 ---
 
+### US-WORKOUT-9: Log Completed Workout (Post-Hoc)
+
+**As a** user  
+**I want** to log a workout I already completed without the app open  
+**So that** I can track my training even when I forget to start a live session
+
+**Status:** 📋 Planned (Sprint 4)
+
+**Acceptance Criteria:**
+- [ ] "Log Past Workout" button visible on Workout > Today tab (when no active session)
+- [ ] User selects a plan day to log against (or "Freeform" — no plan)
+- [ ] Date picker allows any past date
+- [ ] User enters exercises one by one:
+  - Search/type exercise name (autocomplete from exercise library + free text)
+  - Add sets: weight, reps, RPE (optional) per set
+  - "Add Another Exercise" button at bottom
+- [ ] No live timer — straight set logging
+- [ ] "Save Workout" creates completed session in DB with selected date
+- [ ] Session appears in history immediately
+- [ ] Freeform workouts also appear in history (tagged as "Freeform")
+- [ ] User can edit a post-hoc logged session within 24 hours
+
+**Technical Notes:**
+- Sessions created with `status = 'completed'` directly (no `in_progress` phase)
+- `started_at` set to user-selected date + time
+- `day_name` = plan day name or "Freeform — [date]"
+- `plan_day_id` = null for freeform workouts
+- Freeform exercises stored with `exercise_id = null` (name in `exercise_name` only)
+
+---
+
 ## Story Dependencies
 
 ```
-US-WORKOUT-1 (view plan) ──→ US-WORKOUT-2 (start session)
-                                    │
-                            ┌───────┼───────┐
-                            ↓       ↓       ↓
-                    (exercise)  (rest)  (complete)
-                       │          │         │
-                       ↓          ↓         ↓
-                 US-WORKOUT-3  US-WORKOUT-4 │
-                                            ↓
-                                    US-WORKOUT-5 (history)
+US-WORKOUT-6 (choose split) ──→ US-WORKOUT-7 (custom builder)
+        │                               │
+        │                        US-WORKOUT-8 (manage plans)
+        │
+        └──→ US-WORKOUT-1 (view plan) ──→ US-WORKOUT-2 (start session)
+                                                    │
+                          ┌─────────────────────────┼──────────────────────┐
+                          ↓                         ↓                      ↓
+                  US-WORKOUT-3 (set log)    US-WORKOUT-4 (rest timer)    US-WORKOUT-9 (post-hoc)
+                          │                         │                      │
+                          └──────────┬──────────────┘                      │
+                                     ↓                                     │
+                             US-WORKOUT-5 (history) ←──────────────────────┘
 ```
+
+**Cross-epic reference:** See also `docs/user-stories/workout-planning.md` for US-WORKOUT-6/7/8 details.
 
 ## Edge Cases
 
 - **Skipped exercises:** User can skip an exercise (mark as skipped with reason)
 - **Mid-session exit:** Session saves progress, user can resume within same day
-- **Plan completion:** When all days in a plan are completed, suggest "Generate new plan" or congratulate
+- **Mid-session exercise substitution:** User can swap an exercise (e.g., "Can't barbell squat, switch to leg press")
+- **Plan completion:** When all days in a plan are completed, suggest "Change plan" or congratulate
 - **Weight unit mismatch:** Session respects profile weight unit (kg/lbs), converts display if needed
 - **Empty workout day:** If a scheduled day has no exercises, show "Rest day" or allow custom exercise entry
+- **Post-hoc date range:** User can log a workout for any past date via calendar picker
+- **Rest timer global persistence:** Timer continues across tab switches; shows compact indicator in header
+- **Partial set logging:** If user does fewer reps than planned, RPE becomes important signal for auto-regulation
+- **Timer accuracy:** Use `Date.now()` delta-based timing instead of `setInterval` increment to prevent drift

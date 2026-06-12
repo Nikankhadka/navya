@@ -140,3 +140,37 @@ All blocking issues resolved. All features built and functional. Comprehensive E
 - Manual smoke test of all flows in demo mode
 - Deploy to EAS (iOS/Android) or Vercel (web)
 - Sprint 4: Refactor large files, add unit tests, set up CI/CD
+
+## [2026-06-12] Session — Workout Feature Audit & Planning
+
+### Goal
+Audit workout feature against MVP scope and user stories, plan Sprint 4-5 workout enhancements.
+
+### Completed
+- ✅ Full audit of workout feature: 17 files, ~2,000 lines across screens, services, hooks, components
+- ✅ Reviewed all 5 existing workout user stories against actual implementation
+- ✅ Compared against market research (Strong, Hevy, Fitbod, Boostcamp)
+- ✅ Created US-WORKOUT-6 through US-WORKOUT-9 covering plan selection, custom builder, and post-hoc logging
+- ✅ Updated US-WORKOUT-2/3/4 status from "Built" to "In Progress" with detailed per-set logging AC
+- ✅ Updated sprint backlog (Sprint 4: +4 workout stories, Sprint 5: +2 workout stories)
+- ✅ Updated project docs (sprints, execution status, workout user stories, workout-planning user stories)
+
+### Current State
+- Workout feature has solid core (plan viewing + basic session tracking) but lacks depth tracking
+- No per-set weight/reps/RPE entry — all auto-filled from plan
+- Rest timer is elapsed-only, no countdown ring or controls
+- Only one hardcoded PPL plan — no split selection or custom builder
+- No post-hoc logging — sessions must be live-tracked
+- No unit tests in workout feature (0 test files)
+- Workout history summary exists but no drill-down session detail view
+
+### Key Decisions
+- Plan selection: post-onboarding standalone screen (not in onboarding flow)
+- Post-hoc logging: any past date via calendar picker
+- Rest timer: global background persistence across tab switches
+- Implementation approach: user stories first, then iterate on implementation
+
+### Next Session Should Start With
+- Review updated user stories and sprint docs
+- Begin Sprint 4 implementation: per-set logging UI + rest timer upgrade
+- Run `npm run typecheck` before starting

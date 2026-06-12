@@ -5,7 +5,7 @@
  * This file assembles the original `workoutService` object so existing
  * consumers (hooks, barrel exports) continue to work unchanged.
  */
-import { getActivePlan } from './workoutPlan.service';
+import { getActivePlan, createDefaultPlan } from './workoutPlan.service';
 import {
   getTodaySession,
   getWorkoutHistory,
@@ -15,6 +15,7 @@ import {
 
 export const workoutService = {
   getActivePlan,
+  createDefaultPlan,
   getTodaySession,
   getWorkoutHistory,
   startSession,

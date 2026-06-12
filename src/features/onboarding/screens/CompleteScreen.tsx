@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { profileService } from '@/features/profile/api/profile.service';
+import { workoutService } from '@/features/workout/api/workout.service';
 import { Image } from 'expo-image';
 import { Colors, Radius, Spacing, Typography, useAppTheme } from '@/theme';
 
@@ -28,6 +29,13 @@ export default function CompleteScreen() {
           onboarding_complete: true,
         });
 
+        // Auto-generate a default workout plan so the Workout tab is
+        // immediately usable. Failure is non-blocking — profile saves
+        // regardless of plan creation.
+        workoutService.createDefaultPlan(session.user.id).catch((planErr) => {
+          console.error('Failed to create default workout plan:', planErr);
+        });
+
         // Update local auth store so layout redirects to tabs
         setProfile({ ...payload, onboarding_complete: true });
 
@@ -36,7 +44,7 @@ export default function CompleteScreen() {
 
         // Brief delay for visual confirmation
         setTimeout(() => {
-          router.replace('/(tabs)/(home)');
+          router.replace('/(tabs)');
         }, 2000);
       } catch (err) {
         console.error('Failed to save onboarding:', err);

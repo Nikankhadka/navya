@@ -31,10 +31,11 @@ Making Nutrition and Home feel like a real daily habit product. A tester can log
 ## Known Issues
 - gitleaks not installed for secret scanning
 - No CI pipeline configured for automated testing
-- Some profile stats still use static placeholders (Sprint 4 target)
+- Workout plan limited to single hardcoded PPL split — plan selection, per-set logging, rest timer upgrade, and post-hoc entry planned for Sprint 4
+- No unit tests in workout feature (0 test files)
 - Barcode food capture is speculative pending USDA data quality validation
 
 ## Next Steps After Sprint 3
-1. Sprint 4 — Progress & Adherence (weight check-ins, workout history, adherence stats)
-2. Sprint 5 — Coach & Capture Speed (weekly summaries, meal templates, barcode)
+1. Sprint 4 — Progress & Adherence (weight check-ins, workout history, adherence stats, workout plan selection, per-set logging, rest timer upgrade, post-hoc entry)
+2. Sprint 5 — Coach & Capture Speed (weekly summaries, meal templates, barcode, plan regeneration, custom plan builder)
 3. Sprint 6 — Polish & Beta (edge cases, offline resilience, EAS deployment)

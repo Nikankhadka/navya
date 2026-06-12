@@ -1,4 +1,5 @@
 import type { WorkoutPlan, WorkoutSession } from '@/types/app';
+import type { Database } from '@/types/database';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { MOCK_PLAN, MOCK_PROFILE } from '@/features/demo/mockData';
 import { mapWorkoutPlanRow } from '@/lib/supabase/mappers';
@@ -89,4 +90,162 @@ export async function getActivePlan(userId: string): Promise<WorkoutPlan | null>
   }
 
   return data ? mapWorkoutPlanRow(data) : null;
+}
+
+/**
+ * PPL (Push/Pull/Legs) template — exercises mapped by muscle group from
+ * exercise_library. Uses exercise_name strings to match against the seed data.
+ */
+const PPL_TEMPLATE = [
+  {
+    day_of_week: 'monday',
+    day_name: 'Push — Chest & Shoulders',
+    order_index: 0,
+    estimated_minutes: 50,
+    exercises: [
+      { name: 'Barbell Bench Press', sets: 4, reps: '6-8', rest_seconds: 120, order_index: 0 },
+      { name: 'Dumbbell Shoulder Press', sets: 3, reps: '8-10', rest_seconds: 90, order_index: 1 },
+      { name: 'Tricep Dips', sets: 3, reps: '10-12', rest_seconds: 60, order_index: 2 },
+      { name: 'Plank', sets: 3, reps: '30-60s', rest_seconds: 60, order_index: 3 },
+    ],
+  },
+  {
+    day_of_week: 'wednesday',
+    day_name: 'Pull — Back & Biceps',
+    order_index: 1,
+    estimated_minutes: 50,
+    exercises: [
+      { name: 'Pull-Up', sets: 4, reps: '6-10', rest_seconds: 120, order_index: 0 },
+      { name: 'Dumbbell Row', sets: 3, reps: '8-10', rest_seconds: 90, order_index: 1 },
+      { name: 'Lat Pulldown', sets: 3, reps: '10-12', rest_seconds: 90, order_index: 2 },
+      { name: 'Dumbbell Bicep Curl', sets: 3, reps: '10-12', rest_seconds: 60, order_index: 3 },
+    ],
+  },
+  {
+    day_of_week: 'friday',
+    day_name: 'Legs — Quads & Hamstrings',
+    order_index: 2,
+    estimated_minutes: 55,
+    exercises: [
+      { name: 'Barbell Back Squat', sets: 4, reps: '5-8', rest_seconds: 150, order_index: 0 },
+      { name: 'Barbell Deadlift', sets: 3, reps: '6-8', rest_seconds: 120, order_index: 1 },
+      { name: 'Leg Press', sets: 3, reps: '10-12', rest_seconds: 90, order_index: 2 },
+      { name: 'Dumbbell Lunges', sets: 3, reps: '10-12', rest_seconds: 90, order_index: 3 },
+    ],
+  },
+] as const;
+
+/**
+ * Generate a default PPL workout plan for a newly onboarded user.
+ * Fetches exercise IDs from exercise_library by name, then inserts
+ * the plan, days, and exercises into the database.
+ */
+export async function createDefaultPlan(userId: string): Promise<WorkoutPlan | null> {
+  if (shouldUseDemoWorkout(userId)) {
+    return MOCK_PLAN;
+  }
+
+  // Fetch exercise IDs matching the template exercise names
+  const exerciseNames = PPL_TEMPLATE.flatMap((day) => day.exercises.map((ex) => ex.name));
+
+  const { data: exercises, error: fetchError } = await supabase
+    .from('exercise_library')
+    .select('id, name')
+    .in('name', exerciseNames);
+
+  if (fetchError) {
+    console.error('Error fetching exercises for default plan:', fetchError);
+    return null;
+  }
+
+  const exerciseMap = new Map<string, string>();
+  for (const ex of exercises ?? []) {
+    exerciseMap.set(ex.name, ex.id);
+  }
+
+  // Insert the plan
+  const { data: planRow, error: planError } = await supabase
+    .from('workout_plans')
+    .insert({
+      user_id: userId,
+      name: 'Push / Pull / Legs',
+      goal: 'build_muscle',
+      version: 1,
+      is_active: true,
+    } as never)
+    .select('*')
+    .single();
+
+  if (planError || !planRow) {
+    console.error('Error creating default plan:', planError);
+    return null;
+  }
+
+  const plan = planRow as Database['public']['Tables']['workout_plans']['Row'];
+
+  // Insert plan days and exercises
+  const planDays: Database['public']['Tables']['workout_plan_days']['Row'][] = [];
+
+  for (const dayTemplate of PPL_TEMPLATE) {
+    const { data: dayRow, error: dayError } = await supabase
+      .from('workout_plan_days')
+      .insert({
+        plan_id: plan.id,
+        day_of_week: dayTemplate.day_of_week,
+        day_name: dayTemplate.day_name,
+        order_index: dayTemplate.order_index,
+        estimated_minutes: dayTemplate.estimated_minutes,
+      } as never)
+      .select('*')
+      .single();
+
+    if (dayError || !dayRow) {
+      console.error('Error creating plan day:', dayError);
+      continue;
+    }
+
+    const day = dayRow as Database['public']['Tables']['workout_plan_days']['Row'];
+    planDays.push(day);
+
+    const planExercises = dayTemplate.exercises
+      .map((ex) => {
+        const exerciseId = exerciseMap.get(ex.name);
+        return exerciseId
+          ? {
+              plan_day_id: day.id,
+              exercise_id: exerciseId,
+              sets: ex.sets,
+              reps: ex.reps,
+              rest_seconds: ex.rest_seconds,
+              order_index: ex.order_index,
+              notes: null,
+            }
+          : null;
+      })
+      .filter((pe): pe is NonNullable<typeof pe> => pe !== null);
+
+    if (planExercises.length > 0) {
+      await supabase.from('plan_exercises').insert(planExercises as never);
+    }
+  }
+
+  // Fetch the full plan with days and exercises to return
+  const { data: fullPlan } = await supabase
+    .from('workout_plans')
+    .select(
+      `
+        *,
+        workout_plan_days (
+          *,
+          plan_exercises (
+            *,
+            exercise:exercise_library (*)
+          )
+        )
+      `,
+    )
+    .eq('id', plan.id)
+    .single();
+
+  return fullPlan ? mapWorkoutPlanRow(fullPlan) : null;
 }
