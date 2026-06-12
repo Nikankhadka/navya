@@ -20,11 +20,14 @@ import {
   EMPTY_MANUAL_FORM,
   MealSection,
   WaterTracker,
+  MealTemplatesSheet,
 } from '@/features/nutrition/components';
 import type { ManualMealForm } from '@/features/nutrition/components';
 import { useDailyNutrition } from '@/features/nutrition/hooks/useDailyNutrition';
 import { useFoodSearch } from '@/features/nutrition/hooks/useFoodSearch';
+import { useMealTemplates } from '@/features/nutrition/hooks/useMealTemplates';
 import { useNutritionActions } from '@/features/nutrition/hooks/useNutritionActions';
+import { templateService } from '@/features/nutrition/api/template.service';
 import {
   calculateFoodLogNutrients,
   getDefaultFoodPortion,
@@ -36,6 +39,7 @@ import type {
   FavoriteFood,
   FoodSearchResult,
   MealTime,
+  MealTemplate,
   RecentFood,
 } from '@/types/app';
 import { mealTimeLabel } from '@/utils/helpers';
@@ -99,6 +103,8 @@ export default function NutritionScreen() {
   const { data: nutritionSummary } = useDailyNutrition(userId);
   const { addMeal, deleteMeal, saveCustomFood, toggleFavorite, addWater } =
     useNutritionActions(userId);
+  const { data: mealTemplates, isLoading: templatesLoading } = useMealTemplates(userId);
+  const templates = mealTemplates ?? [];
   const [showModal, setShowModal] = useState(false);
   const [activeMode, setActiveMode] = useState<AddMode>('manual');
   const [manualForm, setManualForm] = useState<ManualMealForm>(EMPTY_MANUAL_FORM);
@@ -268,6 +274,13 @@ export default function NutritionScreen() {
     await addMeal.mutateAsync(recentToMealInput(food));
   };
 
+  const handleLogTemplate = async (template: MealTemplate) => {
+    const foodLogs = templateService.templateToFoodLogs(template);
+    for (const foodLog of foodLogs) {
+      await addMeal.mutateAsync(foodLog);
+    }
+  };
+
   const handleLogFavoriteFood = async (food: FavoriteFood) => {
     await addMeal.mutateAsync(favoriteToMealInput(food, 'snack'));
   };
@@ -389,6 +402,13 @@ export default function NutritionScreen() {
               ))
             )}
           </View>
+
+          <SectionHeader title="Meal Templates" />
+          <MealTemplatesSheet
+            templates={templates}
+            isLoading={templatesLoading}
+            onLogTemplate={handleLogTemplate}
+          />
 
           <SectionHeader title="Today's Diary" action="+ Add" onAction={openAddModal} />
 

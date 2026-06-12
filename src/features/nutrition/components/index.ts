@@ -8,3 +8,4 @@ export {
 } from './ManualMealSheet';
 export { MealSection, type MealSectionProps } from './MealSection';
 export { WaterTracker, type WaterTrackerProps } from './WaterTracker';
+export { MealTemplatesSheet } from './MealTemplatesSheet';
