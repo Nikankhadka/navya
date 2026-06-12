@@ -10,16 +10,15 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useHabitStreak } from '@/features/home/hooks/useHabitStreak';
 
 function addMonths(dateKey: string, months: number): string {
-  const [yearStr, monthStr, dayStr] = dateKey.split('-');
+  const [yearStr, monthStr] = dateKey.split('-');
   const year = parseInt(yearStr, 10);
   const month = parseInt(monthStr, 10);
-  const day = parseInt(dayStr, 10);
 
   const newDate = new Date(year, month - 1 + months, 1);
   const newYear = newDate.getFullYear();
   const newMonth = newDate.getMonth() + 1;
 
-  return `${newYear}-${String(newMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return `${newYear}-${String(newMonth).padStart(2, '0')}-01`;
 }
 
 export default function DailyDiaryScreen() {
@@ -34,18 +33,8 @@ export default function DailyDiaryScreen() {
   const { data: habitStreak } = useHabitStreak(user?.id);
 
   const activityDates = useMemo(() => {
-    const keys: string[] = [];
-
-    for (let offset = -60; offset <= 0; offset++) {
-      const date = new Date();
-      date.setDate(date.getDate() + offset);
-      const key = date.toISOString().slice(0, 10);
-      if (!isFuture(key)) {
-        keys.push(key);
-      }
-    }
-
-    return new Set(keys);
+    if (!habitStreak?.activity_dates) return new Set<string>();
+    return new Set(habitStreak.activity_dates);
   }, [habitStreak]);
 
   const handleSelectDate = useCallback(

@@ -3,17 +3,13 @@ import type { Database } from '@/types/database';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { MOCK_DAILY_NUTRITION, MOCK_TODAY_SESSION } from '@/features/demo/mockData';
 import { nutritionService } from '@/features/nutrition/api/nutrition.service';
-import { fromDateKey, getTodayDateString } from '@/utils/date';
+import { fromDateKey, getTodayDateString, toDateKey } from '@/utils/date';
 
 type WaterLogActivityRow = Pick<Database['public']['Tables']['water_logs']['Row'], 'logged_at'>;
 type WorkoutSessionActivityRow = Pick<
   Database['public']['Tables']['workout_sessions']['Row'],
   'started_at' | 'status'
 >;
-
-function dayKeyFromDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
 
 function dayKeyFromIso(value: string): string {
   return value.slice(0, 10);
@@ -30,7 +26,7 @@ function weekKeysFromDate(dateKey: string): string[] {
   return Array.from({ length: 7 }, (_, index) => {
     const entry = new Date(monday);
     entry.setDate(monday.getDate() + index);
-    return dayKeyFromDate(entry);
+    return toDateKey(entry);
   });
 }
 
@@ -42,7 +38,7 @@ function buildHabitSummary(activityKeys: Set<string>, dateKey: string): HabitStr
     const date = new Date(baseDate);
     date.setHours(0, 0, 0, 0);
     date.setDate(baseDate.getDate() - offset);
-    const key = dayKeyFromDate(date);
+    const key = toDateKey(date);
 
     if (!activityKeys.has(key)) {
       break;
@@ -58,6 +54,7 @@ function buildHabitSummary(activityKeys: Set<string>, dateKey: string): HabitStr
     current_streak_days: streak,
     weekly_activity: weeklyActivity,
     completed_days_this_week: weeklyActivity.filter(Boolean).length,
+    activity_dates: Array.from(activityKeys),
   };
 }
 

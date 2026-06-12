@@ -1,7 +1,14 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Pressable } from 'react-native';
 import { Colors, Spacing, Radius, Typography, type ThemeColors } from '@/theme';
-import { getMonthGrid, formatMonthYear, isToday, isFuture, addDays } from '@/utils/date';
+import {
+  getMonthGrid,
+  formatMonthYear,
+  isToday,
+  isFuture,
+  toDateKey,
+  getTodayDateString,
+} from '@/utils/date';
 
 interface CalendarProps {
   selectedDate: string;
@@ -27,6 +34,10 @@ export function Calendar({
 
   const weekLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
+  const [sy, sm] = selectedDate.split('-').map(Number);
+  const nextMonthKey = toDateKey(new Date(sy, sm, 1));
+  const isNextMonthDisabled = nextMonthKey > getTodayDateString();
+
   const rows: (typeof grid)[] = [];
   for (let i = 0; i < grid.length; i += 7) {
     rows.push(grid.slice(i, i + 7));
@@ -41,13 +52,13 @@ export function Calendar({
         <Text style={[styles.monthLabel, { color: colors.text }]}>{monthLabel}</Text>
         <TouchableOpacity
           onPress={onNextMonth}
-          style={[styles.navButton, isFuture(selectedDate) && styles.navButtonDisabled]}
-          disabled={isFuture(addDays(selectedDate, 1))}
+          style={[styles.navButton, isNextMonthDisabled && styles.navButtonDisabled]}
+          disabled={isNextMonthDisabled}
         >
           <Text
             style={[
               styles.navButtonText,
-              { color: isFuture(addDays(selectedDate, 1)) ? colors.dim : colors.text },
+              { color: isNextMonthDisabled ? colors.dim : colors.text },
             ]}
           >
             ›
@@ -56,8 +67,8 @@ export function Calendar({
       </View>
 
       <View style={styles.weekDayRow}>
-        {weekLabels.map((label) => (
-          <View key={label} style={styles.weekDayCell}>
+        {weekLabels.map((label, i) => (
+          <View key={i} style={styles.weekDayCell}>
             <Text style={[styles.weekDayLabel, { color: colors.muted }]}>{label}</Text>
           </View>
         ))}
@@ -70,6 +81,8 @@ export function Calendar({
             const isTodayDate = isToday(dateKey);
             const hasActivity = activityDates.has(dateKey);
             const isFutureDate = isFuture(dateKey);
+            const isPastDate = !isFutureDate && !isTodayDate;
+            const isUntracked = isPastDate && isCurrentMonth && !hasActivity;
 
             return (
               <Pressable
@@ -81,6 +94,7 @@ export function Calendar({
                   !isCurrentMonth && styles.dayCellOtherMonth,
                   isSelected && styles.dayCellSelected,
                   isFutureDate && styles.dayCellDisabled,
+                  isUntracked && { backgroundColor: colors.orangeMuted },
                   hovered && { backgroundColor: colors.cardHover },
                 ]}
               >
