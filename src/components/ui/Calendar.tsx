@@ -81,8 +81,6 @@ export function Calendar({
             const isTodayDate = isToday(dateKey);
             const hasActivity = activityDates.has(dateKey);
             const isFutureDate = isFuture(dateKey);
-            const isPastDate = !isFutureDate && !isTodayDate;
-            const isUntracked = isPastDate && isCurrentMonth && !hasActivity;
 
             return (
               <Pressable
@@ -94,7 +92,6 @@ export function Calendar({
                   !isCurrentMonth && styles.dayCellOtherMonth,
                   isSelected && styles.dayCellSelected,
                   isFutureDate && styles.dayCellDisabled,
-                  isUntracked && { backgroundColor: colors.orangeMuted },
                   hovered && { backgroundColor: colors.cardHover },
                 ]}
               >
