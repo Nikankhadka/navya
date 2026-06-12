@@ -11,6 +11,7 @@ import {
   getWorkoutHistory,
   startSession,
   saveSession,
+  savePostHocSession,
 } from './workoutSession.service';
 
 export const workoutService = {
@@ -20,4 +21,5 @@ export const workoutService = {
   getWorkoutHistory,
   startSession,
   saveSession,
+  savePostHocSession,
 };

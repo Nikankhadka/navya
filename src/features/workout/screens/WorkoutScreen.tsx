@@ -8,6 +8,7 @@ import {
   type AppStateStatus,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQueryClient } from '@tanstack/react-query';
 import { Colors, Spacing, Radius, Typography, useAppTheme, type ThemeColors } from '@/theme';
 import { useWorkoutStore } from '@/store/useWorkoutStore';
 import { Card, EmptyState } from '@/components/ui';
@@ -19,6 +20,7 @@ import {
   WorkoutStats,
   SetLoggingSheet,
   SessionDetailModal,
+  PostHocLoggingSheet,
 } from '@/features/workout/components';
 import { formatDuration, sessionProgress } from '@/utils/helpers';
 import { crossAlert } from '@/utils/crossAlert';
@@ -27,6 +29,7 @@ import { useActivePlan } from '@/features/workout/hooks/useActivePlan';
 import { useTodaySession } from '@/features/workout/hooks/useTodaySession';
 import { useWorkoutHistory } from '@/features/workout/hooks/useWorkoutHistory';
 import { useWorkoutActions } from '@/features/workout/hooks/useWorkoutActions';
+import { workoutService } from '@/features/workout/api/workout.service';
 import type { WorkoutPlanDay, SessionExercise, CompletedSet } from '@/types/app';
 import { isVisualTestScenario } from '@/utils/visualTest';
 import { MOCK_PLAN } from '@/features/demo/mockData';
@@ -36,6 +39,7 @@ export default function WorkoutScreen() {
   const styles = createStyles(colors);
   const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const userId = user?.id;
   const { data: activePlan } = useActivePlan(userId);
   const { data: todaySessionData } = useTodaySession(userId);
@@ -73,6 +77,7 @@ export default function WorkoutScreen() {
   const [sheetExercise, setSheetExercise] = useState<SessionExercise | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null);
+  const [showPostHoc, setShowPostHoc] = useState(false);
   const selectedSession = selectedSessionId
     ? (workoutHistory?.recent_sessions?.find((s) => s.id === selectedSessionId) ?? null)
     : null;
@@ -158,6 +163,53 @@ export default function WorkoutScreen() {
     editSet(sheetExercise.exercise_id, setIndex, set);
     setSheetExercise(null);
     setEditingSetIndex(null);
+  };
+
+  const handlePostHocSave = async (data: {
+    id: string;
+    user_id: string;
+    plan_day_id: string | null;
+    day_name: string;
+    startDate: string;
+    exercises: {
+      exerciseName: string;
+      plannedSets: number;
+      completedSets: { weight_kg: number | null; reps_completed: number; rpe: number | null }[];
+    }[];
+  }) => {
+    const sessionExercises: SessionExercise[] = data.exercises.map((ex, idx) => ({
+      id: `${data.id}-ex-${idx}`,
+      session_id: data.id,
+      exercise_id: `ex-${ex.exerciseName.toLowerCase().replace(/\s+/g, '-')}`,
+      exercise_name: ex.exerciseName,
+      planned_sets: ex.plannedSets,
+      planned_reps: `${ex.plannedSets}`,
+      completed_sets: ex.completedSets.map((s, setIdx) => ({
+        set_number: setIdx + 1,
+        reps_completed: s.reps_completed,
+        weight_kg: s.weight_kg,
+        rpe: s.rpe,
+        rest_seconds: null,
+        completed_at: data.startDate,
+      })),
+      notes: null,
+      is_skipped: false,
+    }));
+
+    workoutService.savePostHocSession({
+      id: data.id,
+      user_id: data.user_id,
+      plan_day_id: data.plan_day_id,
+      day_name: data.day_name,
+      status: 'completed',
+      started_at: data.startDate,
+      completed_at: data.startDate,
+      duration_seconds: null,
+      session_exercises: sessionExercises,
+    });
+
+    await queryClient.invalidateQueries({ queryKey: ['workout-history', userId] });
+    setShowPostHoc(false);
   };
 
   const handleQuickLogSet = useCallback(
@@ -391,6 +443,15 @@ export default function WorkoutScreen() {
           weeklyTarget={weeklyTarget}
           onSessionPress={setSelectedSessionId}
         />
+
+        <TouchableOpacity
+          style={styles.postHocBtn}
+          onPress={() => setShowPostHoc(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.postHocBtnText}>Log Past Workout</Text>
+        </TouchableOpacity>
+
         <View style={{ height: 40 }} />
       </ScrollView>
 
@@ -429,6 +490,14 @@ export default function WorkoutScreen() {
           setSheetExercise(null);
           setEditingSetIndex(null);
         }}
+      />
+
+      <PostHocLoggingSheet
+        visible={showPostHoc}
+        activePlan={activePlan ?? null}
+        userId={userId ?? ''}
+        onSave={handlePostHocSave}
+        onClose={() => setShowPostHoc(false)}
       />
     </View>
   );
@@ -562,4 +631,18 @@ const createStyles = (colors: ThemeColors) =>
       marginBottom: 4,
     },
     planMeta: { color: colors.muted, fontSize: Typography.size.sm },
+    postHocBtn: {
+      marginTop: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderRadius: Radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center' as const,
+      borderStyle: 'dashed' as const,
+    },
+    postHocBtnText: {
+      color: colors.muted,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.medium,
+    },
   }) as const;

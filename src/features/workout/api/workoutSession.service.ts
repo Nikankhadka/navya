@@ -6,6 +6,8 @@ import { mapSessionExerciseRow, mapWorkoutSessionRow } from '@/lib/supabase/mapp
 import { fromDateKey, getTodayDateString } from '@/utils/date';
 import { buildSessionFromPlan, getActivePlan, shouldUseDemoWorkout } from './workoutPlan.service';
 
+const demoWorkoutHistory: WorkoutSession[] = [...MOCK_WORKOUT_HISTORY.recent_sessions];
+
 /**
  * Compute the start of the current week (Monday) from an optional date key.
  */
@@ -116,16 +118,23 @@ export async function getWorkoutHistory(
   const targetDate = dateKey ?? getTodayDateString();
 
   if (shouldUseDemoWorkout(userId)) {
+    const allSessions = [...demoWorkoutHistory, ...MOCK_WORKOUT_HISTORY.recent_sessions];
+    const completedThisWeek = allSessions.filter((s) => s.status === 'completed').length;
     return {
-      ...MOCK_WORKOUT_HISTORY,
+      recent_sessions: allSessions.slice(0, 8),
+      completed_this_week: completedThisWeek,
       weekly_target: weeklyTarget,
       adherence_pct:
-        weeklyTarget > 0
-          ? Math.min(
-              Math.round((MOCK_WORKOUT_HISTORY.completed_this_week / weeklyTarget) * 100),
-              100,
+        weeklyTarget > 0 ? Math.min(Math.round((completedThisWeek / weeklyTarget) * 100), 100) : 0,
+      last_completed_at: allSessions[0]?.completed_at ?? null,
+      total_completed_sessions: allSessions.length,
+      average_duration_seconds:
+        allSessions.length > 0
+          ? Math.round(
+              allSessions.reduce((sum, s) => sum + (s.duration_seconds ?? 0), 0) /
+                allSessions.length,
             )
-          : 0,
+          : null,
     };
   }
 
@@ -264,6 +273,26 @@ export async function saveSession(
     if (error) {
       console.error('Error updating session exercise:', error);
     }
+  }
+
+  return completedSession;
+}
+
+/**
+ * Save a post-hoc (already completed) workout session entered after the fact.
+ * For demo mode, appends to the in-memory history so it shows in workout history.
+ */
+export function savePostHocSession(session: WorkoutSession): WorkoutSession {
+  const completedSession: WorkoutSession = {
+    ...session,
+    status: 'completed',
+    duration_seconds:
+      session.duration_seconds ??
+      session.session_exercises.reduce((total, ex) => total + ex.completed_sets.length * 120, 0),
+  };
+
+  if (shouldUseDemoWorkout(session.user_id)) {
+    demoWorkoutHistory.unshift(completedSession);
   }
 
   return completedSession;

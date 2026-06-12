@@ -8,3 +8,5 @@ export { WorkoutStats } from './WorkoutStats';
 export { SetLoggingSheet } from './SetLoggingSheet';
 export { SplitSelectionSheet } from './SplitSelectionSheet';
 export type { SplitSelectionSheetProps } from './SplitSelectionSheet';
+export { PostHocLoggingSheet } from './PostHocLoggingSheet';
+export type { PostHocLoggingSheetProps, PostHocExercise } from './PostHocLoggingSheet';
