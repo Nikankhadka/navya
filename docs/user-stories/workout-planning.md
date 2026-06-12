@@ -14,16 +14,16 @@ As a fitness user, I want to choose a workout split that matches my goals and ex
 **I want** to select a workout split from popular pre-built options or build my own  
 **So that** my plan matches my current fitness goals and schedule
 
-**Status:** 📋 Planned (Sprint 4)
+**Status:** ✅ Mostly Built (0.1-mvp) — 4 of 6 splits done, bottom sheet instead of full screen
 
 **Acceptance Criteria:**
-- [ ] "Choose Your Split" screen accessible from Profile > Workout Plan section (post-onboarding)
-- [ ] Screen shows 6 cards: Bro Split, Push/Pull/Legs, Upper/Lower, Arnold Split, Full Body, Custom
-- [ ] Each card displays: name, estimated duration, days/week, difficulty, muscle coverage, icon
-- [ ] Tapping a pre-built split shows preview (which muscles on which days, total exercise count)
-- [ ] "Select This Split" button generates the plan in DB, sets it as active, navigates to Workout tab
-- [ ] Selecting a new split deactivates the current one (soft-delete: `is_active = false`, new `version` incremented)
-- [ ] Empty state if no plan selected ("Choose your first workout split")
+- [x] "Choose Your Split" accessible from Profile
+- [x] Shows 4 cards: Push/Pull/Legs, Upper/Lower, Full Body, Bro Split
+- [ ] Arnold Split and Custom (planned)
+- [x] Each card displays: name, days/week, difficulty, muscle coverage, icon
+- [x] Cards show which muscles on which days, total exercise count
+- [x] "Select This Split" generates the plan in DB and sets it active
+- [x] Selecting a new split deactivates the current one (is_active = false)
 
 **Technical Notes:**
 - `workout_plans` already has `version` and `is_active` — use these for plan rotation

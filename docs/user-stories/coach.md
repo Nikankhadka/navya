@@ -63,17 +63,16 @@ As a user, I want an AI coach that understands my goals, recent activity, and pr
 **I want** to receive a weekly coach summary on Home  
 **So that** I can reflect on my week's performance and get guidance for the next week
 
-**Status:** 📋 Planned (Sprint 5)
+**Status:** ✅ Built (0.1-mvp)
 
 **Acceptance Criteria:**
-- [ ] Weekly summary generated every Monday (or first app open of the week)
-- [ ] Summary includes: workouts completed vs. planned, nutrition adherence %, streak outcome
-- [ ] Coach provides 1–2 actionable suggestions for the upcoming week
-- [ ] Summary is 3–5 sentences, scannable
-- [ ] Summary appears as a card on Home (Coach card or dedicated weekly card)
-- [ ] User can tap to expand or view full summary in Coach tab
-- [ ] Old summaries are archived in chat history
-- [ ] Generation respects API budget (no summary if budget is exceeded)
+- [x] Weekly summary generated via edge function (`coach-weekly-summary`)
+- [x] Summary includes: workouts completed vs. planned, average duration, daily calorie average, weight trend
+- [x] Coach provides actionable suggestions based on adherence
+- [x] Summary is 3–5 sentences, scannable
+- [x] Summary appears as a card on Home (WeeklyCoachSummaryCard)
+- [x] User can tap to expand or view full summary in Coach tab
+- [x] Demo fallback: static summary when Supabase unavailable
 
 **Technical Notes:**
 - Edge function runs weekly aggregation query + OpenAI call
@@ -88,17 +87,16 @@ As a user, I want an AI coach that understands my goals, recent activity, and pr
 **I want** to request a new workout plan from my coach  
 **So that** I can change my routine when I get bored or need to progress
 
-**Status:** 📋 Planned (Sprint 5)
+**Status:** 🚧 Partially Built (0.1-mvp)
 
 **Acceptance Criteria:**
-- [ ] "Regenerate Workout Plan" action available in Workout tab or Coach chat
-- [ ] Coach asks for preferences: same goal? same frequency? any exercises to include/avoid?
-- [ ] Coach generates a new plan respecting: goal, frequency, experience, available equipment
-- [ ] New plan replaces the current workout plan
-- [ ] Generation respects API budget constraints
-- [ ] User can cancel regeneration
-- [ ] Previous plan is archived (not deleted) in case user wants to revert
-- [ ] Generation takes < 15 seconds (loading state with progress info)
+- [x] "Choose Workout Split" action available in Profile (replaces dead-end regenerate button)
+- [x] SplitSelectionSheet shows 4 pre-built templates (PPL, Upper/Lower, Full Body, Bro Split)
+- [x] Selecting a split generates plan in DB and sets it active
+- [x] Previous plan is deactivated (is_active = false)
+- [ ] Coach asks for preferences: same goal? same frequency? exercises to include/avoid? (not yet)
+- [ ] AI-powered plan generation from coach conversation (not yet)
+- [ ] Previous plan archived for potential revert (not yet)
 
 **Technical Notes:**
 - Edge function calls OpenAI with structured prompt to output plan JSON

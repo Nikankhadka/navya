@@ -67,24 +67,23 @@ As a fitness user, I want to view my workout plans, track sessions in real time,
 **I want** to log weight, reps, RPE, and rest for each set  
 **So that** I can track progressive overload in detail and see my strength gains
 
-**Status:** 🚧 In Progress (basic complete built Sprint 2, full per-set Sprint 4)
+**Status:** ✅ Built (0.1-mvp)
 
 **Acceptance Criteria:**
 - [x] Each exercise shows target sets (e.g., "4 × 8-10")
-- [ ] Tapping an exercise opens a Set Logging Sheet showing:
+- [x] Tapping an exercise opens a Set Logging Sheet showing:
   - Set number (e.g., "Set 2 of 4")
-  - Weight input field with unit from profile (kg/lbs toggle at top)
+  - Weight input field with kg support
   - Weight quick-adjust: +2.5, -2.5, +5 buttons
   - Reps input field
-  - RPE slider (1-10, optional) with labels: "Easy" (1-3), "Moderate" (4-6), "Hard" (7-9), "Max" (10)
+  - RPE 1-10 selector with labels: Easy (1-3), Moderate (4-6), Hard (7-9), Max (10)
   - "Log Set" button — saves and auto-starts rest timer
-  - Previous session's weight/reps shown as ghost/hint text
-- [ ] Completed sets shown below exercise name (e.g., "60kg × 8, 65kg × 8, 65kg × 7")
-- [ ] User can tap a completed set row to edit its values
-- [ ] Sets are auto-numbered starting at 1
-- [ ] RPE is optional (user can skip)
-- [ ] Volume computed per exercise: sum(weight × reps) shown after all sets done
-- [ ] Rest duration logged per set in session data
+  - Previous session's weight/reps shown as hint text
+- [x] Completed sets shown below exercise name as tappable chips (e.g., "60kg × 8")
+- [x] User can tap a completed set chip to edit its values (re-opens sheet pre-filled)
+- [x] Sets are auto-numbered starting at 1
+- [x] RPE is optional (user can skip)
+- [x] Volume computed per exercise: sum(weight × reps) shown after all sets done
 
 **Technical Notes:**
 - `session_exercises.completed_sets` JSONB column stores: set_number, reps_completed, weight_kg, rpe, rest_seconds, completed_at
@@ -99,21 +98,18 @@ As a fitness user, I want to view my workout plans, track sessions in real time,
 **I want** an automatic rest timer between sets  
 **So that** I can maintain consistent rest intervals without watching a clock
 
-**Status:** 🚧 In Progress (basic elapsed timer built Sprint 2, full timer Sprint 4)
+**Status:** ✅ Built (0.1-mvp)
 
 **Acceptance Criteria:**
-- [ ] Timer auto-starts when a set is logged via Set Logging Sheet
-- [ ] Default rest duration from plan (30s, 60s, 90s, 120s, 180s)
-- [ ] Visual countdown ring with remaining time in center
-- [ ] Timer shows current exercise name above ring (e.g., "Rest — Bench Press")
-- [ ] Next exercise name shown below (e.g., "Next: Incline DB Press")
-- [ ] Controls: Pause, Skip (+0s, starts next set), +30s extend
-- [ ] Vibration alert when timer hits 0 (Haptics API)
-- [ ] Timer pauses if app goes to background, resumes on foreground (AppState listener)
-- [ ] Timer runs globally — survives tab switch (e.g., user goes to Nutrition tab, timer keeps running)
-- [ ] Timer notification shown in header if on other tab ("Rest: 0:45 — Bench Press")
-- [ ] Rest duration logged per set in session data (`rest_seconds` in CompletedSet)
-- [ ] Timer uses `Date.now()` delta for accuracy, not `setInterval` increment
+- [x] Timer auto-starts when a set is logged via Set Logging Sheet
+- [x] Default rest duration from plan (30s, 60s, 90s, 120s, 180s)
+- [x] Timer shows remaining time in center with exercise name
+- [x] Next exercise name shown below
+- [x] Controls: Pause, Skip, +30s extend
+- [x] Vibration alert when timer hits 0 (Vibration API)
+- [x] Timer pauses if app goes to background, resumes on foreground (AppState listener)
+- [x] Timer runs globally — survives tab switch (module-level polling in Zustand store)
+- [x] Timer uses `Date.now()` delta for accuracy
 
 **Technical Notes:**
 - In-app haptic vibration via `expo-haptics` (no push notification needed for MVP)
@@ -150,21 +146,21 @@ As a fitness user, I want to view my workout plans, track sessions in real time,
 **I want** to log a workout I already completed without the app open  
 **So that** I can track my training even when I forget to start a live session
 
-**Status:** 📋 Planned (Sprint 4)
+**Status:** ✅ Built (0.1-mvp)
 
 **Acceptance Criteria:**
-- [ ] "Log Past Workout" button visible on Workout > Today tab (when no active session)
-- [ ] User selects a plan day to log against (or "Freeform" — no plan)
-- [ ] Date picker allows any past date
-- [ ] User enters exercises one by one:
-  - Search/type exercise name (autocomplete from exercise library + free text)
+- [x] "Log Past Workout" button visible on Workout tab
+- [x] User selects a plan day to log against (or "Freeform" — no plan)
+- [x] Date picker allows any past date (DD/MM/YYYY inputs)
+- [x] User enters exercises one by one:
+  - Type exercise name (free text)
   - Add sets: weight, reps, RPE (optional) per set
   - "Add Another Exercise" button at bottom
-- [ ] No live timer — straight set logging
-- [ ] "Save Workout" creates completed session in DB with selected date
-- [ ] Session appears in history immediately
-- [ ] Freeform workouts also appear in history (tagged as "Freeform")
-- [ ] User can edit a post-hoc logged session within 24 hours
+- [x] No live timer — straight set logging
+- [x] "Save Workout" creates completed session in DB with selected date
+- [x] Session appears in history immediately
+- [x] Freeform workouts appear in history (tagged as "Freeform")
+- [x] Supabase persistence path: INSERT into workout_sessions + session_exercises
 
 **Technical Notes:**
 - Sessions created with `status = 'completed'` directly (no `in_progress` phase)

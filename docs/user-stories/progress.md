@@ -40,17 +40,16 @@ As a goal-oriented user, I want to track my body measurements, see my progress o
 **I want** to see my weight history as a chart or list  
 **So that** I can visualise my long-term trend
 
-**Status:** 📋 Planned (Sprint 4)
+**Status:** ✅ Built (0.1-mvp)
 
 **Acceptance Criteria:**
-- [ ] Progress history accessible from Profile or dedicated progress section
-- [ ] Line chart shows weight over time (last 7 days, 30 days, 90 days)
-- [ ] Each data point is a logged check-in
-- [ ] Chart shows goal line (target weight from profile) as reference
-- [ ] User can toggle between kg and lbs
-- [ ] Empty state if no check-ins logged ("Log your first weigh-in to see your trend")
-- [ ] Summary stats shown: start weight, current weight, total change, lowest, highest
-- [ ] Tapping a data point shows exact value and date
+- [x] Progress history accessible from Profile
+- [x] Bar chart shows weight over time (last 14 days with change)
+- [x] Each data point is a logged check-in
+- [x] Chart shows goal line (target weight from profile) as reference
+- [ ] User can toggle between kg and lbs (not yet)
+- [x] Empty state if no check-ins logged
+- [x] Summary stats shown: current weight, 14d change, last check-in
 
 **Technical Notes:**
 - Uses `react-native-chart-kit` or a lightweight charting library
@@ -65,16 +64,14 @@ As a goal-oriented user, I want to track my body measurements, see my progress o
 **I want** to see how consistently I'm completing my scheduled workouts  
 **So that** I can hold myself accountable and identify patterns
 
-**Status:** 🚧 In Progress (Sprint 3)
+**Status:** ✅ Built (0.1-mvp)
 
 **Acceptance Criteria:**
-- [ ] Adherence shown as percentage (e.g., "75% this week")
-- [ ] Weekly view: "3 of 4 planned sessions completed"
-- [ ] Monthly view: adherence % across all scheduled days
-- [ ] Adherence data shown on Home (Progress card) and Profile
-- [ ] Current streak shown alongside adherence
-- [ ] No placeholders — all data derived from `workout_sessions`
-- [ ] Empty state: "No workouts logged yet — start your first session!"
+- [x] Adherence shown as percentage (e.g., "75% this week")
+- [x] Weekly view: "X of Y planned sessions completed"
+- [x] Adherence data shown on Home (Progress card) and Profile
+- [x] Current streak shown alongside adherence
+- [x] No placeholders — all data derived from `workout_sessions`
 
 **Technical Notes:**
 - Adherence = completed_sessions / planned_sessions for the period

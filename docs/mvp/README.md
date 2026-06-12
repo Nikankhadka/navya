@@ -143,39 +143,32 @@ Acceptance criteria:
 - Home reflects calories, macros, water, and streak state from real data
 - all diary widgets work in both demo mode and live Supabase mode
 
-### Phase 2: Add Progress And Adherence
+### Phase 2: Add Progress And Adherence ✅ COMPLETE (0.1-mvp)
 
 Goal: turn profile data into visible progress.
 
 Scope:
 
-- add weight check-ins from Profile and Home
-- add simple progress history for weight and workout adherence
-- add workout history screen or section using completed workout sessions
-- surface weekly completion stats in Profile
+- add weight check-ins from Profile and Home ✅
+- add weight trend chart (WeightTrendCard) ✅
+- add workout history with SessionDetailModal + volume calc ✅
+- add split selection with 4 pre-built templates ✅
+- per-set logging: RPE 1-10 slider, tap-to-edit sets ✅
+- rest timer: vibration, global persistence ✅
+- post-hoc workout logging ✅
+- surface weekly completion stats in Profile from real data ✅
 
-Acceptance criteria:
-
-- a tester can log weight and view a simple trend/history
-- completed workout sessions are visible after finishing a workout
-- Profile stats no longer rely on static placeholders
-
-### Phase 3: Coach And Capture Speed
+### Phase 3: Coach And Capture Speed 🚧 PARTIAL (0.1-mvp)
 
 Goal: make Navya feel smarter without rebuilding the product.
 
 Scope:
 
-- generate weekly coach summary from logged food, workouts, and streaks
-- add meal templates for common breakfasts, lunches, dinners, and snacks
-- add feature-flagged barcode-assisted nutrition capture
-- wire "Regenerate Workout Plan" to a constrained, real flow instead of a dead-end action
-
-Acceptance criteria:
-
-- coach weekly summaries reflect real user behavior
-- repeat meal logging is materially faster than manual re-entry
-- barcode capture can be disabled safely if source data quality is weak
+- generate weekly coach summary from real data (edge function) ✅
+- add meal templates: 8 system presets + save_as_custom flow ✅
+- replace dead-end regenerate button with Choose Workout Split ✅
+- add feature-flagged barcode-assisted nutrition capture ⬜ Deferred
+- custom plan builder ⬜ Planned
 
 ## Product Rules
 
