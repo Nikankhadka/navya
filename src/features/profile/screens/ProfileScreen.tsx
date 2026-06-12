@@ -23,6 +23,9 @@ import {
 import type { UserProfile } from '@/types/app';
 import { crossAlert } from '@/utils/crossAlert';
 import { isVisualTestScenario } from '@/utils/visualTest';
+import { SplitSelectionSheet } from '@/features/workout/components';
+import { createPlanFromTemplate } from '@/features/workout/api/workoutPlan.service';
+import type { SplitTemplate } from '@/features/workout/data/splitTemplates';
 
 type EditProfileForm = EditProfileModalProps['form'];
 
@@ -214,6 +217,7 @@ export default function ProfileScreen() {
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [checkInWeight, setCheckInWeight] = useState('');
+  const [showSplitSheet, setShowSplitSheet] = useState(false);
   const [form, setForm] = useState<EditProfileForm>({
     full_name: '',
     weight_kg: '',
@@ -251,6 +255,14 @@ export default function ProfileScreen() {
   }, []);
 
   if (!activeUser) return null;
+
+  const handleSelectSplit = (template: SplitTemplate) => {
+    if (!user?.id) return;
+    createPlanFromTemplate(template, user.id);
+    queryClient.invalidateQueries({ queryKey: ['workout-active-plan', user.id] });
+    queryClient.invalidateQueries({ queryKey: ['workout-history', user.id] });
+    setShowSplitSheet(false);
+  };
 
   const showComingSoon = (title: string, message: string) => {
     crossAlert(title, message);
@@ -492,16 +504,8 @@ export default function ProfileScreen() {
         >
           <Text style={styles.actionBtnText}>🔔 Notification Settings</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() =>
-            showComingSoon(
-              'Workout regeneration is coming soon',
-              'For the MVP, plan refresh still needs backend planning logic. Testers should use the existing workout plan flow instead.',
-            )
-          }
-        >
-          <Text style={styles.actionBtnText}>🤖 Regenerate Workout Plan</Text>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => setShowSplitSheet(true)}>
+          <Text style={styles.actionBtnText}>🤖 Choose Workout Split</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionBtn, styles.signOutBtn]} onPress={signOut}>
           <Text style={styles.signOutText}>{isDemoSession ? 'Exit Demo' : 'Sign Out'}</Text>
@@ -538,6 +542,12 @@ export default function ProfileScreen() {
         weight={checkInWeight}
         onWeightChange={setCheckInWeight}
         isPending={logWeight.isPending}
+      />
+
+      <SplitSelectionSheet
+        visible={showSplitSheet}
+        onSelect={handleSelectSplit}
+        onClose={() => setShowSplitSheet(false)}
       />
     </ScrollView>
   );

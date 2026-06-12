@@ -4,6 +4,9 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { MOCK_PLAN, MOCK_PROFILE } from '@/features/demo/mockData';
 import { mapWorkoutPlanRow } from '@/lib/supabase/mappers';
 import { fromDateKey } from '@/utils/date';
+import type { SplitTemplate } from '@/features/workout/data/splitTemplates';
+
+let demoActivePlan: WorkoutPlan | null = null;
 
 /**
  * Build a local WorkoutSession from an active plan for a given date.
@@ -61,7 +64,7 @@ export function shouldUseDemoWorkout(userId: string): boolean {
  */
 export async function getActivePlan(userId: string): Promise<WorkoutPlan | null> {
   if (shouldUseDemoWorkout(userId)) {
-    return MOCK_PLAN;
+    return demoActivePlan ?? MOCK_PLAN;
   }
 
   const { data, error } = await supabase
@@ -248,4 +251,68 @@ export async function createDefaultPlan(userId: string): Promise<WorkoutPlan | n
     .single();
 
   return fullPlan ? mapWorkoutPlanRow(fullPlan) : null;
+}
+
+/**
+ * Build a local WorkoutPlan from a SplitTemplate (demo mode).
+ * Generates UUID-like IDs for plan, days, and exercises.
+ */
+export function createPlanFromTemplate(template: SplitTemplate, userId: string): WorkoutPlan {
+  const planId = `plan-${template.id}-${Date.now()}`;
+  const createdDate = new Date().toISOString();
+
+  const workoutPlanDays = template.days.map((day, dayIndex) => {
+    const dayId = `${planId}-day-${dayIndex}`;
+
+    const planExercises = day.exercises.map((ex, exIndex) => ({
+      id: `${dayId}-pe-${exIndex}`,
+      plan_day_id: dayId,
+      exercise_id: `ex-${ex.name.toLowerCase().replace(/\s+/g, '-')}`,
+      exercise: {
+        id: `ex-${ex.name.toLowerCase().replace(/\s+/g, '-')}`,
+        name: ex.name,
+        muscle_groups:
+          day.focusAreas as WorkoutPlan['workout_plan_days'][0]['plan_exercises'][0]['exercise']['muscle_groups'],
+        equipment_required: [],
+        difficulty: template.difficulty,
+        instructions: '',
+        video_url: null,
+      },
+      sets: ex.sets,
+      reps: ex.reps,
+      rest_seconds: ex.restSeconds,
+      order_index: exIndex,
+      notes: ex.notes ?? null,
+    }));
+
+    return {
+      id: dayId,
+      plan_id: planId,
+      day_of_week: day.dayOfWeek as WorkoutPlan['workout_plan_days'][0]['day_of_week'],
+      day_name: day.dayName,
+      order_index: dayIndex,
+      estimated_minutes: day.exercises.reduce(
+        (total, ex) => total + ex.sets * Math.ceil(ex.restSeconds / 60) + 1,
+        0,
+      ),
+      plan_exercises: planExercises,
+    };
+  });
+
+  const plan: WorkoutPlan = {
+    id: planId,
+    user_id: userId,
+    name: template.name,
+    goal: 'build_muscle',
+    version: 1,
+    is_active: true,
+    created_at: createdDate,
+    workout_plan_days: workoutPlanDays,
+  };
+
+  if (shouldUseDemoWorkout(userId)) {
+    demoActivePlan = plan;
+  }
+
+  return plan;
 }

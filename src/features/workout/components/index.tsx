@@ -6,3 +6,5 @@ export { SessionCompleteCard } from './SessionCompleteCard';
 export { SessionDetailModal } from './SessionDetailModal';
 export { WorkoutStats } from './WorkoutStats';
 export { SetLoggingSheet } from './SetLoggingSheet';
+export { SplitSelectionSheet } from './SplitSelectionSheet';
+export type { SplitSelectionSheetProps } from './SplitSelectionSheet';
