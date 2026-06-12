@@ -12,7 +12,3 @@ export const useDateStore = create<DateState>((set) => ({
   setSelectedDate: (dateKey: string) => set({ selectedDate: dateKey }),
   resetToToday: () => set({ selectedDate: getTodayDateString() }),
 }));
-
-export function isDateToday(): boolean {
-  return useDateStore.getState().selectedDate === getTodayDateString();
-}

@@ -20,7 +20,7 @@ export function getVisualTestSessionMode(): VisualTestSessionMode | null {
   return null;
 }
 
-export function getVisualTestScenario(): string | null {
+function getVisualTestScenario(): string | null {
   return readSearchParam('navya-test-scenario');
 }
 

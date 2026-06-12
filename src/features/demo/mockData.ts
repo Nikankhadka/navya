@@ -6,7 +6,6 @@ import type {
   CoachMessage,
   DailyNutritionSummary,
   WeightLog,
-  WaterLog,
   WorkoutHistorySummary,
   FoodSearchResult,
 } from '@/types/app';
@@ -60,7 +59,8 @@ export const MOCK_PLAN: WorkoutPlan = {
             muscle_groups: ['chest', 'triceps', 'shoulders'],
             equipment_required: ['barbell'],
             difficulty: 'intermediate',
-            instructions: 'Lie on bench, grip slightly wider than shoulder width, lower bar to chest, press up.',
+            instructions:
+              'Lie on bench, grip slightly wider than shoulder width, lower bar to chest, press up.',
             video_url: null,
           },
           sets: 4,
@@ -79,7 +79,8 @@ export const MOCK_PLAN: WorkoutPlan = {
             muscle_groups: ['shoulders', 'triceps'],
             equipment_required: ['barbell'],
             difficulty: 'intermediate',
-            instructions: 'Stand with bar at shoulder height, press directly overhead, lock out elbows.',
+            instructions:
+              'Stand with bar at shoulder height, press directly overhead, lock out elbows.',
             video_url: null,
           },
           sets: 3,
@@ -117,7 +118,8 @@ export const MOCK_PLAN: WorkoutPlan = {
             muscle_groups: ['shoulders'],
             equipment_required: ['dumbbells'],
             difficulty: 'beginner',
-            instructions: 'Raise dumbbells to the side until parallel with ground, control the descent.',
+            instructions:
+              'Raise dumbbells to the side until parallel with ground, control the descent.',
             video_url: null,
           },
           sets: 4,
@@ -136,7 +138,8 @@ export const MOCK_PLAN: WorkoutPlan = {
             muscle_groups: ['triceps'],
             equipment_required: ['gym'],
             difficulty: 'beginner',
-            instructions: 'Using cable machine, press the bar down while keeping elbows fixed at sides.',
+            instructions:
+              'Using cable machine, press the bar down while keeping elbows fixed at sides.',
             video_url: null,
           },
           sets: 3,
@@ -243,18 +246,21 @@ export const MOCK_TODAY_SESSION: WorkoutSession = {
     exercise_name: pe.exercise.name,
     planned_sets: pe.sets,
     planned_reps: pe.reps,
-    completed_sets: i < 2 ? Array.from({ length: pe.sets }, (_, j) => ({
-      set_number: j + 1,
-      reps_completed: 8,
-      weight_kg: 60,
-      completed_at: new Date().toISOString(),
-    })) : [],
+    completed_sets:
+      i < 2
+        ? Array.from({ length: pe.sets }, (_, j) => ({
+            set_number: j + 1,
+            reps_completed: 8,
+            weight_kg: 60,
+            completed_at: new Date().toISOString(),
+          }))
+        : [],
     notes: pe.notes,
     is_skipped: false,
   })),
 };
 
-export const MOCK_FOOD_LOGS: FoodLog[] = [
+const MOCK_FOOD_LOGS: FoodLog[] = [
   {
     id: 'food-1',
     user_id: 'mock-user-1',
@@ -430,10 +436,6 @@ export const MOCK_COACH_MESSAGES: CoachMessage[] = [
   },
 ];
 
-export const MOCK_WEEKLY_STREAK = [true, true, false, true, true, true, false];
-
-export const MOCK_WATER_LOGS: WaterLog[] = MOCK_DAILY_NUTRITION.water_logs;
-
 export const MOCK_WEIGHT_LOGS: WeightLog[] = [
   {
     id: 'weight-1',
@@ -455,7 +457,7 @@ export const MOCK_WEIGHT_LOGS: WeightLog[] = [
   },
 ];
 
-export const MOCK_COMPLETED_WORKOUTS: WorkoutSession[] = [
+const MOCK_COMPLETED_WORKOUTS: WorkoutSession[] = [
   {
     ...MOCK_TODAY_SESSION,
     id: 'session-complete-1',
@@ -495,7 +497,7 @@ export const COACH_QUICK_REPLIES = [
 export const DEMO_COACH_RESPONSES = [
   "Based on your recent sessions, you're consistently hitting your volume targets. Keep the intensity on compound movements and you'll see solid strength gains in the next 2–3 weeks. 💪",
   "For muscle building, aim for 1.8–2.2g of protein per kg of body weight. At 78kg that's 140–172g/day. Your current intake looks close — just bump up dinner protein.",
-  "Rest day tomorrow? Perfect. Light walking and 8 hours of sleep will accelerate recovery more than any supplement. Your body grows during rest, not just during training.",
+  'Rest day tomorrow? Perfect. Light walking and 8 hours of sleep will accelerate recovery more than any supplement. Your body grows during rest, not just during training.',
   "Your 7-day streak is a strong habit signal. The hardest part was week 1 — you're well past that now. Stay consistent for another 3 weeks and this becomes automatic.",
   "For today's soreness: focus on active recovery — 10 min light cardio, dynamic stretching, and foam rolling the affected areas. Avoid training that muscle group for another 24–48 hours.",
 ];

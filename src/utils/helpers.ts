@@ -1,4 +1,4 @@
-import type { GoalType, ActivityLevel, DayOfWeek } from '@/types/app';
+import type { GoalType } from '@/types/app';
 
 // ─── Time ─────────────────────────────────────────────────────────────────────
 
@@ -28,47 +28,6 @@ export function formatTime(isoString: string): string {
   });
 }
 
-export function formatDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString('en-AU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-}
-
-export function getTodayDateString(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-// ─── Nutrition ────────────────────────────────────────────────────────────────
-
-export function calcCalorieGoal(
-  weightKg: number,
-  goal: GoalType,
-  activityLevel: ActivityLevel,
-): number {
-  const activityMultiplier: Record<ActivityLevel, number> = {
-    sedentary: 1.2,
-    lightly_active: 1.375,
-    moderately_active: 1.55,
-    very_active: 1.725,
-  };
-  const bmr = weightKg * 22; // simplified
-  const tdee = Math.round(bmr * activityMultiplier[activityLevel]);
-  if (goal === 'build_muscle') return tdee + 300;
-  if (goal === 'lose_weight') return tdee - 400;
-  return tdee;
-}
-
-export function calcProteinGoal(weightKg: number, goal: GoalType): number {
-  const multiplier = goal === 'build_muscle' ? 2.0 : goal === 'lose_weight' ? 1.8 : 1.6;
-  return Math.round(weightKg * multiplier);
-}
-
-export function macroPercent(consumed: number, goal: number): number {
-  return Math.min(Math.round((consumed / goal) * 100), 100);
-}
-
 // ─── Labels ───────────────────────────────────────────────────────────────────
 
 export function goalLabel(goal: GoalType): string {
@@ -80,14 +39,6 @@ export function goalLabel(goal: GoalType): string {
     general_fitness: 'General Fitness',
   };
   return map[goal];
-}
-
-export function dayLabel(day: DayOfWeek): string {
-  return day.charAt(0).toUpperCase() + day.slice(1);
-}
-
-export function dayShort(day: DayOfWeek): string {
-  return day.slice(0, 3).toUpperCase();
 }
 
 export function mealTimeLabel(mealTime: string): string {
@@ -119,8 +70,4 @@ export function sessionProgress(session: {
     (ex) => ex.is_skipped || ex.completed_sets.length >= ex.planned_sets,
   ).length;
   return Math.round((done / total) * 100);
-}
-
-export function getWeekDayLabels(): string[] {
-  return ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 }

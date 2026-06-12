@@ -6,14 +6,6 @@ export const emailSchema = z
   .trim()
   .toLowerCase();
 
-export const passwordSchema = z
-  .string()
-  .min(6, 'Password must be at least 6 characters')
-  .max(72, 'Password must be less than 72 characters');
-
-export type EmailInput = z.infer<typeof emailSchema>;
-export type PasswordInput = z.infer<typeof passwordSchema>;
-
 function getFirstErrorMessage(result: unknown, field: string): string | undefined {
   const parseResult = result as {
     success: boolean;

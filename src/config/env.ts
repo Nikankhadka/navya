@@ -1,8 +1,5 @@
 import Constants from 'expo-constants';
 
-export const appEnv =
-  process.env.EXPO_PUBLIC_APP_ENV ?? Constants.expoConfig?.extra?.appEnv ?? 'development';
-
 const rawSupabaseUrl =
   Constants.expoConfig?.extra?.supabaseUrl ?? process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 
@@ -25,21 +22,11 @@ export const supabaseAnonKey =
     );
   })();
 
-export const demoModeFlag =
-  Constants.expoConfig?.extra?.enableDemoMode ??
-  process.env.EXPO_PUBLIC_ENABLE_DEMO_MODE ??
-  'false';
-
 export const isSupabaseConfigured = supabaseUrl.length > 0 && supabaseAnonKey.length > 0;
 
-export const isHostedAppEnv = appEnv === 'preview' || appEnv === 'production';
-
-export const isDemoModeAvailable =
-  demoModeFlag === 'true' || (!isHostedAppEnv && !isSupabaseConfigured);
-
-export const coachFeatureFlag =
+const coachFeatureFlag =
   Constants.expoConfig?.extra?.coachFeatureFlag ?? process.env.EXPO_PUBLIC_ENABLE_COACH ?? 'true';
 
 export const isCoachEnabled = coachFeatureFlag === 'true';
 
-export const isLocalDev = supabaseUrl.includes('localhost') || supabaseUrl.includes('127.0.0.1');
+export const siteUrl = process.env.EXPO_PUBLIC_SITE_URL ?? 'http://localhost:8081';

@@ -1,12 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import {
-  isDemoModeAvailable,
-  isSupabaseConfigured,
-  supabaseAnonKey,
-  supabaseUrl,
-} from '@/config/env';
+import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from '@/config/env';
 import type { Database } from '@/types/database';
 
 const inMemoryStorage: Record<string, string> = {};
@@ -74,7 +69,7 @@ const SecureStoreAdapter = {
   },
 };
 
-export { isDemoModeAvailable, isSupabaseConfigured };
+export { isSupabaseConfigured };
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {

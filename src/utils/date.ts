@@ -2,7 +2,7 @@ export function getTodayDateString(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function toDateKey(date: Date): string {
+function toDateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
@@ -43,21 +43,6 @@ export function formatDayLabel(dateKey: string): string {
 export function formatMonthYear(dateKey: string): string {
   const date = fromDateKey(dateKey);
   return date.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
-}
-
-export function getWeekKeys(dateKey: string): string[] {
-  const date = fromDateKey(dateKey);
-  const day = date.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  const monday = new Date(date);
-  monday.setHours(0, 0, 0, 0);
-  monday.setDate(date.getDate() + mondayOffset);
-
-  return Array.from({ length: 7 }, (_, i) => {
-    const entry = new Date(monday);
-    entry.setDate(monday.getDate() + i);
-    return toDateKey(entry);
-  });
 }
 
 export function getMonthGrid(dateKey: string): { dateKey: string; isCurrentMonth: boolean }[] {

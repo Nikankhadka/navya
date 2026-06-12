@@ -77,7 +77,7 @@ function mapCompletedSets(value: Json | null): CompletedSet[] {
   return value.flatMap((entry) => (isCompletedSet(entry) ? [entry] : []));
 }
 
-export function mapExerciseRow(row: ExerciseRow): Exercise {
+function mapExerciseRow(row: ExerciseRow): Exercise {
   return {
     id: row.id,
     name: row.name,
@@ -89,7 +89,7 @@ export function mapExerciseRow(row: ExerciseRow): Exercise {
   };
 }
 
-export function mapPlanExerciseRow(row: PlanExerciseRow): PlanExercise {
+function mapPlanExerciseRow(row: PlanExerciseRow): PlanExercise {
   const exerciseRow = asSingle(row.exercise);
 
   return {
@@ -115,7 +115,7 @@ export function mapPlanExerciseRow(row: PlanExerciseRow): PlanExercise {
   };
 }
 
-export function mapWorkoutPlanDayRow(row: WorkoutPlanDayRow): WorkoutPlanDay {
+function mapWorkoutPlanDayRow(row: WorkoutPlanDayRow): WorkoutPlanDay {
   return {
     id: row.id,
     plan_id: row.plan_id,
