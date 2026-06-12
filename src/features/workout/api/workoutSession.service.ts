@@ -281,8 +281,9 @@ export async function saveSession(
 /**
  * Save a post-hoc (already completed) workout session entered after the fact.
  * For demo mode, appends to the in-memory history so it shows in workout history.
+ * For Supabase mode, inserts into workout_sessions and session_exercises tables.
  */
-export function savePostHocSession(session: WorkoutSession): WorkoutSession {
+export async function savePostHocSession(session: WorkoutSession): Promise<WorkoutSession> {
   const completedSession: WorkoutSession = {
     ...session,
     status: 'completed',
@@ -293,7 +294,53 @@ export function savePostHocSession(session: WorkoutSession): WorkoutSession {
 
   if (shouldUseDemoWorkout(session.user_id)) {
     demoWorkoutHistory.unshift(completedSession);
+    return completedSession;
   }
 
-  return completedSession;
+  // Persist to Supabase
+  const { data: sessionRow, error: sessionError } = await supabase
+    .from('workout_sessions')
+    .insert({
+      user_id: completedSession.user_id,
+      plan_day_id: completedSession.plan_day_id,
+      day_name: completedSession.day_name,
+      status: 'completed',
+      started_at: completedSession.started_at,
+      completed_at: completedSession.completed_at,
+      duration_seconds: completedSession.duration_seconds,
+    } as never)
+    .select('*')
+    .single();
+
+  if (sessionError || !sessionRow) {
+    console.error('Error saving post-hoc session:', sessionError);
+    return completedSession;
+  }
+
+  const sessionId = (sessionRow as Database['public']['Tables']['workout_sessions']['Row']).id;
+
+  // Insert session exercises
+  const sessionExercises = completedSession.session_exercises.map((ex) => ({
+    session_id: sessionId,
+    exercise_id: ex.exercise_id,
+    exercise_name: ex.exercise_name,
+    planned_sets: ex.planned_sets,
+    planned_reps: ex.planned_reps,
+    completed_sets: ex.completed_sets as never,
+    notes: ex.notes,
+    is_skipped: false,
+  }));
+
+  const { error: exError } = await supabase
+    .from('session_exercises')
+    .insert(sessionExercises as never);
+
+  if (exError) {
+    console.error('Error saving post-hoc session exercises:', exError);
+  }
+
+  return {
+    ...completedSession,
+    id: sessionId,
+  };
 }

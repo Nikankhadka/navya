@@ -316,3 +316,129 @@ export function createPlanFromTemplate(template: SplitTemplate, userId: string):
 
   return plan;
 }
+
+/**
+ * Create a workout plan from a split template and persist to Supabase.
+ * Deactivates any existing active plans, inserts plan+days+exercises
+ * using exercise_library lookups, and returns the fully joined plan.
+ * Falls back to local creation for demo mode.
+ */
+export async function createPlanFromTemplateOnSupabase(
+  template: SplitTemplate,
+  userId: string,
+): Promise<WorkoutPlan | null> {
+  if (shouldUseDemoWorkout(userId)) {
+    demoActivePlan = createPlanFromTemplate(template, userId);
+    return demoActivePlan;
+  }
+
+  // Deactivate any existing active plans for this user
+  await supabase
+    .from('workout_plans')
+    .update({ is_active: false } as never)
+    .eq('user_id', userId)
+    .eq('is_active', true);
+
+  // Fetch exercise IDs matching the template exercise names
+  const exerciseNames = template.days.flatMap((day) => day.exercises.map((ex) => ex.name));
+  const { data: exercises, error: fetchError } = await supabase
+    .from('exercise_library')
+    .select('id, name')
+    .in('name', exerciseNames);
+
+  if (fetchError) {
+    console.error('Error fetching exercises for plan:', fetchError);
+    return null;
+  }
+
+  const exerciseMap = new Map<string, string>();
+  for (const ex of exercises ?? []) {
+    exerciseMap.set(ex.name, ex.id);
+  }
+
+  // Insert the plan
+  const { data: planRow, error: planError } = await supabase
+    .from('workout_plans')
+    .insert({
+      user_id: userId,
+      name: template.name,
+      goal: 'build_muscle',
+      version: 1,
+      is_active: true,
+    } as never)
+    .select('*')
+    .single();
+
+  if (planError || !planRow) {
+    console.error('Error creating plan from template:', planError);
+    return null;
+  }
+
+  const plan = planRow as Database['public']['Tables']['workout_plans']['Row'];
+
+  // Insert plan days and exercises
+  for (const [dayIndex, dayTemplate] of template.days.entries()) {
+    const { data: dayRow, error: dayError } = await supabase
+      .from('workout_plan_days')
+      .insert({
+        plan_id: plan.id,
+        day_of_week: dayTemplate.dayOfWeek,
+        day_name: dayTemplate.dayName,
+        order_index: dayIndex,
+        estimated_minutes: dayTemplate.exercises.reduce(
+          (total, ex) => total + ex.sets * Math.ceil(ex.restSeconds / 60) + 1,
+          0,
+        ),
+      } as never)
+      .select('*')
+      .single();
+
+    if (dayError || !dayRow) {
+      console.error('Error creating plan day:', dayError);
+      continue;
+    }
+
+    const day = dayRow as Database['public']['Tables']['workout_plan_days']['Row'];
+
+    const planExercises = dayTemplate.exercises
+      .map((ex, exIndex) => {
+        const exerciseId = exerciseMap.get(ex.name);
+        return exerciseId
+          ? {
+              plan_day_id: day.id,
+              exercise_id: exerciseId,
+              sets: ex.sets,
+              reps: ex.reps,
+              rest_seconds: ex.restSeconds,
+              order_index: exIndex,
+              notes: ex.notes ?? null,
+            }
+          : null;
+      })
+      .filter((pe): pe is NonNullable<typeof pe> => pe !== null);
+
+    if (planExercises.length > 0) {
+      await supabase.from('plan_exercises').insert(planExercises as never);
+    }
+  }
+
+  // Fetch the full plan with days and exercises
+  const { data: fullPlan } = await supabase
+    .from('workout_plans')
+    .select(
+      `
+        *,
+        workout_plan_days (
+          *,
+          plan_exercises (
+            *,
+            exercise:exercise_library (*)
+          )
+        )
+      `,
+    )
+    .eq('id', plan.id)
+    .single();
+
+  return fullPlan ? mapWorkoutPlanRow(fullPlan) : null;
+}

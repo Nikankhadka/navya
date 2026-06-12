@@ -196,7 +196,7 @@ export default function WorkoutScreen() {
       is_skipped: false,
     }));
 
-    workoutService.savePostHocSession({
+    await workoutService.savePostHocSession({
       id: data.id,
       user_id: data.user_id,
       plan_day_id: data.plan_day_id,

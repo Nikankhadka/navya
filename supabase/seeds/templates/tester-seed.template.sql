@@ -84,31 +84,69 @@ insert_exercises as (
     video_url
   )
   values
-    (
-      'Bench Press',
-      array['chest', 'triceps', 'shoulders'],
-      array['barbell'],
-      'intermediate',
-      'Lower the bar to the chest and press back to full extension.',
-      null
-    ),
-    (
-      'Overhead Press',
-      array['shoulders', 'triceps'],
-      array['barbell'],
-      'intermediate',
-      'Press the bar from shoulder height overhead with control.',
-      null
-    ),
-    (
-      'Lateral Raise',
-      array['shoulders'],
-      array['dumbbells'],
-      'beginner',
-      'Raise dumbbells to shoulder height with a slight elbow bend.',
-      null
-    )
-  on conflict do nothing
+    ('Barbell Bench Press', '{chest,triceps,shoulders}', '{barbell}', 'intermediate',
+     'Lie on a flat bench, grip slightly wider than shoulder width. Lower bar to mid-chest, press back to full extension.', null),
+    ('Overhead Press', '{shoulders,triceps}', '{barbell}', 'intermediate',
+     'Stand with bar at shoulder height, press directly overhead until elbows lock out.', null),
+    ('Incline Dumbbell Press', '{chest,shoulders}', '{dumbbells}', 'intermediate',
+     'Set bench to 30-45 degree incline. Press dumbbells up and slightly inward.', null),
+    ('Lateral Raise', '{shoulders}', '{dumbbells}', 'beginner',
+     'Stand with dumbbells at sides. Raise arms to shoulder height with slight elbow bend.', null),
+    ('Tricep Pushdowns', '{triceps}', '{gym}', 'beginner',
+     'Using cable machine with bar attachment, press bar down until arms fully extend.', null),
+    ('Deadlift', '{back,legs,glutes}', '{barbell}', 'intermediate',
+     'Stand with feet hip-width, bar over midfoot. Hinge at hips, drive through heels.', null),
+    ('Barbell Row', '{back,biceps}', '{barbell}', 'intermediate',
+     'Hinge at hips until torso is near-parallel. Pull barbell to lower chest.', null),
+    ('Lat Pulldown', '{back,biceps}', '{gym}', 'beginner',
+     'Grip wide bar on cable machine. Pull bar to upper chest while squeezing lats.', null),
+    ('Face Pull', '{shoulders,back}', '{gym}', 'beginner',
+     'Using rope attachment on cable. Pull toward face while externally rotating shoulders.', null),
+    ('Barbell Curl', '{biceps}', '{barbell}', 'beginner',
+     'Stand holding barbell with underhand grip. Curl bar toward shoulders.', null),
+    ('Barbell Squat', '{legs,glutes}', '{barbell}', 'intermediate',
+     'Bar on upper back, feet shoulder-width. Squat below parallel, drive through heels.', null),
+    ('Romanian Deadlift', '{legs,glutes,back}', '{barbell}', 'intermediate',
+     'Hold bar at hip level. Hinge hips back, lower bar along legs.', null),
+    ('Leg Press', '{legs,glutes}', '{gym}', 'beginner',
+     'Sit in leg press machine, feet shoulder-width on platform. Press until legs extend.', null),
+    ('Calf Raise', '{calves}', '{gym}', 'beginner',
+     'Stand on platform edge. Raise heels as high as possible, lower for stretch.', null),
+    ('Dumbbell Bench Press', '{chest,triceps,shoulders}', '{dumbbells}', 'intermediate',
+     'Lie on flat bench with dumbbells at chest. Press straight up.', null),
+    ('Cable Flyes', '{chest}', '{gym}', 'intermediate',
+     'Stand centered between cable posts. Bring hands together in arc.', null),
+    ('Skull Crushers', '{triceps}', '{barbell}', 'intermediate',
+     'Lie on bench, bar at arms length. Lower bar toward forehead, extend back up.', null),
+    ('Pull Ups', '{back,biceps}', '{pull_up_bar}', 'intermediate',
+     'Hang from bar with overhand grip. Pull chest to bar level.', null),
+    ('Seated Cable Row', '{back,biceps}', '{gym}', 'beginner',
+     'Sit at cable row station. Pull handle to torso while squeezing shoulder blades.', null),
+    ('Hammer Curl', '{biceps}', '{dumbbells}', 'beginner',
+     'Hold dumbbells at sides with neutral grip. Curl toward shoulders.', null),
+    ('Leg Curl', '{legs}', '{gym}', 'beginner',
+     'Lie face down on leg curl machine. Curl pad toward glutes.', null),
+    ('Leg Extension', '{legs}', '{gym}', 'beginner',
+     'Sit at leg extension machine. Extend legs to horizontal.', null),
+    ('Plank', '{core}', '{none}', 'beginner',
+     'Forearms on ground, body in straight line. Hold position engaging abs.', null),
+    ('Dumbbell Shoulder Press', '{shoulders,triceps}', '{dumbbells}', 'intermediate',
+     'Sit on bench with back support, dumbbells at shoulder height. Press overhead.', null),
+    ('Dumbbell Bicep Curl', '{biceps}', '{dumbbells}', 'beginner',
+     'Stand with dumbbells at sides, palms forward. Curl weights toward shoulders.', null),
+    ('Tricep Dips', '{triceps,chest}', '{gym}', 'intermediate',
+     'Use parallel bars or bench. Lower body by bending elbows to 90 degrees.', null),
+    ('Pull-Up', '{back,biceps}', '{pull_up_bar}', 'intermediate',
+     'Hang with overhand grip. Pull until chin clears bar.', null),
+    ('Barbell Back Squat', '{legs,glutes}', '{barbell}', 'intermediate',
+     'Bar on upper back, feet shoulder-width. Squat to depth, drive through heels.', null),
+    ('Barbell Deadlift', '{back,legs,glutes}', '{barbell}', 'intermediate',
+     'Approach bar with midfoot under bar. Hinge at hips, drive through heels to lockout.', null),
+    ('Dumbbell Row', '{back,biceps}', '{dumbbells}', 'intermediate',
+     'One knee and hand on bench for support. Row dumbbell to hip.', null),
+    ('Dumbbell Lunges', '{legs,glutes}', '{dumbbells}', 'beginner',
+     'Hold dumbbells at sides. Step forward, lower back knee toward ground.', null)
+  on conflict (name) do nothing
   returning id, name
 ),
 all_exercises as (
@@ -116,7 +154,11 @@ all_exercises as (
   union
   select id, name
   from public.exercise_library
-  where name in ('Bench Press', 'Overhead Press', 'Lateral Raise')
+  where name in (
+    'Barbell Bench Press', 'Overhead Press', 'Lateral Raise',
+    'Barbell Squat', 'Deadlift', 'Barbell Row',
+    'Lat Pulldown', 'Tricep Pushdowns', 'Incline Dumbbell Press'
+  )
 ),
 insert_plan as (
   insert into public.workout_plans (user_id, name, goal, version, is_active)
@@ -196,7 +238,7 @@ select
 from plan_day
 join (
   values
-    ('Bench Press', 4, '6-8', 120, 0, 'Focus on control'),
+    ('Barbell Bench Press', 4, '6-8', 120, 0, 'Focus on control'),
     ('Overhead Press', 3, '8-10', 90, 1, null),
     ('Lateral Raise', 3, '12-15', 60, 2, 'Light weight, strict form')
 ) as seed(exercise_name, sets, reps, rest_seconds, order_index, notes)
@@ -379,7 +421,7 @@ from seeded_sessions session
 join (
   values
     (
-      'Bench Press',
+      'Barbell Bench Press',
       4,
       '6-8',
       '[{"set_number":1,"reps_completed":8,"weight_kg":75,"completed_at":"2026-01-01T00:00:00Z"},{"set_number":2,"reps_completed":8,"weight_kg":75,"completed_at":"2026-01-01T00:05:00Z"},{"set_number":3,"reps_completed":7,"weight_kg":75,"completed_at":"2026-01-01T00:10:00Z"},{"set_number":4,"reps_completed":6,"weight_kg":75,"completed_at":"2026-01-01T00:15:00Z"}]',
@@ -427,4 +469,42 @@ where not exists (
   from public.coach_messages
   where user_id = target_user.user_id
     and text = 'Welcome to Navya. Your tester workout plan and nutrition data are ready to explore.'
+);
+
+-- Seed user meal templates for the tester
+insert into public.meal_templates (user_id, name, meal_time, foods, is_system, is_favorite)
+select
+  target_user.user_id,
+  seed.name,
+  seed.meal_time::text,
+  seed.foods::jsonb,
+  false,
+  false
+from target_user
+join (
+  values
+    (
+      'Quick Oats Bowl',
+      'breakfast',
+      '[
+        {"meal_name": "Oats (60g)", "calories": 228, "protein_g": 8, "carbs_g": 40, "fat_g": 4},
+        {"meal_name": "Banana (1)", "calories": 105, "protein_g": 1, "carbs_g": 27, "fat_g": 0},
+        {"meal_name": "Honey (15g)", "calories": 48, "protein_g": 0, "carbs_g": 13, "fat_g": 0}
+      ]'
+    ),
+    (
+      'Post-Workout Shake',
+      'snack',
+      '[
+        {"meal_name": "Protein Powder (1 scoop)", "calories": 120, "protein_g": 24, "carbs_g": 3, "fat_g": 1},
+        {"meal_name": "Milk 2% (250ml)", "calories": 130, "protein_g": 9, "carbs_g": 12, "fat_g": 5}
+      ]'
+    )
+) as seed(name, meal_time, foods)
+  on true
+where not exists (
+  select 1
+  from public.meal_templates existing
+  where existing.user_id = target_user.user_id
+    and existing.name = seed.name
 );

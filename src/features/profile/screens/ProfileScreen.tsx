@@ -24,7 +24,7 @@ import type { UserProfile } from '@/types/app';
 import { crossAlert } from '@/utils/crossAlert';
 import { isVisualTestScenario } from '@/utils/visualTest';
 import { SplitSelectionSheet } from '@/features/workout/components';
-import { createPlanFromTemplate } from '@/features/workout/api/workoutPlan.service';
+import { createPlanFromTemplateOnSupabase } from '@/features/workout/api/workoutPlan.service';
 import type { SplitTemplate } from '@/features/workout/data/splitTemplates';
 
 type EditProfileForm = EditProfileModalProps['form'];
@@ -256,9 +256,13 @@ export default function ProfileScreen() {
 
   if (!activeUser) return null;
 
-  const handleSelectSplit = (template: SplitTemplate) => {
+  const handleSelectSplit = async (template: SplitTemplate) => {
     if (!user?.id) return;
-    createPlanFromTemplate(template, user.id);
+    try {
+      await createPlanFromTemplateOnSupabase(template, user.id);
+    } catch {
+      // Plan creation failed — user can retry
+    }
     queryClient.invalidateQueries({ queryKey: ['workout-active-plan', user.id] });
     queryClient.invalidateQueries({ queryKey: ['workout-history', user.id] });
     setShowSplitSheet(false);
